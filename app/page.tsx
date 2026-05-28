@@ -305,6 +305,16 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Homepage structured data */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          { '@type': 'Organization', '@id': 'https://presenceia.com/#organization', name: 'Présence IA', url: 'https://presenceia.com', description: 'GEO — Generative Engine Optimization pour les PME suisses.', address: { '@type': 'PostalAddress', addressLocality: 'Zug', addressCountry: 'CH' }, areaServed: 'CH', knowsLanguage: ['fr', 'de', 'en', 'it'] },
+          { '@type': 'WebSite', '@id': 'https://presenceia.com/#website', url: 'https://presenceia.com', name: 'Présence IA', publisher: { '@id': 'https://presenceia.com/#organization' } },
+          { '@type': 'SoftwareApplication', name: 'AI Visibility Checker', applicationCategory: 'BusinessApplication', offers: { '@type': 'Offer', price: '0', priceCurrency: 'CHF' } }
+        ]
+      })}} />
     </div>
   )
 }
