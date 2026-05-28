@@ -1,140 +1,147 @@
 'use client'
-import { CheckCircle, XCircle, ArrowRight, RefreshCw, Share2, TrendingUp } from 'lucide-react'
-import ScoreRing from './ui/ScoreRing'
-import PlatformCard from './ui/PlatformCard'
+import { CheckCircle, XCircle, TrendingUp, RefreshCw, Share2, ArrowRight } from 'lucide-react'
 import { ScoringResult } from '@/lib/scoring-engine'
-import { type Lang } from '@/lib/translations'
+import { type Lang } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { useEffect, useState } from 'react'
 
-interface Props {
-  result: ScoringResult
-  lang: Lang
-  onReset: () => void
+interface Props { result: ScoringResult; lang: Lang; onReset: () => void }
+
+const gradeColors = {
+  A: { ring: '#38A169', text: '#68D391', bg: 'rgba(56,161,105,0.1)' },
+  B: { ring: '#3182CE', text: '#63B3ED', bg: 'rgba(49,130,206,0.1)' },
+  C: { ring: '#D69E2E', text: '#F6E05E', bg: 'rgba(214,158,46,0.1)' },
+  D: { ring: '#E8372A', text: '#FC8181', bg: 'rgba(232,55,42,0.1)' },
+  F: { ring: '#6B6B80', text: '#A0AEC0', bg: 'rgba(107,107,128,0.1)' },
 }
 
-const gradeConfig = {
-  A: { label: 'Excellent', color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
-  B: { label: 'Bon', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
-  C: { label: 'Moyen', color: 'text-yellow-700', bg: 'bg-yellow-50', border: 'border-yellow-200' },
-  D: { label: 'Faible', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' },
-  F: { label: 'Invisible', color: 'text-gray-700', bg: 'bg-gray-50', border: 'border-gray-200' },
+function AnimatedScore({ score, grade }: { score: number; grade: string }) {
+  const [val, setVal] = useState(0)
+  const colors = gradeColors[grade as keyof typeof gradeColors] || gradeColors.F
+  const size = 160; const sw = 10; const r = (size - sw) / 2; const circ = 2 * Math.PI * r
+
+  useEffect(() => {
+    let start = performance.now()
+    const dur = 1600
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / dur, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setVal(Math.round(eased * score))
+      if (p < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [score])
+
+  const offset = circ - (val / 100) * circ
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={sw} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={colors.ring} strokeWidth={sw}
+          strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.05s linear', filter: `drop-shadow(0 0 8px ${colors.ring}40)` }} />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-display text-5xl" style={{ color: colors.text }}>{val}</span>
+        <span className="font-mono text-xs text-white/30 mt-1">/100</span>
+        <span className="font-mono text-xs font-bold mt-2 px-2 py-0.5 rounded-full" style={{ background: colors.bg, color: colors.text }}>
+          GRADE {grade}
+        </span>
+      </div>
+    </div>
+  )
 }
+
+const platformIcons: Record<string, string> = { chatgpt: '🤖', claude: '🧠', perplexity: '🔍' }
+const platformColors: Record<string, string> = { chatgpt: '#10A37F', claude: '#CC785C', perplexity: '#8B5CF6' }
 
 export default function ResultsPanel({ result, lang, onReset }: Props) {
-  const grade = result.grade as keyof typeof gradeConfig
-  const cfg = gradeConfig[grade] || gradeConfig['F']
-  const isEn = lang === 'en'
-
-  const share = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Mon score IA — Présence IA',
-        text: `${result.businessName} a un score de visibilité IA de ${result.overallScore}/100. Testez le vôtre sur presenceia.com`,
-        url: window.location.href
-      })
-    }
-  }
+  const isEn = lang === 'en'; const isDe = lang === 'de'
+  const share = () => navigator.share?.({ title: 'Mon score IA', text: `${result.businessName}: ${result.overallScore}/100 sur presenceia.com`, url: window.location.href })
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-6 fade-in-up">
-
-      {/* Score header */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-card p-8">
-        <div className="flex flex-col md:flex-row items-center gap-8">
-          <div className="flex-shrink-0">
-            <ScoreRing score={result.overallScore} size={180} grade={result.grade} />
-          </div>
-          <div className="flex-1 text-center md:text-left">
-            <div className={cn('inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-3', cfg.bg, cfg.color, `border ${cfg.border}`)}>
-              <span>{result.grade}</span>
-              <span>·</span>
-              <span>{cfg.label}</span>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">{result.businessName}</h2>
-            <p className="text-gray-500 text-sm mb-4">{result.city} · {result.category}</p>
-            <p className="text-gray-700 text-sm leading-relaxed">{result.summary}</p>
-
-            {/* Share of voice badge */}
-            <div className="flex items-center gap-4 mt-5">
-              <div className="flex items-center gap-2 text-sm">
-                <TrendingUp className="w-4 h-4 text-red-500" />
-                <span className="text-gray-600">
-                  {isEn ? 'AI Share of Voice' : 'Part de voix IA'}:
-                  <span className="font-bold text-gray-900 ml-1">{result.shareOfVoice}%</span>
-                </span>
-              </div>
-            </div>
+    <div className="space-y-6">
+      {/* Score + summary */}
+      <div className="flex flex-col md:flex-row gap-8 items-center">
+        <div className="flex-shrink-0"><AnimatedScore score={result.overallScore} grade={result.grade} /></div>
+        <div>
+          <h3 className="text-white font-semibold text-xl mb-1">{result.businessName}</h3>
+          <p className="text-white/30 text-sm mb-4">{result.city} · {result.category}</p>
+          <p className="text-white/60 text-sm leading-relaxed">{result.summary}</p>
+          <div className="flex items-center gap-2 mt-4 text-sm font-mono">
+            <TrendingUp className="w-4 h-4 text-brand" />
+            <span className="text-white/40">{isEn ? 'AI Share of Voice' : isDe ? 'KI Share of Voice' : 'Part de voix IA'}:</span>
+            <span className="text-white font-semibold">{result.shareOfVoice}%</span>
           </div>
         </div>
       </div>
 
       {/* Platform results */}
-      <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">
-          {isEn ? 'Results by platform' : 'Résultats par plateforme'}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {result.platformResults.map((pr, i) => (
-            <PlatformCard key={i} result={pr} lang={isEn ? 'en' : 'fr'} />
-          ))}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {result.platformResults.map((pr, i) => (
+          <div key={i} className={cn('glass-light rounded-2xl p-4 border', pr.appeared ? 'border-green-500/15' : 'border-white/5 opacity-70')}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span>{platformIcons[pr.platform] || '🤖'}</span>
+                <span className="text-white text-xs font-semibold">{pr.platformLabel}</span>
+              </div>
+              <div className={cn('flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-full', pr.appeared ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400')}>
+                {pr.appeared ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                {pr.appeared ? (isEn ? 'Present' : isDe ? 'Präsent' : 'Présent') : (isEn ? 'Absent' : isDe ? 'Abwesend' : 'Absent')}
+              </div>
+            </div>
+            {pr.appeared && (
+              <>
+                <div className="flex justify-between text-xs font-mono text-white/30 mb-1">
+                  <span>Score</span><span>{pr.score}/25</span>
+                </div>
+                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(pr.score/25)*100}%`, background: platformColors[pr.platform] || '#E8372A' }} />
+                </div>
+              </>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Recommendations */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-card p-7">
-        <h3 className="text-lg font-bold text-gray-900 mb-5">
-          {isEn ? '🎯 Priority recommendations' : '🎯 Recommandations prioritaires'}
-        </h3>
+      <div className="glass-light rounded-2xl p-6 border border-white/5">
+        <h4 className="font-mono text-xs text-brand tracking-widest uppercase mb-4">
+          {isEn ? '— Priority actions' : isDe ? '— Prioritätsmaßnahmen' : '— Actions prioritaires'}
+        </h4>
         <div className="space-y-3">
           {result.topRecommendations.map((rec, i) => (
             <div key={i} className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-50 flex items-center justify-center mt-0.5">
-                <span className="text-xs font-bold text-red-600">{i + 1}</span>
-              </div>
-              <p className="text-sm text-gray-700 leading-relaxed">{rec}</p>
+              <span className="font-mono text-xs text-brand/50 mt-0.5 flex-shrink-0">0{i+1}</span>
+              <p className="text-white/60 text-sm leading-relaxed">{rec}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* CTA */}
-      <div className="bg-gradient-to-br from-red-500 to-red-700 rounded-3xl p-8 text-white text-center shadow-red">
-        <h3 className="text-2xl font-bold mb-2">
-          {isEn ? 'Ready to dominate AI recommendations?' : 'Prêt à dominer les recommandations IA ?'}
-        </h3>
-        <p className="text-red-100 mb-6 text-sm">
-          {isEn
-            ? 'GEO Swiss helps you become the answer AI gives your clients. Full audit + action plan.'
-            : 'GEO Swiss vous aide à devenir la réponse que les IA donnent à vos clients. Audit complet + plan d\'action.'}
+      <div className="bg-brand rounded-2xl p-6 text-center">
+        <h4 className="text-white font-semibold text-lg mb-2">
+          {isEn ? 'Ready to dominate AI results?' : isDe ? 'Bereit, KI-Ergebnisse zu dominieren?' : 'Prêt à dominer les recommandations IA ?'}
+        </h4>
+        <p className="text-white/70 text-sm mb-5">
+          {isEn ? 'Get a full audit + action plan from our GEO experts.' : isDe ? 'Erhalten Sie ein vollständiges Audit + Aktionsplan.' : 'Obtenez un audit complet + plan d\'action de nos experts GEO.'}
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a
-            href="mailto:hello@presenceia.com?subject=Audit gratuit&body=Bonjour, je souhaite un audit complet pour mon entreprise."
-            className="inline-flex items-center justify-center gap-2 bg-white text-red-600 px-6 py-3 rounded-xl font-semibold text-sm hover:bg-red-50 transition-colors shadow-sm"
-          >
-            {isEn ? 'Get a free full audit' : 'Obtenir un audit gratuit'}
+        <div className="flex gap-3 justify-center">
+          <a href="mailto:hello@presenceia.com" className="inline-flex items-center gap-2 bg-white text-brand px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/90 transition-colors">
+            {isEn ? 'Free audit' : isDe ? 'Kostenloses Audit' : 'Audit gratuit'}
             <ArrowRight className="w-4 h-4" />
           </a>
-          <button
-            onClick={share}
-            className="inline-flex items-center justify-center gap-2 border border-red-300 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-red-600 transition-colors"
-          >
+          <button onClick={share} className="inline-flex items-center gap-2 border border-white/30 text-white px-4 py-2.5 rounded-xl text-sm hover:bg-white/10 transition-colors">
             <Share2 className="w-4 h-4" />
-            {isEn ? 'Share my score' : 'Partager mon score'}
           </button>
         </div>
       </div>
 
-      {/* Reset */}
-      <div className="text-center">
-        <button
-          onClick={onReset}
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          {isEn ? 'Check another business' : 'Analyser une autre entreprise'}
-        </button>
-      </div>
+      <button onClick={onReset} className="w-full flex items-center justify-center gap-2 text-white/25 hover:text-white/50 text-xs font-mono transition-colors py-2">
+        <RefreshCw className="w-3.5 h-3.5" />
+        {isEn ? 'Analyse another business' : isDe ? 'Anderes Unternehmen analysieren' : 'Analyser une autre entreprise'}
+      </button>
     </div>
   )
 }

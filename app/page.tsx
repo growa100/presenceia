@@ -1,252 +1,215 @@
+'use client'
+import { useLang } from '@/components/LangProvider'
 import Navbar from '@/components/Navbar'
 import CheckerForm from '@/components/CheckerForm'
-import { Search, Zap, BarChart3, Shield, ArrowRight, CheckCircle } from 'lucide-react'
+import { blogPosts } from '@/lib/blog-data'
+import Link from 'next/link'
+import { ArrowRight, ArrowUpRight, CheckCircle, Zap } from 'lucide-react'
+import { format } from 'date-fns'
+import { fr, de, enUS } from 'date-fns/locale'
+
+const dateLocales = { fr, de, en: enUS }
 
 export default function Home() {
+  const { t, lang } = useLang()
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="relative min-h-screen bg-ink">
       <Navbar />
 
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="relative pt-24 pb-12 overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-red-50 via-white to-white pointer-events-none" />
-        <div className="absolute top-20 right-0 w-96 h-96 bg-red-100 rounded-full blur-3xl opacity-30 pointer-events-none" />
-        <div className="absolute bottom-0 left-20 w-64 h-64 bg-red-50 rounded-full blur-2xl opacity-40 pointer-events-none" />
+      {/* ── HERO ────────────────────────────────────────────────────────── */}
+      <section className="relative min-h-screen flex flex-col justify-center pt-20 overflow-hidden">
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-4xl mx-auto mb-14">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold px-4 py-2 rounded-full mb-8">
-              <Zap className="w-3.5 h-3.5" />
-              Nouveau · Analyse en temps réel sur ChatGPT, Claude & Perplexity
-            </div>
+        {/* Grid bg */}
+        <div className="absolute inset-0 bg-grid bg-grid opacity-100 pointer-events-none" />
 
-            {/* Headline */}
-            <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl text-gray-900 mb-6 leading-tight">
-              Votre entreprise{' '}
-              <span className="gradient-text italic">existe-t-elle</span>
-              {' '}pour les IA ?
-            </h1>
+        {/* Radial glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand/8 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-20 right-20 w-64 h-64 bg-brand/5 rounded-full blur-[80px] pointer-events-none" />
 
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Quand un client demande à <strong className="text-gray-900">ChatGPT</strong> un plombier à Sion,
-              un dentiste à Genève ou un avocat à Lausanne — votre nom apparaît-il ?
-              Testez votre score gratuitement en 60 secondes.
-            </p>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24">
 
-            {/* Trust badges */}
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 mb-12">
-              {['100% gratuit', 'Aucune carte requise', 'Résultat en 30–60s', 'Données 100% Swiss'].map(b => (
-                <div key={b} className="flex items-center gap-1.5">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>{b}</span>
-                </div>
-              ))}
+          {/* Badge */}
+          <div className="flex items-center gap-3 mb-10">
+            <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/8 text-brand text-xs font-mono font-medium px-4 py-2 rounded-full">
+              <span className="w-1.5 h-1.5 bg-brand rounded-full pulse-dot" />
+              {t.hero.badge}
             </div>
           </div>
 
-          {/* ── FORM CARD ─────────────────────────────────────────────── */}
-          <div id="checker" className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-3xl shadow-strong border border-gray-100 p-8 md:p-10">
-              <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
-                Analyser ma présence IA
-              </h2>
-              <p className="text-sm text-gray-500 text-center mb-8">
-                Entrez les informations de votre entreprise pour obtenir votre score
-              </p>
-              <CheckerForm />
-            </div>
-          </div>
+          {/* Headline */}
+          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] mb-8 max-w-5xl">
+            <span className="text-white/30 block">{t.hero.h1a}</span>
+            <span className="text-white italic block">{t.hero.h1b}</span>
+            <span className="text-brand block">{t.hero.h1c}</span>
+          </h1>
 
-          {/* Social proof */}
-          <div className="mt-10 text-center">
-            <p className="text-sm text-gray-400">
-              Déjà utilisé par des entrepreneurs à Genève, Lausanne, Zurich, Sion et Lugano
-            </p>
-            <div className="flex items-center justify-center gap-1 mt-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-              <span className="text-sm text-gray-600 ml-2 font-medium">4.9/5 — 120+ analyses</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
-      <section id="how" className="py-24 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl md:text-5xl text-gray-900 mb-4">
-              Comment fonctionne l'analyse
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Notre moteur interroge les IA en temps réel et calcule votre score de visibilité
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: Search,
-                step: '01',
-                title: 'Nous interrogeons les IA',
-                desc: 'Nous envoyons vos requêtes locales (en français, allemand, anglais) à ChatGPT, Claude et Perplexity — exactement comme le feraient vos clients.',
-                color: 'bg-blue-50 text-blue-600',
-              },
-              {
-                icon: BarChart3,
-                step: '02',
-                title: 'Analyse des réponses',
-                desc: 'Notre algorithme détecte si vous apparaissez, à quelle position, avec quel sentiment, et calcule votre part de voix face à vos concurrents.',
-                color: 'bg-purple-50 text-purple-600',
-              },
-              {
-                icon: Zap,
-                step: '03',
-                title: 'Score & Plan d\'action',
-                desc: 'Vous recevez un score 0–100 avec un grade (A–F) et 4 recommandations concrètes pour améliorer votre visibilité IA dès aujourd\'hui.',
-                color: 'bg-red-50 text-red-600',
-              },
-            ].map(({ icon: Icon, step, title, desc, color }, i) => (
-              <div key={i} className="bg-white rounded-3xl p-8 shadow-soft border border-gray-100 relative overflow-hidden">
-                <div className="absolute top-6 right-6 text-6xl font-black text-gray-50 select-none">{step}</div>
-                <div className={`inline-flex p-3 rounded-xl ${color} mb-5`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">{title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PLATFORMS ────────────────────────────────────────────────────── */}
-      <section className="py-16 bg-white border-y border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">
-            Plateformes analysées
+          <p className="text-white/50 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed font-light">
+            {t.hero.sub}
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-8">
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-20">
+            <a href="#checker" className="btn-primary inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-semibold">
+              {t.hero.cta1}
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            <a href="#how" className="btn-ghost inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-medium">
+              {t.hero.cta2}
+            </a>
+          </div>
+
+          {/* Floating platform tags */}
+          <div className="flex flex-wrap gap-3">
             {[
-              { name: 'ChatGPT', icon: '🤖', sub: 'GPT-4o' },
-              { name: 'Claude', icon: '🧠', sub: 'Anthropic' },
-              { name: 'Perplexity', icon: '🔍', sub: 'AI Search' },
-              { name: 'Gemini', icon: '✨', sub: 'Google — bientôt' },
-              { name: 'Copilot', icon: '🪟', sub: 'Microsoft — bientôt' },
-            ].map(({ name, icon, sub }) => (
-              <div key={name} className="flex flex-col items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
-                <span className="text-3xl">{icon}</span>
-                <span className="font-semibold text-gray-900 text-sm">{name}</span>
-                <span className="text-xs text-gray-400">{sub}</span>
+              { name: 'ChatGPT', color: '#10A37F' },
+              { name: 'Claude', color: '#CC785C' },
+              { name: 'Perplexity', color: '#8B5CF6' },
+              { name: 'Gemini', color: '#4285F4' },
+              { name: 'Copilot', color: '#0078D4' },
+            ].map(({ name, color }) => (
+              <div key={name} className="flex items-center gap-2 glass-light px-4 py-2 rounded-full text-xs font-mono text-white/60">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                {name}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/20">
+          <span className="text-xs font-mono tracking-widest uppercase">{t.hero.scroll}</span>
+          <div className="w-px h-12 bg-gradient-to-b from-white/20 to-transparent" />
+        </div>
+      </section>
+
+      {/* ── TICKER ──────────────────────────────────────────────────────── */}
+      <div className="border-y border-white/5 bg-ink-2 py-5 overflow-hidden">
+        <div className="marquee-inner flex gap-12 whitespace-nowrap">
+          {[...t.ticker, ...t.ticker].map((item, i) => (
+            <div key={i} className="flex items-center gap-4 text-white/20 text-sm font-mono uppercase tracking-widest flex-shrink-0">
+              <span className="w-1 h-1 bg-brand rounded-full" />
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── STATS ───────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-ink-2">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 rounded-3xl overflow-hidden">
+            {t.stats.map((stat, i) => (
+              <div key={i} className="reveal bg-ink-2 p-8 md:p-12 group hover:bg-ink-3 transition-colors" style={{ transitionDelay: `${i * 0.1}s` }}>
+                <div className="font-display text-4xl md:text-5xl text-white mb-3 group-hover:text-brand transition-colors">{stat.value}</div>
+                <div className="text-white/40 text-sm leading-relaxed">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── PRICING ──────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl md:text-5xl text-gray-900 mb-4">
-              Des tarifs transparents
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Commencez gratuitement. Passez à l'action avec nos offres mensuelles.
+      {/* ── HOW IT WORKS ────────────────────────────────────────────────── */}
+      <section id="how" className="py-32 bg-ink relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid bg-grid opacity-50 pointer-events-none" />
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-brand/5 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="mb-20">
+            <div className="reveal">
+              <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-5">— Process</p>
+              <h2 className="font-display text-4xl md:text-6xl text-white max-w-3xl leading-tight">{t.how.title}</h2>
+            </div>
+            <p className="reveal delay-2 text-white/40 text-lg mt-6 max-w-2xl">{t.how.sub}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {t.how.steps.map((step, i) => (
+              <div key={i} className={`reveal delay-${i + 1} glass-light rounded-3xl p-8 group hover:bg-white/6 transition-all duration-300 border border-white/5 hover:border-brand/20`}>
+                <div className="flex items-start justify-between mb-6">
+                  <span className="font-mono text-xs text-brand/60 tracking-widest">{step.n}</span>
+                  <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand/30 transition-colors">
+                    <ArrowUpRight className="w-3.5 h-3.5 text-white/30 group-hover:text-brand transition-colors" />
+                  </div>
+                </div>
+                <h3 className="text-white font-semibold text-lg mb-3">{step.title}</h3>
+                <p className="text-white/40 text-sm leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CHECKER ─────────────────────────────────────────────────────── */}
+      <section id="checker" className="py-32 bg-ink-2 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-gradient-to-b from-transparent to-brand/20" />
+
+        <div className="max-w-3xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-14 reveal">
+            <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-5">— Free tool</p>
+            <h2 className="font-display text-4xl md:text-5xl text-white mb-4">AI Visibility Score™</h2>
+            <p className="text-white/40 text-base">
+              {lang === 'fr' ? 'Entrez vos informations. Résultat en 30 secondes.' :
+               lang === 'de' ? 'Geben Sie Ihre Informationen ein. Ergebnis in 30 Sekunden.' :
+               'Enter your details. Result in 30 seconds.'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {[
-              {
-                name: 'Starter',
-                price: 'CHF 299',
-                period: '/mois',
-                desc: 'Pour démarrer votre présence IA',
-                features: [
-                  'Audit de présence IA complet',
-                  'Optimisation Google Business Profile',
-                  'Schema.org & données structurées',
-                  'Rapport mensuel',
-                  '3 langues analysées',
-                ],
-                cta: 'Commencer',
-                highlight: false,
-              },
-              {
-                name: 'Growth',
-                price: 'CHF 599',
-                period: '/mois',
-                desc: 'Pour dominer votre marché local',
-                features: [
-                  'Tout Starter, plus :',
-                  '2 articles IA par mois',
-                  'Gestion des avis clients',
-                  'Monitoring IA hebdomadaire',
-                  'Rapport de concurrence',
-                  'Support prioritaire',
-                ],
-                cta: 'Choisir Growth',
-                highlight: true,
-              },
-              {
-                name: 'Domination',
-                price: 'CHF 1\'199',
-                period: '/mois',
-                desc: 'Pour devenir la référence régionale',
-                features: [
-                  'Tout Growth, plus :',
-                  'Contenu hebdomadaire',
-                  'Monitoring IA quotidien',
-                  'Dashboard client dédié',
-                  'Alertes concurrents temps réel',
-                  'Account manager dédié',
-                ],
-                cta: 'Contacter',
-                highlight: false,
-              },
-            ].map(({ name, price, period, desc, features, cta, highlight }) => (
-              <div
-                key={name}
-                className={`rounded-3xl p-8 border ${
-                  highlight
-                    ? 'bg-red-500 border-red-400 text-white shadow-red scale-105'
-                    : 'bg-white border-gray-100 shadow-soft'
-                }`}
-              >
-                {highlight && (
-                  <div className="inline-block bg-white text-red-600 text-xs font-bold px-3 py-1 rounded-full mb-4">
-                    ⭐ Le plus populaire
+          <div className="reveal delay-2 glass-dark rounded-3xl p-8 md:p-10 border border-white/8">
+            <CheckerForm />
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ─────────────────────────────────────────────────────── */}
+      <section id="pricing" className="py-32 bg-ink relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid bg-grid opacity-30 pointer-events-none" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-16 reveal">
+            <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-5">— Pricing</p>
+            <h2 className="font-display text-4xl md:text-6xl text-white mb-4">{t.pricing.title}</h2>
+            <p className="text-white/40 text-lg max-w-xl mx-auto">{t.pricing.sub}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {t.pricing.plans.map((plan, i) => (
+              <div key={i} className={`reveal delay-${i + 1} relative rounded-3xl p-8 border flex flex-col transition-all duration-300 ${
+                (plan as any).popular
+                  ? 'bg-brand border-brand/50 glow-red'
+                  : 'glass-light border-white/8 hover:border-white/15'
+              }`}>
+                {(plan as any).popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-brand text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                    ⭐ {lang === 'fr' ? 'Plus populaire' : lang === 'de' ? 'Am beliebtesten' : 'Most popular'}
                   </div>
                 )}
-                <h3 className={`text-xl font-bold mb-1 ${highlight ? 'text-white' : 'text-gray-900'}`}>{name}</h3>
-                <p className={`text-sm mb-4 ${highlight ? 'text-red-100' : 'text-gray-500'}`}>{desc}</p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className={`text-4xl font-black ${highlight ? 'text-white' : 'text-gray-900'}`}>{price}</span>
-                  <span className={`text-sm ${highlight ? 'text-red-200' : 'text-gray-400'}`}>{period}</span>
+                <div className="mb-6">
+                  <h3 className={`text-lg font-bold mb-1 ${(plan as any).popular ? 'text-white' : 'text-white'}`}>{plan.name}</h3>
+                  <p className={`text-sm ${(plan as any).popular ? 'text-white/70' : 'text-white/40'}`}>{plan.desc}</p>
                 </div>
-                <ul className="space-y-2.5 mb-8">
-                  {features.map(f => (
-                    <li key={f} className="flex items-start gap-2 text-sm">
-                      <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${highlight ? 'text-red-200' : 'text-green-500'}`} />
-                      <span className={highlight ? 'text-red-50' : 'text-gray-600'}>{f}</span>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className={`font-display text-5xl ${(plan as any).popular ? 'text-white' : 'text-white'}`}>CHF {plan.price}</span>
+                  <span className={`text-sm ${(plan as any).popular ? 'text-white/60' : 'text-white/30'}`}>{t.pricing.mo}</span>
+                </div>
+                <p className={`text-xs font-mono mb-8 ${(plan as any).popular ? 'text-white/50' : 'text-white/25'}`}>
+                  + CHF {plan.setup} {t.pricing.setup}
+                </p>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {plan.features.map((f, j) => (
+                    <li key={j} className="flex items-start gap-2.5 text-sm">
+                      <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${(plan as any).popular ? 'text-white/70' : 'text-brand/60'}`} />
+                      <span className={`leading-relaxed ${(plan as any).popular ? 'text-white/80' : 'text-white/50'}`}>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={`mailto:hello@presenceia.com?subject=Offre ${name}`}
-                  className={`block text-center py-3 rounded-xl font-semibold text-sm transition-all ${
-                    highlight
-                      ? 'bg-white text-red-600 hover:bg-red-50'
-                      : 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
-                  }`}
-                >
-                  {cta} →
+                <a href={`mailto:hello@presenceia.com?subject=${plan.name}`}
+                  className={`block text-center py-3.5 rounded-xl text-sm font-semibold transition-all ${
+                    (plan as any).popular
+                      ? 'bg-white text-brand hover:bg-white/90'
+                      : 'btn-primary'
+                  }`}>
+                  {plan.cta} →
                 </a>
               </div>
             ))}
@@ -254,42 +217,91 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── BLOG ────────────────────────────────────────────────────────── */}
+      <section id="blog" className="py-32 bg-ink-2">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-16">
+            <div className="reveal">
+              <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-5">— Insights</p>
+              <h2 className="font-display text-4xl md:text-5xl text-white">{t.blog.title}</h2>
+              <p className="text-white/40 text-lg mt-3 max-w-xl">{t.blog.sub}</p>
+            </div>
+            <Link href="/blog" className="hidden md:flex items-center gap-2 text-white/40 hover:text-white text-sm transition-colors reveal">
+              {lang === 'fr' ? 'Tous les articles' : lang === 'de' ? 'Alle Artikel' : 'All articles'}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {blogPosts.map((post, i) => (
+              <Link key={post.slug} href={`/blog/${post.slug}`}
+                className={`reveal delay-${i+1} group glass-light rounded-3xl p-7 border border-white/5 hover:border-white/12 transition-all duration-300 hover:-translate-y-1 flex flex-col`}>
+                <div className="flex items-center gap-3 mb-5">
+                  {post.tags.slice(0, 2).map(tag => (
+                    <span key={tag} className="font-mono text-xs text-brand/60 bg-brand/8 px-3 py-1 rounded-full">{tag}</span>
+                  ))}
+                </div>
+                <h3 className="text-white font-semibold text-base leading-snug mb-3 group-hover:text-white/90 flex-1">
+                  {post.title[lang as 'fr'|'de'|'en']}
+                </h3>
+                <p className="text-white/35 text-sm leading-relaxed mb-6 line-clamp-3">
+                  {post.excerpt[lang as 'fr'|'de'|'en']}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-xs text-white/25 font-mono">
+                    <span>{format(new Date(post.date), 'dd MMM yyyy', { locale: dateLocales[lang as 'fr'|'de'|'en'] ?? enUS })}</span>
+                    <span>·</span>
+                    <span>{post.readingTime} min</span>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-white/20 group-hover:text-brand transition-colors" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── FINAL CTA ────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 to-gray-800">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="font-serif text-4xl md:text-5xl text-white mb-6">
-            Le moment d'agir, c'est maintenant
-          </h2>
-          <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-            La révolution IA du référencement local est en cours. Les entreprises qui agissent aujourd'hui
-            seront les références de demain. Vos concurrents n'ont pas encore bougé.
-          </p>
-          <a
-            href="#checker"
-            className="inline-flex items-center gap-2.5 bg-red-500 hover:bg-red-600 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all shadow-red hover:shadow-lg hover:-translate-y-0.5"
-          >
-            Tester ma présence IA gratuitement
-            <ArrowRight className="w-5 h-5" />
-          </a>
-          <p className="text-gray-600 text-sm mt-4">Gratuit · Sans engagement · Résultat en 60 secondes</p>
+      <section className="py-40 bg-ink relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid bg-grid opacity-30 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-brand/3 to-transparent pointer-events-none" />
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+          <div className="reveal">
+            <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-8">— Act now</p>
+            <h2 className="font-display text-5xl md:text-7xl text-white mb-6 leading-tight">
+              {t.cta_section.title}
+            </h2>
+            <p className="text-white/40 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
+              {t.cta_section.sub}
+            </p>
+            <a href="#checker"
+              className="btn-primary inline-flex items-center gap-3 px-8 py-5 rounded-2xl text-base font-semibold">
+              <Zap className="w-5 h-5" />
+              {t.cta_section.btn}
+            </a>
+            <p className="text-white/20 text-xs font-mono mt-6 tracking-wider">
+              {lang === 'fr' ? 'GRATUIT · SANS ENGAGEMENT · 60 SECONDES' :
+               lang === 'de' ? 'KOSTENLOS · UNVERBINDLICH · 60 SEKUNDEN' :
+               'FREE · NO COMMITMENT · 60 SECONDS'}
+            </p>
+          </div>
         </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────────── */}
-      <footer className="bg-gray-950 text-gray-500 py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <footer className="bg-ink-2 border-t border-white/5 py-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 bg-red-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-black text-sm">P</span>
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 bg-brand rounded-sm flex items-center justify-center">
+                <span className="text-white font-black text-xs">+</span>
               </div>
-              <span className="font-bold text-gray-300">présence<span className="text-red-500">ia</span></span>
-              <span className="text-gray-700 text-sm">— Zug, Suisse</span>
+              <span className="font-sans font-bold text-white/80">présence<span className="text-brand">ia</span></span>
+              <span className="text-white/20 text-sm">— Zug</span>
             </div>
-            <div className="flex items-center gap-6 text-sm">
-              <a href="mailto:hello@presenceia.com" className="hover:text-gray-300 transition-colors">Contact</a>
-              <span className="text-gray-700">©2026 Présence IA — Tous droits réservés</span>
-            </div>
+            <p className="font-mono text-xs text-white/20 tracking-wider">{t.footer.tagline}</p>
+            <p className="text-white/20 text-xs">{t.footer.rights}</p>
           </div>
         </div>
       </footer>

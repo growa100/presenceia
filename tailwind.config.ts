@@ -9,27 +9,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        red: {
-          50:  '#FFF5F5',
-          100: '#FED7D7',
-          200: '#FEB2B2',
-          400: '#FC8181',
-          500: '#E53E3E',
-          600: '#C53030',
-          700: '#9B2C2C',
-          800: '#822727',
-          900: '#63171B',
-        },
+        ink:    { DEFAULT: '#0A0A0F', 2: '#14141C', 3: '#1E1E2A', 4: '#2A2A38' },
+        cream:  { DEFAULT: '#FAFAF8' },
+        brand:  { DEFAULT: '#E8372A', 2: '#FF4D3E' },
+        gold:   { DEFAULT: '#C9A84C' },
+        muted:  { DEFAULT: '#6B6B80' },
       },
       fontFamily: {
-        sans:  ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['DM Serif Display', 'Georgia', 'serif'],
+        sans:    ['Syne', 'system-ui', 'sans-serif'],
+        display: ['Instrument Serif', 'Georgia', 'serif'],
+        mono:    ['DM Mono', 'monospace'],
       },
       boxShadow: {
-        soft:   '0 4px 24px rgba(0,0,0,0.06)',
-        card:   '0 8px 32px rgba(0,0,0,0.08)',
-        strong: '0 16px 48px rgba(0,0,0,0.12)',
-        red:    '0 8px 32px rgba(229,62,62,0.25)',
+        'glow-red': '0 0 40px rgba(232,55,42,0.3), 0 0 80px rgba(232,55,42,0.1)',
+        'card':     '0 1px 0 rgba(255,255,255,0.05), 0 20px 40px rgba(0,0,0,0.4)',
+      },
+      backgroundImage: {
+        'grid': 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+      },
+      backgroundSize: {
+        'grid': '60px 60px',
+      },
+      animation: {
+        'marquee': 'marquee 30s linear infinite',
+        'pulse-slow': 'pulse 4s ease-in-out infinite',
+        'spin-slow': 'spin 8s linear infinite',
       },
     },
   },
