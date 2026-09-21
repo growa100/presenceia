@@ -75,7 +75,7 @@ function Targets({ res, reload }: { res: TargetsRes; reload: () => void }) {
               <tr className="text-[11px] font-mono uppercase tracking-wider text-ink/40 text-left border-b border-line">
                 <th className="py-2 font-normal">Actif</th><th className="py-2 font-normal">Secteur</th><th className="py-2 font-normal">Région</th>
                 <th className="py-2 font-normal">Priorité</th><th className="py-2 font-normal">Quota/nuit</th>
-                <th className="py-2 font-normal text-right">Trouvés</th><th className="py-2 font-normal text-right">Contactés</th>
+                <th className="py-2 font-normal text-right" title="Entreprises trouvées sur Google Maps ; le site est généré la nuit suivante">Trouvés</th><th className="py-2 font-normal text-right">Contactés</th>
                 <th className="py-2 font-normal text-right">Visites</th><th className="py-2 font-normal text-right">Réponses</th>
                 <th className="py-2 font-normal">Dernier run</th><th className="py-2 font-normal"></th>
               </tr>
@@ -103,7 +103,7 @@ function Targets({ res, reload }: { res: TargetsRes; reload: () => void }) {
                       onBlur={e => { const v = +e.target.value; if (v && v !== t.daily_quota) patch(t, { daily_quota: v }) }}
                       className="w-16 bg-white border border-line rounded-lg px-2 py-1 text-sm tabular-nums" />
                   </td>
-                  <td className="py-3 pr-3 text-right tabular-nums">{t.stats.leads}<span className="text-ink/40 text-xs"> ({t.stats.sites} sites)</span></td>
+                  <td className="py-3 pr-3 text-right tabular-nums">{t.leads_found}<span className="text-ink/40 text-xs"> ({t.stats.sites} sites)</span></td>
                   <td className="py-3 pr-3 text-right tabular-nums">{t.stats.contacted}</td>
                   <td className="py-3 pr-3 text-right tabular-nums">{t.stats.visited} <span className="text-ink/40 text-xs">({pct(t.stats.contacted ? (100 * t.stats.visited) / t.stats.contacted : null)})</span></td>
                   <td className="py-3 pr-3 text-right tabular-nums">{t.stats.replied} <span className="text-ink/40 text-xs">({pct(t.stats.contacted ? (100 * t.stats.replied) / t.stats.contacted : null)})</span></td>
