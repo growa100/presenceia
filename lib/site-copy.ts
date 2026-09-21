@@ -10,7 +10,7 @@
 import type { Lang } from './i18n'
 
 export const CONTACT = {
-  email: 'hello@presenceia.com',
+  email: 'antoine@presenceia.com',
   phone: '+41 78 915 15 73',
   phoneHref: 'tel:+41789151573',
   company: '41 Labs GmbH',

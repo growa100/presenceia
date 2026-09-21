@@ -128,7 +128,7 @@ export default function ResultsPanel({ result, lang, onReset }: Props) {
           {isEn ? 'Get a full audit + action plan from our GEO experts.' : isDe ? 'Erhalten Sie ein vollständiges Audit + Aktionsplan.' : 'Obtenez un audit complet + plan d\'action de nos experts GEO.'}
         </p>
         <div className="flex gap-3 justify-center">
-          <a href="mailto:hello@presenceia.com" className="inline-flex items-center gap-2 bg-white text-brand px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/90 transition-colors">
+          <a href="mailto:antoine@presenceia.com" className="inline-flex items-center gap-2 bg-white text-brand px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/90 transition-colors">
             {isEn ? 'Free audit' : isDe ? 'Kostenloses Audit' : 'Audit gratuit'}
             <ArrowRight className="w-4 h-4" />
           </a>

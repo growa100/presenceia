@@ -15,14 +15,14 @@ export default function MentionsLegales() {
       sections={[
         { title: 'Éditeur du site', body: [
           '41 Labs GmbH, société à responsabilité limitée de droit suisse, dont le siège est à Zug (Suisse). Le site presenceia.com et la marque Présence IA sont exploités par 41 Labs GmbH.',
-          'Contact : hello@presenceia.com · +41 78 915 15 73. Responsable de la publication : Antoine Pury.',
+          'Contact : antoine@presenceia.com · +41 78 915 15 73. Responsable de la publication : Antoine Pury.',
         ]},
         { title: 'Hébergement', body: [
           'Le site presenceia.com est hébergé par Vercel Inc. (San Francisco, États-Unis). Les sites web réalisés pour nos clients sont hébergés sur des serveurs en Suisse et dans l\'Union européenne, avec chiffrement TLS.',
         ]},
         { title: 'Sites préparés à titre de présentation', body: [
           'Les sites de démonstration accessibles sur des sous-domaines de presenceia.com sont préparés à partir d\'informations publiquement disponibles (fiches Google, annuaires professionnels, sites existants) afin de présenter notre service à l\'entreprise concernée. Ils ne sont pas indexés par les moteurs de recherche, portent une mention « aperçu » visible et sont retirés sur simple demande de l\'entreprise, sans frais.',
-          'Aucune information relative à une entreprise n\'est publiée au-delà de ce qu\'elle a elle-même rendu public. Pour demander le retrait d\'un site de démonstration : hello@presenceia.com.',
+          'Aucune information relative à une entreprise n\'est publiée au-delà de ce qu\'elle a elle-même rendu public. Pour demander le retrait d\'un site de démonstration : antoine@presenceia.com.',
         ]},
         { title: 'Propriété intellectuelle', body: [
           'Les éléments du site presenceia.com (textes, graphismes, code) sont la propriété de 41 Labs GmbH. Les logos, photos et contenus des entreprises clientes restent la propriété de ces entreprises. Le nom de domaine d\'un site client est enregistré au nom de l\'entreprise cliente.',
