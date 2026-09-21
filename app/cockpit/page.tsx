@@ -13,6 +13,7 @@ type Overview = {
   by_sector: Row[]; by_region: Row[]
   mailboxes: { email: string; cap: number; sent_today: number }[]
   replies_by_class: Record<string, number>
+  warnings?: string[]
 }
 type Row = { key: string; contacted: number; visited: number; replied: number; won: number; visit_rate: number | null; reply_rate: number | null }
 
@@ -60,6 +61,8 @@ export default function OverviewPage() {
           </button>
         </div>
       </div>
+
+      {data.warnings?.length ? <ErrorBox msg={`Données partielles : ${data.warnings.join(' · ')}`} /> : null}
 
       {/* Funnel */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
