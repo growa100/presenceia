@@ -27,6 +27,7 @@ export default function Navbar({ variant = 'dark' }: { variant?: Variant }) {
 
   const links = light
     ? [
+        { href: '/#checker', label: c.analysis },
         { href: '/#exemples', label: c.examples },
         { href: '/#how', label: c.how },
         { href: '/#pricing', label: c.pricing },

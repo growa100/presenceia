@@ -59,6 +59,20 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── FREE ANALYSIS (ChatGPT visibility check) ─────────────────────── */}
+      <section id="checker" className="py-24 md:py-32 bg-ink text-white">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand-2 mb-4">{c.checker.eyebrow}</p>
+            <h2 className="font-display text-4xl md:text-5xl leading-tight">{c.checker.title}</h2>
+            <p className="mt-4 text-white/55">{c.checker.sub}</p>
+          </div>
+          <div className="glass-dark rounded-3xl p-8 md:p-10 border border-white/10">
+            <CheckerForm />
+          </div>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
       <section id="how" className="py-24 md:py-32">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
@@ -227,20 +241,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CHECKER (secondary lead magnet, dark band) ────────────────────── */}
-      <section id="checker" className="py-24 md:py-32 bg-ink text-white">
-        <div className="max-w-3xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand-2 mb-4">{c.checker.eyebrow}</p>
-            <h2 className="font-display text-4xl md:text-5xl leading-tight">{c.checker.title}</h2>
-            <p className="mt-4 text-white/55">{c.checker.sub}</p>
-          </div>
-          <div className="glass-dark rounded-3xl p-8 md:p-10 border border-white/10">
-            <CheckerForm />
-          </div>
-        </div>
-      </section>
-
       {/* ── FOOTER ───────────────────────────────────────────────────────── */}
       <footer className="border-t border-line py-12">
         <div className="max-w-6xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -265,9 +265,9 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',
         '@graph': [
-          { '@type': 'Organization', '@id': 'https://presenceia.com/#organization', name: 'Présence IA', legalName: CONTACT.company, url: 'https://presenceia.com', email: CONTACT.email, telephone: CONTACT.phone, address: { '@type': 'PostalAddress', addressLocality: CONTACT.city, addressCountry: 'CH' }, areaServed: ['CH', 'FR'], knowsLanguage: ['fr', 'de', 'en'] },
+          { '@type': 'Organization', '@id': 'https://presenceia.com/#organization', name: 'Présence IA', legalName: CONTACT.company, url: 'https://presenceia.com', email: CONTACT.email, telephone: CONTACT.phone, address: { '@type': 'PostalAddress', addressLocality: CONTACT.city, addressCountry: 'CH' }, areaServed: 'Worldwide', knowsLanguage: ['fr', 'de', 'en'] },
           { '@type': 'WebSite', '@id': 'https://presenceia.com/#website', url: 'https://presenceia.com', name: 'Présence IA', publisher: { '@id': 'https://presenceia.com/#organization' } },
-          { '@type': 'Service', name: 'Site web professionnel pour PME', provider: { '@id': 'https://presenceia.com/#organization' }, areaServed: ['CH', 'FR'], offers: [
+          { '@type': 'Service', name: 'Site web professionnel pour PME', provider: { '@id': 'https://presenceia.com/#organization' }, areaServed: 'Worldwide', offers: [
             { '@type': 'Offer', name: 'Site web', price: '99', priceCurrency: 'CHF', priceSpecification: { '@type': 'UnitPriceSpecification', price: '99', priceCurrency: 'CHF', unitText: 'MONTH' } },
             { '@type': 'Offer', name: 'Site + Visibilité IA', price: '149', priceCurrency: 'CHF' },
             { '@type': 'Offer', name: 'Tout compris', price: '229', priceCurrency: 'CHF' },

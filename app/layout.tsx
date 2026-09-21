@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     default: 'Présence IA, votre site web professionnel déjà prêt, CHF 99 par mois',
     template: '%s | Présence IA',
   },
-  description: 'Nous préparons le site web de votre entreprise avant de vous écrire. Vous le regardez, vous dites oui, il est en ligne cette semaine sur votre nom de domaine. CHF 99 par mois, tout compris, sans engagement. Artisans et PME, Suisse romande et France.',
+  description: 'Nous préparons le site web de votre entreprise avant de vous écrire. Vous le regardez, vous dites oui, il est en ligne cette semaine sur votre nom de domaine. CHF 99 par mois, tout compris, sans engagement. Artisans, commerces et PME.',
   keywords: [
     'site web artisan', 'site web PME suisse', 'création site web Valais', 'site web garage', 'site web plombier',
     'GEO', 'Generative Engine Optimization', 'visibilité IA', 'ChatGPT PME suisse',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Présence IA, votre site web professionnel déjà prêt',
-    description: 'CHF 99 par mois, tout compris, sans engagement. Artisans et PME, Suisse et France.',
+    description: 'CHF 99 par mois, tout compris, sans engagement. Artisans, commerces et PME.',
     images: ['/og-image.png'],
   },
   alternates: {
