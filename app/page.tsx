@@ -1,10 +1,10 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ArrowUpRight, Check, ChevronDown, Mail, Phone, ShieldCheck } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Check, ChevronDown, Mail, Phone, ShieldCheck, Sparkles } from 'lucide-react'
 import { useLang } from '@/components/LangProvider'
 import Navbar from '@/components/Navbar'
-import CheckerForm from '@/components/CheckerForm'
+import AnalysisDialog from '@/components/AnalysisDialog'
 import { CONTACT, SHOWCASE, siteCopy } from '@/lib/site-copy'
 import type { Lang } from '@/lib/i18n'
 
@@ -59,16 +59,28 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── FREE ANALYSIS (ChatGPT visibility check) ─────────────────────── */}
-      <section id="checker" className="py-24 md:py-32 bg-ink text-white">
-        <div className="max-w-3xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand-2 mb-4">{c.checker.eyebrow}</p>
-            <h2 className="font-display text-4xl md:text-5xl leading-tight">{c.checker.title}</h2>
-            <p className="mt-4 text-white/55">{c.checker.sub}</p>
-          </div>
-          <div className="glass-dark rounded-3xl p-8 md:p-10 border border-white/10">
-            <CheckerForm />
+      {/* ── FREE ANALYSIS (opens as a popup) ─────────────────────────────── */}
+      <section id="checker" className="py-16 md:py-24">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="card relative overflow-hidden p-8 md:p-12 md:flex md:items-center md:gap-12">
+            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-brand/10 blur-3xl pointer-events-none" />
+            <div className="relative flex-1">
+              <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.checker.eyebrow}</p>
+              <h2 className="font-display text-3xl md:text-5xl text-ink leading-tight max-w-2xl">{c.checker.title}</h2>
+              <p className="mt-5 text-lg text-ink/65 max-w-2xl">{c.checker.sub}</p>
+            </div>
+            <div className="relative mt-8 md:mt-0 flex-shrink-0">
+              <AnalysisDialog
+                title={c.checker.title}
+                sub={c.checker.sub}
+                trigger={
+                  <button className="btn-primary inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl text-base font-semibold">
+                    <Sparkles className="w-4 h-4" /> {c.checker.cta}
+                  </button>
+                }
+              />
+              <p className="mt-3 text-xs text-ink/45 text-center">{c.checker.note}</p>
+            </div>
           </div>
         </div>
       </section>

@@ -117,6 +117,8 @@ const fr = {
     eyebrow: 'Analyse gratuite',
     title: 'Votre entreprise apparaît-elle dans les réponses de ChatGPT ?',
     sub: 'De plus en plus de clients demandent à ChatGPT, Perplexity ou Gemini « un bon artisan près de chez moi ». Entrez votre entreprise, votre ville et votre métier : résultat en 30 secondes, gratuit, sans engagement.',
+    cta: 'Lancer l\'analyse gratuite',
+    note: '30 secondes · aucune inscription',
   },
   footer: {
     tagline: 'Sites web et visibilité IA pour artisans et PME.',
@@ -216,6 +218,8 @@ const de: typeof fr = {
     eyebrow: 'Kostenlose Analyse',
     title: 'Erscheint Ihr Betrieb in den Antworten von ChatGPT?',
     sub: 'Immer mehr Kunden fragen ChatGPT, Perplexity oder Gemini nach „einem guten Handwerker in meiner Nähe“. Geben Sie Betrieb, Ort und Beruf ein: Ergebnis in 30 Sekunden, kostenlos, unverbindlich.',
+    cta: 'Kostenlose Analyse starten',
+    note: '30 Sekunden · keine Anmeldung',
   },
   footer: {
     tagline: 'Websites und KI-Sichtbarkeit für Handwerker und KMU.',
@@ -315,6 +319,8 @@ const en: typeof fr = {
     eyebrow: 'Free analysis',
     title: 'Does your business show up in ChatGPT\'s answers?',
     sub: 'More and more customers ask ChatGPT, Perplexity or Gemini for "a good tradesperson near me". Enter your business, town and trade: result in 30 seconds, free, no commitment.',
+    cta: 'Start the free analysis',
+    note: '30 seconds · no sign-up',
   },
   footer: {
     tagline: 'Websites and AI visibility for trades and small businesses.',

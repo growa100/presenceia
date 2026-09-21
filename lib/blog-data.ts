@@ -6,9 +6,16 @@ export interface BlogPost {
   title: { fr: string; de: string; en: string }
   excerpt: { fr: string; de: string; en: string }
   content: { fr: string; de: string; en: string }
+  /** Byline; defaults to the team. */
+  author?: string
+  /** Optional hero image (public path) for the listing. */
+  image?: string
 }
 
+import { chatgptClientPost } from './blog-post-chatgpt-client'
+
 export const blogPosts: BlogPost[] = [
+  chatgptClientPost,
   {
     slug: 'geo-vs-seo-nouvelle-ere',
     date: '2026-05-15',

@@ -24,12 +24,39 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
         elements.push(<code key={i} className="block font-mono text-xs text-emerald-300/80 bg-black/30 px-4 py-1">{line}</code>)
         return
       }
+      const img = line.match(/^!\[(.*?)\]\((.*?)\)$/)
+      if (img) {
+        elements.push(
+          <figure key={i} className="my-10 -mx-2 md:-mx-10">
+            <img src={img[2]} alt={img[1]} className="w-full h-auto rounded-3xl" loading="lazy" />
+            {img[1] && <figcaption className="mt-3 text-center text-xs font-mono text-white/30">{img[1]}</figcaption>}
+          </figure>
+        )
+        return
+      }
+      if (line.startsWith('> ')) {
+        elements.push(
+          <blockquote key={i} className="my-8 border-l-2 border-brand pl-6 font-display text-2xl md:text-3xl text-white/90 leading-snug">
+            {line.slice(2)}
+          </blockquote>
+        )
+        return
+      }
+      if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
+        elements.push(<p key={i} className="text-white/35 text-sm italic leading-relaxed mt-8">{line.slice(1, -1)}</p>)
+        return
+      }
       if (line.startsWith('## ')) {
         elements.push(<h2 key={i} className="font-display text-2xl md:text-3xl text-white mt-12 mb-5">{line.slice(3)}</h2>)
       } else if (line.startsWith('### ')) {
         elements.push(<h3 key={i} className="text-white font-semibold text-lg mt-8 mb-3">{line.slice(4)}</h3>)
       } else if (line.startsWith('- ')) {
-        elements.push(<li key={i} className="text-white/60 text-base leading-relaxed mb-2 ml-4 list-disc">{line.slice(2)}</li>)
+        const parts = line.slice(2).split(/\*\*(.*?)\*\*/g)
+        elements.push(
+          <li key={i} className="text-white/60 text-base leading-relaxed mb-2 ml-4 list-disc">
+            {parts.map((p, j) => j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{p}</strong> : p)}
+          </li>
+        )
       } else if (line.trim() === '') {
         elements.push(<div key={i} className="mb-3" />)
       } else if (line.includes('**')) {
@@ -72,7 +99,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
             {post.excerpt[lang as 'fr'|'de'|'en']}
           </p>
           <div className="flex items-center gap-6 text-xs font-mono text-white/25 border-t border-b border-white/5 py-4">
-            <span>Équipe Présence IA</span>
+            <span>{post.author ?? 'Équipe Présence IA'}</span>
             <span>{format(new Date(post.date), 'dd MMMM yyyy', { locale: dateLocales[lang as 'fr'|'de'|'en'] ?? enUS })}</span>
             <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" />{post.readingTime} min</span>
           </div>
@@ -87,7 +114,7 @@ export default function BlogPostClient({ post }: { post: BlogPost }) {
           headline: post.title[lang as 'fr'|'de'|'en'],
           description: post.excerpt[lang as 'fr'|'de'|'en'],
           datePublished: post.date,
-          author: { '@type': 'Organization', name: 'Présence IA', url: 'https://presenceia.com' },
+          author: post.author ? { '@type': 'Person', name: post.author, url: 'https://presenceia.com' } : { '@type': 'Organization', name: 'Présence IA', url: 'https://presenceia.com' },
           publisher: { '@type': 'Organization', name: 'Présence IA', url: 'https://presenceia.com' },
           keywords: post.tags.join(', '),
         })}} />
