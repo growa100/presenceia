@@ -18,7 +18,7 @@ export default function LoginPage() {
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Error'); return }
-      router.push(data.user.role === 'admin' ? '/admin' : '/dashboard')
+      router.push(data.user.role === 'admin' ? '/cockpit' : '/dashboard')
     } catch { setError('Network error') } finally { setLoading(false) }
   }
 
