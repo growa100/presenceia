@@ -11,6 +11,8 @@ const config: Config = {
       colors: {
         ink:    { DEFAULT: '#0A0A0F', 2: '#14141C', 3: '#1E1E2A', 4: '#2A2A38' },
         cream:  { DEFAULT: '#FAFAF8' },
+        paper:  { DEFAULT: '#FAF8F3', 2: '#F3F0E8' },
+        line:   { DEFAULT: '#E6E1D6' },
         brand:  { DEFAULT: '#E8372A', 2: '#FF4D3E' },
         gold:   { DEFAULT: '#C9A84C' },
         muted:  { DEFAULT: '#6B6B80' },

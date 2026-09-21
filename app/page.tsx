@@ -1,319 +1,279 @@
 'use client'
+import { useState } from 'react'
+import Link from 'next/link'
+import { ArrowRight, ArrowUpRight, Check, ChevronDown, Mail, Phone, ShieldCheck } from 'lucide-react'
 import { useLang } from '@/components/LangProvider'
 import Navbar from '@/components/Navbar'
 import CheckerForm from '@/components/CheckerForm'
-import { blogPosts } from '@/lib/blog-data'
-import Link from 'next/link'
-import { ArrowRight, ArrowUpRight, CheckCircle, Zap } from 'lucide-react'
-import { format } from 'date-fns'
-import { fr, de, enUS } from 'date-fns/locale'
+import { CONTACT, SHOWCASE, siteCopy } from '@/lib/site-copy'
+import type { Lang } from '@/lib/i18n'
 
-const dateLocales = { fr, de, en: enUS }
+const mailto = (subject: string, body: string) =>
+  `mailto:${CONTACT.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 
 export default function Home() {
-  const { t, lang } = useLang()
+  const { lang } = useLang()
+  const c = siteCopy[lang]
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   return (
-    <div className="relative min-h-screen bg-ink">
-      <Navbar />
+    <div className="page-light min-h-screen">
+      <Navbar variant="light" />
 
-      {/* ── HERO ────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex flex-col justify-center pt-20 overflow-hidden">
-
-        {/* Grid bg */}
-        <div className="absolute inset-0 bg-grid bg-grid opacity-100 pointer-events-none" />
-
-        {/* Radial glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand/8 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-20 right-20 w-64 h-64 bg-brand/5 rounded-full blur-[80px] pointer-events-none" />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24">
-
-          {/* Badge */}
-          <div className="flex items-center gap-3 mb-10">
-            <div className="inline-flex items-center gap-2 border border-brand/30 bg-brand/8 text-brand text-xs font-mono font-medium px-4 py-2 rounded-full">
-              <span className="w-1.5 h-1.5 bg-brand rounded-full pulse-dot" />
-              {t.hero.badge}
-            </div>
-          </div>
-
-          {/* Headline */}
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] mb-8 max-w-5xl">
-            <span className="text-white/30 block">{t.hero.h1a}</span>
-            <span className="text-white italic block">{t.hero.h1b}</span>
-            <span className="text-brand block">{t.hero.h1c}</span>
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      <section className="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
+        <div className="absolute -top-40 right-[-10%] w-[520px] h-[520px] rounded-full bg-brand/10 blur-[120px] pointer-events-none" />
+        <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-6">{c.hero.eyebrow}</p>
+          <h1 className="font-display text-5xl md:text-7xl lg:text-[5.5rem] leading-[1.0] text-ink max-w-4xl">
+            {c.hero.h1a}<br />
+            <span className="italic text-brand">{c.hero.h1b}</span>
           </h1>
+          <p className="mt-8 text-lg md:text-xl text-ink/70 max-w-2xl leading-relaxed">{c.hero.sub}</p>
 
-          <p className="text-white/50 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed font-light">
-            {t.hero.sub}
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-20">
-            <a href="#checker" className="btn-primary inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-semibold">
-              {t.hero.cta1}
-              <ArrowRight className="w-4 h-4" />
+          <div className="mt-10 flex flex-col sm:flex-row gap-4">
+            <a href="#activer" className="btn-primary inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-base font-semibold">
+              {c.hero.cta1} <ArrowRight className="w-4 h-4" />
             </a>
-            <a href="#how" className="btn-ghost inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-medium">
-              {t.hero.cta2}
+            <a href="#exemples" className="btn-outline inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-base font-medium">
+              {c.hero.cta2}
             </a>
           </div>
 
-          {/* Floating platform tags */}
-          <div className="flex flex-wrap gap-3">
-            {[
-              { name: 'ChatGPT', color: '#10A37F' },
-              { name: 'Claude', color: '#CC785C' },
-              { name: 'Perplexity', color: '#8B5CF6' },
-              { name: 'Gemini', color: '#4285F4' },
-              { name: 'Copilot', color: '#0078D4' },
-            ].map(({ name, color }) => (
-              <div key={name} className="flex items-center gap-2 glass-light px-4 py-2 rounded-full text-xs font-mono text-white/60">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                {name}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/20">
-          <span className="text-xs font-mono tracking-widest uppercase">{t.hero.scroll}</span>
-          <div className="w-px h-12 bg-gradient-to-b from-white/20 to-transparent" />
+          <a href="#how" className="mt-8 inline-flex items-center gap-2 text-sm text-ink/60 hover:text-ink transition-colors">
+            <Mail className="w-4 h-4 text-brand" />
+            <span>{c.hero.received} <span className="underline underline-offset-4 decoration-brand/50">{c.hero.receivedLink}</span></span>
+          </a>
         </div>
       </section>
 
-      {/* ── TICKER ──────────────────────────────────────────────────────── */}
-      <div className="border-y border-white/5 bg-ink-2 py-5 overflow-hidden">
-        <div className="marquee-inner flex gap-12 whitespace-nowrap">
-          {[...t.ticker, ...t.ticker].map((item, i) => (
-            <div key={i} className="flex items-center gap-4 text-white/20 text-sm font-mono uppercase tracking-widest flex-shrink-0">
-              <span className="w-1 h-1 bg-brand rounded-full" />
+      {/* ── TRUST STRIP ──────────────────────────────────────────────────── */}
+      <div className="border-y border-line bg-paper-2">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 py-4 flex flex-wrap gap-x-8 gap-y-2">
+          {c.trust.map(item => (
+            <div key={item} className="flex items-center gap-2 text-sm text-ink/70">
+              <ShieldCheck className="w-4 h-4 text-brand flex-shrink-0" />
               {item}
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── STATS ───────────────────────────────────────────────────────── */}
-      <section className="py-24 bg-ink-2">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 rounded-3xl overflow-hidden">
-            {t.stats.map((stat, i) => (
-              <div key={i} className="reveal bg-ink-2 p-8 md:p-12 group hover:bg-ink-3 transition-colors" style={{ transitionDelay: `${i * 0.1}s` }}>
-                <div className="font-display text-4xl md:text-5xl text-white mb-3 group-hover:text-brand transition-colors">{stat.value}</div>
-                <div className="text-white/40 text-sm leading-relaxed">{stat.label}</div>
+      {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
+      <section id="how" className="py-24 md:py-32">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.how.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink max-w-3xl leading-tight">{c.how.title}</h2>
+          <div className="mt-14 grid md:grid-cols-3 gap-6">
+            {c.how.steps.map(step => (
+              <div key={step.n} className="card p-8">
+                <div className="w-11 h-11 rounded-full bg-brand text-white font-display text-2xl flex items-center justify-center mb-6">{step.n}</div>
+                <h3 className="text-xl font-semibold text-ink mb-3">{step.title}</h3>
+                <p className="text-ink/65 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ────────────────────────────────────────────────── */}
-      <section id="how" className="py-32 bg-ink relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid bg-grid opacity-50 pointer-events-none" />
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-brand/5 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-20">
-            <div className="reveal">
-              <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-5">— Process</p>
-              <h2 className="font-display text-4xl md:text-6xl text-white max-w-3xl leading-tight">{t.how.title}</h2>
-            </div>
-            <p className="reveal delay-2 text-white/40 text-lg mt-6 max-w-2xl">{t.how.sub}</p>
+      {/* ── EXAMPLES ─────────────────────────────────────────────────────── */}
+      <section id="exemples" className="py-24 md:py-32 bg-paper-2 border-y border-line">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.examples.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink max-w-3xl leading-tight">{c.examples.title}</h2>
+          <p className="mt-5 text-lg text-ink/65 max-w-2xl">{c.examples.sub}</p>
+          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {SHOWCASE.map(site => (
+              <a key={site.slug} href={`https://${site.slug}.presenceia.com`} target="_blank" rel="noopener"
+                className="card group p-6 flex flex-col hover:-translate-y-1 hover:border-brand/40 transition-all duration-300">
+                <span className="font-mono text-xs tracking-widest uppercase text-ink/50">{site.sector[lang as Lang]} · {site.city}</span>
+                <span className="mt-3 text-xl font-semibold text-ink">{site.name}</span>
+                <span className="mt-1 text-sm text-ink/45 truncate">{site.slug}.presenceia.com</span>
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand">
+                  {c.examples.open} <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </span>
+              </a>
+            ))}
           </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {t.how.steps.map((step, i) => (
-              <div key={i} className={`reveal delay-${i + 1} glass-light rounded-3xl p-8 group hover:bg-white/6 transition-all duration-300 border border-white/5 hover:border-brand/20`}>
-                <div className="flex items-start justify-between mb-6">
-                  <span className="font-mono text-xs text-brand/60 tracking-widest">{step.n}</span>
-                  <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand/30 transition-colors">
-                    <ArrowUpRight className="w-3.5 h-3.5 text-white/30 group-hover:text-brand transition-colors" />
-                  </div>
+      {/* ── INCLUDED ─────────────────────────────────────────────────────── */}
+      <section className="py-24 md:py-32">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.included.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink max-w-3xl leading-tight">{c.included.title}</h2>
+          <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-10">
+            {c.included.items.map(item => (
+              <div key={item.title} className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-4 h-4" />
                 </div>
-                <h3 className="text-white font-semibold text-lg mb-3">{step.title}</h3>
-                <p className="text-white/40 text-sm leading-relaxed">{step.desc}</p>
+                <div>
+                  <h3 className="font-semibold text-ink text-lg">{item.title}</h3>
+                  <p className="mt-1.5 text-ink/65 leading-relaxed">{item.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CHECKER ─────────────────────────────────────────────────────── */}
-      <section id="checker" className="py-32 bg-ink-2 relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-gradient-to-b from-transparent to-brand/20" />
-
-        <div className="max-w-3xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-14 reveal">
-            <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-5">— Free tool</p>
-            <h2 className="font-display text-4xl md:text-5xl text-white mb-4">AI Visibility Score™</h2>
-            <p className="text-white/40 text-base">
-              {lang === 'fr' ? 'Entrez vos informations. Résultat en 30 secondes.' :
-               lang === 'de' ? 'Geben Sie Ihre Informationen ein. Ergebnis in 30 Sekunden.' :
-               'Enter your details. Result in 30 seconds.'}
-            </p>
+      {/* ── PRICING ──────────────────────────────────────────────────────── */}
+      <section id="pricing" className="py-24 md:py-32 bg-paper-2 border-y border-line">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto">
+            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.pricing.eyebrow}</p>
+            <h2 className="font-display text-4xl md:text-5xl text-ink leading-tight">{c.pricing.title}</h2>
+            <p className="mt-5 text-lg text-ink/65">{c.pricing.sub}</p>
           </div>
+          <div className="mt-14 grid md:grid-cols-3 gap-6 items-stretch">
+            {c.pricing.plans.map(plan => {
+              const popular = 'popular' in plan && plan.popular
+              return (
+                <div key={plan.name} className={`relative rounded-3xl p-8 flex flex-col ${popular ? 'bg-ink text-white shadow-2xl md:-my-3' : 'card'}`}>
+                  {popular && (
+                    <span className="absolute -top-3 left-8 bg-brand text-white text-xs font-semibold px-3 py-1 rounded-full">{c.pricing.popular}</span>
+                  )}
+                  <h3 className={`text-xl font-semibold ${popular ? 'text-white' : 'text-ink'}`}>{plan.name}</h3>
+                  <p className={`mt-1 text-sm ${popular ? 'text-white/60' : 'text-ink/55'}`}>{plan.desc}</p>
+                  <div className="mt-6 flex items-baseline gap-2">
+                    <span className={`font-display text-5xl ${popular ? 'text-white' : 'text-ink'}`}>CHF {plan.price}</span>
+                    <span className={`text-sm ${popular ? 'text-white/50' : 'text-ink/45'}`}>{c.pricing.mo}</span>
+                  </div>
+                  <ul className="mt-8 space-y-3 flex-1">
+                    {plan.features.map(f => (
+                      <li key={f} className={`flex items-start gap-2.5 text-sm leading-relaxed ${popular ? 'text-white/80' : 'text-ink/70'}`}>
+                        <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${popular ? 'text-brand-2' : 'text-brand'}`} />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <a href="#activer" className={`mt-8 block text-center py-3.5 rounded-xl text-sm font-semibold transition-all ${popular ? 'bg-brand text-white hover:bg-brand-2' : 'btn-outline'}`}>
+                    {plan.cta}
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-10 text-center text-sm text-ink/55">
+            {c.pricing.enterprise}{' '}
+            <a href={mailto('Programme visibilité IA', '')} className="text-brand font-semibold underline underline-offset-4">{c.pricing.enterpriseCta}</a>
+          </p>
+        </div>
+      </section>
 
-          <div className="reveal delay-2 glass-dark rounded-3xl p-8 md:p-10 border border-white/8">
+      {/* ── FOUNDER ──────────────────────────────────────────────────────── */}
+      <section className="py-24 md:py-32">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="card p-8 md:p-12 md:flex md:items-start md:gap-12">
+            <div className="flex-shrink-0 mb-8 md:mb-0">
+              <div className="w-20 h-20 rounded-full bg-brand text-white font-display text-3xl flex items-center justify-center">AP</div>
+            </div>
+            <div>
+              <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-3">{c.founder.eyebrow}</p>
+              <p className="text-xl md:text-2xl text-ink leading-relaxed font-display">“{c.founder.text}”</p>
+              <p className="mt-6 font-semibold text-ink">{c.founder.name}</p>
+              <p className="text-sm text-ink/55">{c.founder.role}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <section id="faq" className="py-24 md:py-32 bg-paper-2 border-y border-line">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.faq.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink leading-tight">{c.faq.title}</h2>
+          <div className="mt-12 divide-y divide-line border-y border-line">
+            {c.faq.items.map((item, i) => {
+              const open = openFaq === i
+              return (
+                <div key={item.q}>
+                  <button onClick={() => setOpenFaq(open ? null : i)} aria-expanded={open}
+                    className="w-full flex items-start justify-between gap-6 py-6 text-left">
+                    <span className="text-lg font-semibold text-ink">{item.q}</span>
+                    <ChevronDown className={`w-5 h-5 text-brand flex-shrink-0 mt-1 transition-transform ${open ? 'rotate-180' : ''}`} />
+                  </button>
+                  {open && <p className="pb-6 -mt-2 text-ink/70 leading-relaxed">{item.a}</p>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── ACTIVATE (contact) ───────────────────────────────────────────── */}
+      <section id="activer" className="py-24 md:py-32">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.activate.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-6xl text-ink leading-tight">{c.activate.title}</h2>
+          <p className="mt-6 text-lg text-ink/65 max-w-2xl mx-auto">{c.activate.sub}</p>
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+            <a href={CONTACT.phoneHref} className="btn-primary inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-base font-semibold">
+              <Phone className="w-4 h-4" /> {c.activate.call} · {CONTACT.phone}
+            </a>
+            <a href={mailto(c.activate.emailSubject, c.activate.emailBody)} className="btn-outline inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-base font-medium">
+              <Mail className="w-4 h-4" /> {c.activate.email}
+            </a>
+          </div>
+          <p className="mt-4 text-sm text-ink/50">{c.activate.reply}</p>
+          <div className="mt-14 card p-6 md:p-8 text-left md:flex md:items-center md:justify-between md:gap-8">
+            <p className="text-ink/70 leading-relaxed">{c.activate.none}</p>
+            <a href={mailto(c.activate.noneSubject, c.activate.noneBody)} className="mt-4 md:mt-0 inline-flex items-center gap-2 text-brand font-semibold whitespace-nowrap">
+              {c.activate.noneSubject} <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CHECKER (secondary lead magnet, dark band) ────────────────────── */}
+      <section id="checker" className="py-24 md:py-32 bg-ink text-white">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand-2 mb-4">{c.checker.eyebrow}</p>
+            <h2 className="font-display text-4xl md:text-5xl leading-tight">{c.checker.title}</h2>
+            <p className="mt-4 text-white/55">{c.checker.sub}</p>
+          </div>
+          <div className="glass-dark rounded-3xl p-8 md:p-10 border border-white/10">
             <CheckerForm />
           </div>
         </div>
       </section>
 
-      {/* ── PRICING ─────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-32 bg-ink relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid bg-grid opacity-30 pointer-events-none" />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16 reveal">
-            <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-5">— Pricing</p>
-            <h2 className="font-display text-4xl md:text-6xl text-white mb-4">{t.pricing.title}</h2>
-            <p className="text-white/40 text-lg max-w-xl mx-auto">{t.pricing.sub}</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {t.pricing.plans.map((plan, i) => (
-              <div key={i} className={`reveal delay-${i + 1} relative rounded-3xl p-8 border flex flex-col transition-all duration-300 ${
-                (plan as any).popular
-                  ? 'bg-brand border-brand/50 glow-red'
-                  : 'glass-light border-white/8 hover:border-white/15'
-              }`}>
-                {(plan as any).popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-brand text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
-                    ⭐ {lang === 'fr' ? 'Plus populaire' : lang === 'de' ? 'Am beliebtesten' : 'Most popular'}
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3 className={`text-lg font-bold mb-1 ${(plan as any).popular ? 'text-white' : 'text-white'}`}>{plan.name}</h3>
-                  <p className={`text-sm ${(plan as any).popular ? 'text-white/70' : 'text-white/40'}`}>{plan.desc}</p>
-                </div>
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className={`font-display text-5xl ${(plan as any).popular ? 'text-white' : 'text-white'}`}>CHF {plan.price}</span>
-                  <span className={`text-sm ${(plan as any).popular ? 'text-white/60' : 'text-white/30'}`}>{t.pricing.mo}</span>
-                </div>
-                <p className={`text-xs font-mono mb-8 ${(plan as any).popular ? 'text-white/50' : 'text-white/25'}`}>
-                  + CHF {plan.setup} {t.pricing.setup}
-                </p>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {plan.features.map((f, j) => (
-                    <li key={j} className="flex items-start gap-2.5 text-sm">
-                      <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${(plan as any).popular ? 'text-white/70' : 'text-brand/60'}`} />
-                      <span className={`leading-relaxed ${(plan as any).popular ? 'text-white/80' : 'text-white/50'}`}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <a href={`mailto:hello@presenceia.com?subject=${plan.name}`}
-                  className={`block text-center py-3.5 rounded-xl text-sm font-semibold transition-all ${
-                    (plan as any).popular
-                      ? 'bg-white text-brand hover:bg-white/90'
-                      : 'btn-primary'
-                  }`}>
-                  {plan.cta} →
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── BLOG ────────────────────────────────────────────────────────── */}
-      <section id="blog" className="py-32 bg-ink-2">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-16">
-            <div className="reveal">
-              <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-5">— Insights</p>
-              <h2 className="font-display text-4xl md:text-5xl text-white">{t.blog.title}</h2>
-              <p className="text-white/40 text-lg mt-3 max-w-xl">{t.blog.sub}</p>
-            </div>
-            <Link href="/blog" className="hidden md:flex items-center gap-2 text-white/40 hover:text-white text-sm transition-colors reveal">
-              {lang === 'fr' ? 'Tous les articles' : lang === 'de' ? 'Alle Artikel' : 'All articles'}
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {blogPosts.map((post, i) => (
-              <Link key={post.slug} href={`/blog/${post.slug}`}
-                className={`reveal delay-${i+1} group glass-light rounded-3xl p-7 border border-white/5 hover:border-white/12 transition-all duration-300 hover:-translate-y-1 flex flex-col`}>
-                <div className="flex items-center gap-3 mb-5">
-                  {post.tags.slice(0, 2).map(tag => (
-                    <span key={tag} className="font-mono text-xs text-brand/60 bg-brand/8 px-3 py-1 rounded-full">{tag}</span>
-                  ))}
-                </div>
-                <h3 className="text-white font-semibold text-base leading-snug mb-3 group-hover:text-white/90 flex-1">
-                  {post.title[lang as 'fr'|'de'|'en']}
-                </h3>
-                <p className="text-white/35 text-sm leading-relaxed mb-6 line-clamp-3">
-                  {post.excerpt[lang as 'fr'|'de'|'en']}
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-xs text-white/25 font-mono">
-                    <span>{format(new Date(post.date), 'dd MMM yyyy', { locale: dateLocales[lang as 'fr'|'de'|'en'] ?? enUS })}</span>
-                    <span>·</span>
-                    <span>{post.readingTime} min</span>
-                  </div>
-                  <ArrowUpRight className="w-4 h-4 text-white/20 group-hover:text-brand transition-colors" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FINAL CTA ────────────────────────────────────────────────────── */}
-      <section className="py-40 bg-ink relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid bg-grid opacity-30 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-brand/3 to-transparent pointer-events-none" />
-
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <div className="reveal">
-            <p className="font-mono text-xs text-brand tracking-[0.3em] uppercase mb-8">— Act now</p>
-            <h2 className="font-display text-5xl md:text-7xl text-white mb-6 leading-tight">
-              {t.cta_section.title}
-            </h2>
-            <p className="text-white/40 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
-              {t.cta_section.sub}
-            </p>
-            <a href="#checker"
-              className="btn-primary inline-flex items-center gap-3 px-8 py-5 rounded-2xl text-base font-semibold">
-              <Zap className="w-5 h-5" />
-              {t.cta_section.btn}
-            </a>
-            <p className="text-white/20 text-xs font-mono mt-6 tracking-wider">
-              {lang === 'fr' ? 'GRATUIT · SANS ENGAGEMENT · 60 SECONDES' :
-               lang === 'de' ? 'KOSTENLOS · UNVERBINDLICH · 60 SEKUNDEN' :
-               'FREE · NO COMMITMENT · 60 SECONDS'}
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* ── FOOTER ───────────────────────────────────────────────────────── */}
-      <footer className="bg-ink-2 border-t border-white/5 py-12">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-brand rounded-sm flex items-center justify-center">
-                <span className="text-white font-black text-xs">+</span>
-              </div>
-              <span className="font-sans font-bold text-white/80">présence<span className="text-brand">ia</span></span>
-              <span className="text-white/20 text-sm">— Zug</span>
+      <footer className="border-t border-line py-12">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 bg-brand rounded-sm inline-flex items-center justify-center text-white text-xs font-black">+</span>
+              <span className="font-bold text-ink">présence<span className="text-brand">ia</span></span>
             </div>
-            <p className="font-mono text-xs text-white/20 tracking-wider">{t.footer.tagline}</p>
-            <p className="text-white/20 text-xs">{t.footer.rights}</p>
+            <p className="mt-2 text-sm text-ink/55">{c.footer.tagline}</p>
           </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink/60">
+            <a href={`mailto:${CONTACT.email}`} className="hover:text-ink">{CONTACT.email}</a>
+            <a href={CONTACT.phoneHref} className="hover:text-ink">{CONTACT.phone}</a>
+            <Link href="/blog" className="hover:text-ink">{c.nav.blog}</Link>
+            <Link href="/mentions-legales" className="hover:text-ink">{c.footer.legal}</Link>
+            <Link href="/confidentialite" className="hover:text-ink">{c.footer.privacy}</Link>
+          </div>
+          <p className="text-xs text-ink/45">{c.footer.rights}</p>
         </div>
       </footer>
 
-      {/* Homepage structured data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',
         '@graph': [
-          { '@type': 'Organization', '@id': 'https://presenceia.com/#organization', name: 'Présence IA', url: 'https://presenceia.com', description: 'GEO — Generative Engine Optimization pour les PME suisses.', address: { '@type': 'PostalAddress', addressLocality: 'Zug', addressCountry: 'CH' }, areaServed: 'CH', knowsLanguage: ['fr', 'de', 'en', 'it'] },
+          { '@type': 'Organization', '@id': 'https://presenceia.com/#organization', name: 'Présence IA', legalName: CONTACT.company, url: 'https://presenceia.com', email: CONTACT.email, telephone: CONTACT.phone, address: { '@type': 'PostalAddress', addressLocality: CONTACT.city, addressCountry: 'CH' }, areaServed: ['CH', 'FR'], knowsLanguage: ['fr', 'de', 'en'] },
           { '@type': 'WebSite', '@id': 'https://presenceia.com/#website', url: 'https://presenceia.com', name: 'Présence IA', publisher: { '@id': 'https://presenceia.com/#organization' } },
-          { '@type': 'SoftwareApplication', name: 'AI Visibility Checker', applicationCategory: 'BusinessApplication', offers: { '@type': 'Offer', price: '0', priceCurrency: 'CHF' } }
-        ]
+          { '@type': 'Service', name: 'Site web professionnel pour PME', provider: { '@id': 'https://presenceia.com/#organization' }, areaServed: ['CH', 'FR'], offers: [
+            { '@type': 'Offer', name: 'Site web', price: '99', priceCurrency: 'CHF', priceSpecification: { '@type': 'UnitPriceSpecification', price: '99', priceCurrency: 'CHF', unitText: 'MONTH' } },
+            { '@type': 'Offer', name: 'Site + Visibilité IA', price: '149', priceCurrency: 'CHF' },
+            { '@type': 'Offer', name: 'Tout compris', price: '229', priceCurrency: 'CHF' },
+          ] },
+          { '@type': 'FAQPage', mainEntity: c.faq.items.map(i => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })) },
+        ],
       })}} />
     </div>
   )

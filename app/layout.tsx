@@ -1,25 +1,25 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { LangProvider } from '@/components/LangProvider'
-import Cursor from '@/components/Cursor'
 import ScrollReveal from '@/components/ScrollReveal'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://presenceia.com'),
   title: {
-    default: 'Présence IA — Visibilité IA pour les PME suisses',
+    default: 'Présence IA, votre site web professionnel déjà prêt, CHF 99 par mois',
     template: '%s | Présence IA',
   },
-  description: 'Découvrez si votre entreprise apparaît quand vos clients demandent à ChatGPT, Claude ou Perplexity. Score de visibilité IA gratuit en 60 secondes. GEO — Generative Engine Optimization pour les PME suisses.',
+  description: 'Nous préparons le site web de votre entreprise avant de vous écrire. Vous le regardez, vous dites oui, il est en ligne cette semaine sur votre nom de domaine. CHF 99 par mois, tout compris, sans engagement. Artisans et PME, Suisse romande et France.',
   keywords: [
+    'site web artisan', 'site web PME suisse', 'création site web Valais', 'site web garage', 'site web plombier',
     'GEO', 'Generative Engine Optimization', 'visibilité IA', 'ChatGPT PME suisse',
     'référencement IA Suisse', 'présence IA', 'Claude Perplexity Suisse',
     'SEO IA Suisse', 'PME suisses ChatGPT', 'Schema.org Suisse',
     'visibilité ChatGPT', 'GEO Switzerland', 'AI visibility Switzerland'
   ],
-  authors: [{ name: 'Présence IA', url: 'https://presenceia.com' }],
-  creator: 'Présence IA GmbH',
-  publisher: 'Présence IA GmbH',
+  authors: [{ name: 'Antoine Pury', url: 'https://presenceia.com' }],
+  creator: '41 Labs GmbH',
+  publisher: '41 Labs GmbH',
   robots: {
     index: true,
     follow: true,
@@ -31,14 +31,14 @@ export const metadata: Metadata = {
     alternateLocale: ['de_CH', 'en_US'],
     url: 'https://presenceia.com',
     siteName: 'Présence IA',
-    title: 'Présence IA — Votre entreprise existe-t-elle pour les IA ?',
-    description: 'Quand vos clients demandent à ChatGPT un plombier, un dentiste ou un avocat — apparaissez-vous ? Score gratuit en 60 secondes.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Présence IA — AI Visibility for Swiss SMEs' }],
+    title: 'Présence IA, votre site web professionnel déjà prêt',
+    description: 'Site web complet, nom de domaine inclus, hébergement suisse. CHF 99 par mois, sans engagement. En ligne cette semaine.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Présence IA, votre site web professionnel déjà prêt' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Présence IA — Be the answer.',
-    description: 'GEO — Generative Engine Optimization pour les PME suisses. Score gratuit en 60 secondes.',
+    title: 'Présence IA, votre site web professionnel déjà prêt',
+    description: 'CHF 99 par mois, tout compris, sans engagement. Artisans et PME, Suisse et France.',
     images: ['/og-image.png'],
   },
   alternates: {
@@ -66,7 +66,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <LangProvider>
-          <Cursor />
           <ScrollReveal />
           {children}
         </LangProvider>
