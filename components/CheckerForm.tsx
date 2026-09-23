@@ -18,11 +18,13 @@ const schema = z.object({
 })
 type FormData = z.infer<typeof schema>
 
+// All assistants are queried in parallel with web search, then the answers are analysed.
 const STEPS: Record<Lang, string[]> = {
-  fr: ['Interrogation de ChatGPT…', 'Interrogation de Claude…', 'Interrogation de Perplexity…', 'Calcul de votre score…'],
-  de: ['ChatGPT wird abgefragt…', 'Claude wird abgefragt…', 'Perplexity wird abgefragt…', 'Score wird berechnet…'],
-  en: ['Querying ChatGPT…', 'Querying Claude…', 'Querying Perplexity…', 'Calculating your score…'],
+  fr: ['Questions posées à ChatGPT, Claude, Gemini, Grok et Perplexity…', 'Recherche web des assistants en cours…', 'Lecture des réponses…', 'Calcul de votre score…'],
+  de: ['Fragen an ChatGPT, Claude, Gemini, Grok und Perplexity…', 'Websuche der Assistenten läuft…', 'Antworten werden gelesen…', 'Score wird berechnet…'],
+  en: ['Asking ChatGPT, Claude, Gemini, Grok and Perplexity…', 'Assistants are searching the web…', 'Reading the answers…', 'Calculating your score…'],
 }
+const STEP_AT_MS = [0, 6000, 18000, 28000]
 
 const CATEGORIES: Record<Lang, string[]> = {
   fr: ['Plombier', 'Électricien', 'Dentiste', 'Médecin généraliste', 'Avocat', 'Fiduciaire', 'Restaurant', 'Hôtel', 'Agent immobilier', 'Architecte', 'Carrossier', 'Autre'],
@@ -47,24 +49,28 @@ export default function CheckerForm() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
   const cat = watch('category')
 
-  const simulateSteps = async () => {
-    for (let i = 0; i < 4; i++) { setStep(i); await new Promise(r => setTimeout(r, 900)) }
+  const startSteps = () => {
+    const timers = STEP_AT_MS.map((ms, i) => setTimeout(() => setStep(i), ms))
+    return () => timers.forEach(clearTimeout)
   }
 
   const onSubmit = async (data: FormData) => {
     setLoading(true); setError(''); setResult(null); setStep(0)
-    const stepP = simulateSteps()
+    const stopSteps = startSteps()
     try {
       const res = await fetch('/api/check', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, language: lang })
       })
-      await stepP
+      if (res.status === 429) throw new Error('rate')
       if (!res.ok) throw new Error()
       setResult(await res.json())
-    } catch {
-      setError(lang === 'fr' ? 'Erreur d\'analyse. Veuillez réessayer.' : lang === 'de' ? 'Analysefehler. Bitte erneut versuchen.' : 'Analysis error. Please try again.')
-    } finally { setLoading(false) }
+    } catch (e) {
+      const rate = e instanceof Error && e.message === 'rate'
+      setError(rate
+        ? (lang === 'fr' ? 'Limite d\'analyses atteinte pour le moment. Réessayez dans une heure ou écrivez à antoine@presenceia.com.' : lang === 'de' ? 'Analyse-Limit vorübergehend erreicht. Bitte in einer Stunde erneut versuchen oder an antoine@presenceia.com schreiben.' : 'Analysis limit reached for now. Try again in an hour or write to antoine@presenceia.com.')
+        : (lang === 'fr' ? 'Erreur d\'analyse. Veuillez réessayer.' : lang === 'de' ? 'Analysefehler. Bitte erneut versuchen.' : 'Analysis error. Please try again.'))
+    } finally { stopSteps(); setLoading(false) }
   }
 
   if (result) return <ResultsPanel result={result} lang={lang} onReset={() => setResult(null)} />

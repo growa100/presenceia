@@ -1,8 +1,11 @@
-import OpenAI from 'openai'
-import Anthropic from '@anthropic-ai/sdk'
+// Présence IA visibility check, engine v2.
+// Asks the AI assistants people use (web search on, located in Switzerland) the question a real
+// customer would ask, stores the answers verbatim, then measures whether the business is named.
+import { askPlatform, platformEnabled, PLATFORM_LABELS, type GeoAnswer, type GeoSource, type PlatformId } from './geo/platforms'
+import { analyseAnswers } from './geo/analyst'
+import { findMention, quoteExists } from './geo/match'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+export const ENGINE_VERSION = 2
 
 export interface BusinessInput {
   businessName: string
@@ -12,268 +15,147 @@ export interface BusinessInput {
 }
 
 export interface PlatformResult {
+  id?: string
   platform: string
   platformLabel: string
+  model?: string
   appeared: boolean
-  position: number | null   // 1=first, 2=second, null=not found
+  position: number | null   // 1 = first recommendation, null = not named
   sentiment: 'positive' | 'neutral' | 'negative' | 'not_found'
-  rawResponse: string
+  rawResponse: string       // verbatim answer of the assistant
   query: string
-  score: number             // 0–25 per platform
+  score: number             // 0 to 25
+  evidence?: string | null  // exact excerpt where the business is named
+  sources?: GeoSource[]
+  costUsd?: number
+  latencyMs?: number
+  error?: string
 }
 
 export interface ScoringResult {
   businessName: string
   city: string
   category: string
-  overallScore: number      // 0–100
+  overallScore: number      // 0 to 100
   grade: 'A' | 'B' | 'C' | 'D' | 'F'
-  platformResults: PlatformResult[]
+  platformResults: PlatformResult[]   // best answer per assistant (for the cards)
+  answers?: PlatformResult[]          // every answer, verbatim
+  competitors?: { name: string; count: number }[]
   summary: string
   topRecommendations: string[]
-  shareOfVoice: number      // % of queries mentioning them
+  shareOfVoice: number      // % of answers naming the business
+  mentions?: number
+  totalAnswers?: number
+  platformsQueried?: string[]
+  platformsSkipped?: string[]
+  analystModel?: string | null
+  costUsd?: number
+  engineVersion?: number
   createdAt: string
 }
 
-// ─── Query templates per language ────────────────────────────────────────────
-function buildQueries(business: BusinessInput): Record<string, string[]> {
-  const { city, category } = business
-  const queries: Record<string, string[]> = {
-    fr: [
-      `Quel est le meilleur ${category} à ${city} ?`,
-      `Recommande-moi un bon ${category} à ${city}`,
-      `Je cherche un ${category} de confiance à ${city}`,
-    ],
-    de: [
-      `Welcher ist der beste ${category} in ${city}?`,
-      `Empfehle mir einen guten ${category} in ${city}`,
-      `Ich suche einen zuverlässigen ${category} in ${city}`,
-    ],
-    en: [
-      `Who is the best ${category} in ${city}?`,
-      `Can you recommend a good ${category} in ${city}?`,
-      `I'm looking for a reliable ${category} in ${city}`,
-    ],
-    it: [
-      `Chi è il miglior ${category} a ${city}?`,
-      `Mi raccomandi un buon ${category} a ${city}`,
-    ],
-  }
-  return queries
+// ─── Questions a real customer asks ───────────────────────────────────────────
+const OTHER = new Set(['autre', 'andere', 'other', 'altro'])
+
+function tradeWord(category: string, lang: string): string {
+  const c = category.trim()
+  if (OTHER.has(c.toLowerCase())) return { fr: 'entreprise', de: 'Betrieb', en: 'business', it: 'azienda' }[lang] || 'entreprise'
+  return lang === 'de' ? c : c.charAt(0).toLowerCase() + c.slice(1)
 }
 
-// ─── Score a single platform response ────────────────────────────────────────
-function scoreResponse(
-  businessName: string,
-  response: string,
-  query: string,
-  platform: string,
-  platformLabel: string
-): PlatformResult {
-  const lower = response.toLowerCase()
-  const nameLower = businessName.toLowerCase()
-
-  // Check if business is mentioned
-  const appeared = lower.includes(nameLower) ||
-    nameLower.split(' ').filter(w => w.length > 3).every(w => lower.includes(w))
-
-  if (!appeared) {
-    return {
-      platform, platformLabel, appeared: false,
-      position: null, sentiment: 'not_found',
-      rawResponse: response, query, score: 0
-    }
-  }
-
-  // Estimate position
-  const idx = lower.indexOf(nameLower)
-  const textBefore = lower.substring(0, idx)
-  const numbersBeforeMatch = (textBefore.match(/\d+\./g) || []).length
-  const position = numbersBeforeMatch === 0 ? 1 : numbersBeforeMatch + 1
-
-  // Sentiment detection
-  const positiveWords = ['excellent', 'recommande', 'meilleur', 'best', 'top', 'great',
-    'highly', 'trusted', 'professional', 'quality', 'beste', 'empfehle', 'ausgezeichnet',
-    'ottimo', 'migliore', 'vertrauenswürdig']
-  const negativeWords = ['avoid', 'poor', 'bad', 'worst', 'éviter', 'mauvais', 'schlecht']
-
-  const contextWindow = response.substring(Math.max(0, idx - 100), idx + 200).toLowerCase()
-  const hasPositive = positiveWords.some(w => contextWindow.includes(w))
-  const hasNegative = negativeWords.some(w => contextWindow.includes(w))
-
-  const sentiment = hasNegative ? 'negative' : hasPositive ? 'positive' : 'neutral'
-
-  // Score calculation (max 25 per platform)
-  let score = 0
-  score += 10  // appeared at all
-  score += position === 1 ? 10 : position === 2 ? 6 : position === 3 ? 3 : 1
-  score += sentiment === 'positive' ? 5 : sentiment === 'neutral' ? 3 : 0
-
-  return { platform, platformLabel, appeared, position, sentiment, rawResponse: response, query, score }
-}
-
-// ─── Query OpenAI GPT-4o ──────────────────────────────────────────────────────
-async function queryOpenAI(query: string): Promise<string> {
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      max_tokens: 400,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a helpful local assistant for Switzerland. Answer concisely with specific business recommendations when asked. Always include business names when recommending.'
-        },
-        { role: 'user', content: query }
-      ]
-    })
-    return response.choices[0]?.message?.content || ''
-  } catch (e) {
-    console.error('OpenAI error:', e)
-    return ''
+export function buildQueries(b: BusinessInput): [string, string] {
+  const t = tradeWord(b.category, b.language)
+  const city = b.city.trim()
+  switch (b.language) {
+    case 'de': return [`Wer ist der beste ${t} in ${city}?`, `Kannst du mir einen zuverlässigen ${t} in ${city} empfehlen?`]
+    case 'en': return [`Who is the best ${t} in ${city}?`, `Can you recommend a reliable ${t} in ${city}?`]
+    case 'it': return [`Chi è il miglior ${t} a ${city}?`, `Mi consigli un ${t} affidabile a ${city}?`]
+    default: return [`Qui est le meilleur ${t} à ${city} ?`, `Peux-tu me recommander un ${t} de confiance à ${city} ?`]
   }
 }
 
-// ─── Query Claude ─────────────────────────────────────────────────────────────
-async function queryClaude(query: string): Promise<string> {
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 400,
-      system: 'You are a helpful local assistant for Switzerland. Answer concisely with specific business recommendations when asked. Always include business names when recommending.',
-      messages: [{ role: 'user', content: query }]
-    })
-    const block = response.content[0]
-    return block.type === 'text' ? block.text : ''
-  } catch (e) {
-    console.error('Claude error:', e)
-    return ''
-  }
+// Which assistant gets which question. ChatGPT and Gemini (most used) get both.
+const PLAN: [PlatformId, 0 | 1][] = [
+  ['chatgpt', 0], ['chatgpt', 1],
+  ['gemini', 0], ['gemini', 1],
+  ['claude', 0],
+  ['grok', 1],
+  ['perplexity', 0],
+]
+
+function scoreOf(appeared: boolean, position: number | null, sentiment: PlatformResult['sentiment']): number {
+  if (!appeared) return 0
+  let s = 10
+  s += position === 1 ? 10 : position === 2 ? 6 : position === 3 ? 3 : 1
+  s += sentiment === 'positive' ? 5 : sentiment === 'neutral' ? 3 : 0
+  return s
 }
 
-// ─── Query Perplexity ─────────────────────────────────────────────────────────
-async function queryPerplexity(query: string): Promise<string> {
-  try {
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-sonar-large-128k-online',
-        messages: [
-          { role: 'system', content: 'You are a helpful local assistant for Switzerland. Provide specific business recommendations with names.' },
-          { role: 'user', content: query }
-        ],
-        max_tokens: 400
-      })
-    })
-    if (!response.ok) return ''
-    const data = await response.json()
-    return data.choices?.[0]?.message?.content || ''
-  } catch (e) {
-    console.error('Perplexity error:', e)
-    return ''
-  }
-}
-
-// ─── Main scoring function ────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 export async function runVisibilityCheck(business: BusinessInput): Promise<ScoringResult> {
   const queries = buildQueries(business)
+  const plan = PLAN.filter(([p]) => platformEnabled(p))
+  const skipped = (Object.keys(PLATFORM_LABELS) as PlatformId[]).filter(p => !platformEnabled(p))
+  if (!plan.length) throw new Error('No AI platform configured')
 
-  // Pick queries for the selected language + always run English
-  const langQueries = queries[business.language] || queries['fr']
-  const enQueries = business.language !== 'en' ? queries['en'].slice(0, 1) : []
-  const allQueries = [...langQueries, ...enQueries]
+  const counters: Record<string, number> = {}
+  const raw: GeoAnswer[] = await Promise.all(plan.map(([p, qi]) => {
+    counters[p] = (counters[p] || 0) + 1
+    return askPlatform(`${p}-${counters[p]}`, p, queries[qi], business.city)
+  }))
 
-  const platformResults: PlatformResult[] = []
+  const ok = raw.filter(a => a.text && !a.error)
+  if (!ok.length) throw new Error('All AI platforms failed')
 
-  // Run all queries across platforms in parallel (batched)
-  const mainQuery = allQueries[0]
-  const secondQuery = allQueries[1] || allQueries[0]
+  const analyst = await analyseAnswers(business, ok)
 
-  const [gptRes1, gptRes2, claudeRes1, claudeRes2] = await Promise.all([
-    queryOpenAI(mainQuery),
-    queryOpenAI(secondQuery),
-    queryClaude(mainQuery),
-    queryClaude(secondQuery),
-  ])
-
-  // GPT-4o results
-  platformResults.push(scoreResponse(business.businessName, gptRes1, mainQuery, 'chatgpt', 'ChatGPT (GPT-4o)'))
-  platformResults.push(scoreResponse(business.businessName, gptRes2, secondQuery, 'chatgpt_2', 'ChatGPT (GPT-4o)'))
-
-  // Claude results
-  platformResults.push(scoreResponse(business.businessName, claudeRes1, mainQuery, 'claude', 'Claude (Anthropic)'))
-  platformResults.push(scoreResponse(business.businessName, claudeRes2, secondQuery, 'claude_2', 'Claude (Anthropic)'))
-
-  // Perplexity (if key available)
-  if (process.env.PERPLEXITY_API_KEY) {
-    const perpRes = await queryPerplexity(mainQuery)
-    platformResults.push(scoreResponse(business.businessName, perpRes, mainQuery, 'perplexity', 'Perplexity AI'))
-  }
-
-  // ─── Calculate overall score ─────────────────────────────────────────────
-  const maxPossibleScore = platformResults.length * 25
-  const totalRaw = platformResults.reduce((sum, r) => sum + r.score, 0)
-  const overallScore = Math.min(100, Math.round((totalRaw / maxPossibleScore) * 100))
-
-  // Share of voice
-  const appeared = platformResults.filter(r => r.appeared).length
-  const shareOfVoice = Math.round((appeared / platformResults.length) * 100)
-
-  // Grade
-  const grade = overallScore >= 80 ? 'A'
-    : overallScore >= 60 ? 'B'
-    : overallScore >= 40 ? 'C'
-    : overallScore >= 20 ? 'D'
-    : 'F'
-
-  // Summary
-  const summaryMap: Record<string, Record<string, string>> = {
-    fr: {
-      F: `${business.businessName} n'apparaît dans aucune réponse des assistants IA analysés. Vos clients potentiels qui utilisent ChatGPT, Claude ou Perplexity pour trouver un ${business.category} à ${business.city} ne vous trouveront pas.`,
-      D: `${business.businessName} a une présence IA très limitée. Vous apparaissez dans quelques réponses, mais vous êtes loin d'être la recommandation principale.`,
-      C: `${business.businessName} est parfois mentionné par les IA, mais pas de manière constante. Vos concurrents ont probablement une meilleure visibilité.`,
-      B: `${business.businessName} a une bonne présence IA. Vous apparaissez régulièrement dans les recommandations, mais il y a encore de la marge pour devenir la référence.`,
-      A: `${business.businessName} est excellemment positionné sur les IA. Vous êtes régulièrement recommandé en premier.`,
-    },
-    en: {
-      F: `${business.businessName} does not appear in any AI assistant responses analyzed. Potential clients using ChatGPT, Claude or Perplexity to find a ${business.category} in ${business.city} will not find you.`,
-      D: `${business.businessName} has very limited AI presence. You appear in a few responses but are far from being the primary recommendation.`,
-      C: `${business.businessName} is occasionally mentioned by AI, but not consistently. Your competitors likely have better visibility.`,
-      B: `${business.businessName} has good AI presence. You appear regularly in recommendations, but there's still room to become the top reference.`,
-      A: `${business.businessName} is excellently positioned on AI. You are regularly recommended first.`,
+  const answers: PlatformResult[] = raw.map(a => {
+    const det = findMention(business.businessName, a.text)
+    const an = analyst?.answers.find(x => x.id === a.id)
+    let appeared: boolean
+    let evidence: string | null = det.matchedText
+    if (an) {
+      // The analyst decides, but only with evidence that really exists in the answer.
+      const verified = !!an.quote && quoteExists(an.quote, a.text)
+      appeared = an.mentioned && (verified || det.mentioned)
+      if (appeared && verified) evidence = an.quote
+    } else {
+      appeared = det.mentioned
     }
-  }
+    const position = appeared ? (an?.rank ?? det.position ?? 1) : null
+    const sentiment: PlatformResult['sentiment'] = appeared
+      ? (an && an.sentiment !== 'not_found' ? an.sentiment : 'neutral')
+      : 'not_found'
+    return {
+      id: a.id,
+      platform: a.platform,
+      platformLabel: a.platformLabel,
+      model: a.model,
+      appeared,
+      position,
+      sentiment,
+      rawResponse: a.text,
+      query: a.query,
+      score: a.error ? 0 : scoreOf(appeared, position, sentiment),
+      evidence: appeared ? evidence : null,
+      sources: a.sources,
+      costUsd: a.costUsd,
+      latencyMs: a.latencyMs,
+      ...(a.error ? { error: a.error } : {}),
+    }
+  })
 
-  const lang = business.language === 'de' || business.language === 'it' ? 'en' : business.language
-  const summary = (summaryMap[lang] || summaryMap['en'])[grade]
+  const scored = answers.filter(a => !a.error)
+  const mentions = scored.filter(a => a.appeared).length
+  const overallScore = Math.min(100, Math.round((scored.reduce((s, r) => s + r.score, 0) / (scored.length * 25)) * 100))
+  const shareOfVoice = Math.round((mentions / scored.length) * 100)
+  const grade = overallScore >= 80 ? 'A' : overallScore >= 60 ? 'B' : overallScore >= 40 ? 'C' : overallScore >= 20 ? 'D' : 'F'
 
-  // Recommendations
-  const recs: Record<string, string[]> = {
-    fr: [
-      `Optimisez votre fiche Google Business Profile avec des descriptions détaillées en ${business.language === 'fr' ? 'français' : 'allemand et français'}`,
-      `Créez du contenu structuré (FAQ, pages de services) que les IA peuvent lire et citer`,
-      `Inscrivez-vous sur local.ch, search.ch et les annuaires professionnels suisses`,
-      `Collectez et répondez à vos avis Google — les IA intègrent le sentiment des avis`,
-      `Ajoutez des données structurées Schema.org à votre site web`,
-      `Faites-vous citer dans la presse locale et les associations professionnelles cantonales`,
-    ],
-    en: [
-      `Optimize your Google Business Profile with detailed descriptions in multiple languages`,
-      `Create structured content (FAQ pages, service pages) that AI can read and cite`,
-      `Register on local.ch, search.ch and Swiss professional directories`,
-      `Collect and respond to Google reviews — AI incorporates review sentiment`,
-      `Add Schema.org structured data markup to your website`,
-      `Get cited in local press and cantonal professional associations`,
-    ]
-  }
+  const queried = Array.from(new Set(scored.map(a => a.platformLabel)))
+  const summary = analyst?.diagnosis || templateSummary(business, grade, queried, mentions, scored.length)
+  const topRecommendations = analyst?.actions?.length === 3 ? analyst.actions : templateRecs(business.language)
 
-  const topRecommendations = (recs[lang] || recs['en']).slice(0, 4)
-
-  // Deduplicate platform results for display (merge same platform)
-  const dedupedPlatforms = deduplicatePlatforms(platformResults)
+  const costUsd = raw.reduce((s, a) => s + a.costUsd, 0) + (analyst?.costUsd || 0)
 
   return {
     businessName: business.businessName,
@@ -281,22 +163,64 @@ export async function runVisibilityCheck(business: BusinessInput): Promise<Scori
     category: business.category,
     overallScore,
     grade,
-    platformResults: dedupedPlatforms,
+    platformResults: bestPerPlatform(answers),
+    answers,
+    competitors: analyst?.competitors || [],
     summary,
     topRecommendations,
     shareOfVoice,
-    createdAt: new Date().toISOString()
+    mentions,
+    totalAnswers: scored.length,
+    platformsQueried: queried,
+    platformsSkipped: skipped.map(p => PLATFORM_LABELS[p]),
+    analystModel: analyst?.model || null,
+    costUsd: Math.round(costUsd * 10000) / 10000,
+    engineVersion: ENGINE_VERSION,
+    createdAt: new Date().toISOString(),
   }
 }
 
-function deduplicatePlatforms(results: PlatformResult[]): PlatformResult[] {
+function bestPerPlatform(results: PlatformResult[]): PlatformResult[] {
   const map = new Map<string, PlatformResult>()
   for (const r of results) {
-    const key = r.platform.replace(/_\d+$/, '')
-    const existing = map.get(key)
-    if (!existing || r.score > existing.score) {
-      map.set(key, { ...r, platform: key })
-    }
+    const cur = map.get(r.platform)
+    if (!cur || (cur.error && !r.error) || (!r.error && r.score > cur.score)) map.set(r.platform, r)
   }
   return Array.from(map.values())
+}
+
+// ─── Fallback texts when the analyst call is unavailable ──────────────────────
+function templateSummary(b: BusinessInput, grade: string, platforms: string[], mentions: number, total: number): string {
+  const list = platforms.join(', ')
+  if (b.language === 'de') {
+    return mentions === 0
+      ? `${b.businessName} wird in keiner der ${total} Antworten genannt (${list}). Kunden, die dort nach einem ${b.category} in ${b.city} fragen, finden Sie nicht.`
+      : `${b.businessName} wird in ${mentions} von ${total} Antworten genannt (${list}). Note ${grade}.`
+  }
+  if (b.language === 'en') {
+    return mentions === 0
+      ? `${b.businessName} is not named in any of the ${total} answers (${list}). Customers asking these assistants for a ${b.category} in ${b.city} will not find you.`
+      : `${b.businessName} is named in ${mentions} of ${total} answers (${list}). Grade ${grade}.`
+  }
+  return mentions === 0
+    ? `${b.businessName} n'est cité dans aucune des ${total} réponses (${list}). Les clients qui demandent à ces assistants un ${b.category.toLowerCase()} à ${b.city} ne vous trouvent pas.`
+    : `${b.businessName} est cité dans ${mentions} réponses sur ${total} (${list}). Note ${grade}.`
+}
+
+function templateRecs(lang: string): string[] {
+  if (lang === 'de') return [
+    'Vervollständigen Sie Ihr Google-Unternehmensprofil mit Leistungen, Öffnungszeiten und Fotos',
+    'Tragen Sie Ihren Betrieb in local.ch und search.ch mit identischen Kontaktdaten ein',
+    'Sammeln Sie regelmässig Google-Bewertungen und beantworten Sie diese',
+  ]
+  if (lang === 'en') return [
+    'Complete your Google Business Profile with services, opening hours and photos',
+    'List your business on local.ch and search.ch with identical contact details',
+    'Collect Google reviews regularly and reply to them',
+  ]
+  return [
+    'Complétez votre fiche Google Business Profile : services, horaires, photos',
+    'Inscrivez-vous sur local.ch et search.ch avec des coordonnées identiques partout',
+    'Collectez régulièrement des avis Google et répondez-y',
+  ]
 }
