@@ -5,7 +5,7 @@
  * the site we built for them. When they look us up, this page has one job:
  * confirm that we are real, Swiss, and that saying "oui" is simple and
  * risk-free. Prices here MUST stay aligned with the outreach sequence
- * (site CHF 99, + visibilité IA CHF 149, tout compris CHF 229).
+ * (see lib/plans.ts for prices: site 99, visibilité IA 249, + assistant 390; 12 months / yearly / no commitment).
  */
 import type { Lang } from './i18n'
 
@@ -43,7 +43,7 @@ const fr = {
     received: 'Vous avez reçu un email d\'Antoine avec votre site ?',
     receivedLink: 'Activer mon site',
   },
-  trust: ['Basé en Suisse, à Sion', 'Mesure réelle sur ChatGPT, Claude, Gemini et Perplexity', 'Données protégées (nLPD / RGPD)', 'Sans engagement', 'Réponse sous 24 h'],
+  trust: ['Basé en Suisse, à Sion', 'Mesure réelle sur ChatGPT, Claude, Gemini et Perplexity', 'Données protégées (nLPD / RGPD)', 'Garantie 90 jours', 'Réponse sous 24 h'],
   how: {
     eyebrow: 'Comment ça marche',
     title: 'Trois étapes, aucune technique de votre côté.',
@@ -73,17 +73,17 @@ const fr = {
   },
   pricing: {
     eyebrow: 'Tarifs',
-    title: 'Des offres claires, sans engagement.',
-    sub: 'Mensuel, sans engagement, résiliable en tout temps. Prix en francs suisses.',
+    title: 'Des offres claires, des résultats mesurés.',
+    sub: 'Trois façons de payer : 12 mois avec mise en place offerte, à l\'année avec 2 mois offerts, ou sans engagement. Prix en francs suisses.',
     secure: 'Paiement sécurisé par Stripe (carte, Apple Pay, Google Pay). Vous gérez votre abonnement et vos factures dans votre espace client.',
     mo: '/ mois',
     popular: 'Le plus choisi',
     plans: [
-      { name: 'Site web', price: 99, desc: 'L\'essentiel, bien fait.', features: ['Site professionnel complet', 'Nom de domaine inclus', 'Hébergement suisse + SSL', 'Modifications illimitées', 'Référencement local', 'En ligne cette semaine'], cta: 'Activer mon site' },
-      { name: 'Site + Visibilité IA', price: 149, popular: true, desc: 'Pour être recommandé par ChatGPT et Google.', features: ['Tout le pack Site web, plus :', 'Structure lisible par les IA (ChatGPT, Perplexity, Gemini)', 'Fiche Google Business optimisée', 'Inscription aux annuaires locaux', 'Rapport mensuel de visibilité IA'], cta: 'Choisir cette offre' },
-      { name: 'Tout compris', price: 229, desc: 'Site, visibilité IA et assistant téléphonique.', features: ['Tout le pack Site + Visibilité IA, plus :', 'Assistant qui répond quand vous êtes occupé', 'Résumé WhatsApp de chaque appel', 'Prise de rendez-vous et rappels', 'Numéro dédié inclus'], cta: 'Choisir Tout compris' },
+      { key: 'site', name: 'Site web', desc: 'L\'essentiel, bien fait.', features: ['Site professionnel complet', 'Nom de domaine inclus', 'Hébergement suisse + SSL', 'Modifications illimitées', 'Référencement local', 'Lisible par les IA'], cta: 'Activer mon site' },
+      { key: 'visibility', name: 'Visibilité IA', popular: true, desc: 'Pour être trouvé sur Google et recommandé par ChatGPT.', features: ['Mise en place : fiche Google, annuaires, données structurées, FAQ', 'Analyse mensuelle sur 4 IA, avec rapport', '4 publications Google par mois', 'Un nouveau contenu par mois', 'Suivi des annuaires et des avis', 'Votre site inclus si besoin'], cta: 'Démarrer' },
+      { key: 'complete', name: 'Visibilité IA + Assistant', desc: 'Visibilité IA et un assistant qui répond à vos appels.', features: ['Tout Visibilité IA, plus :', 'Assistant qui répond quand vous êtes occupé', 'Résumé WhatsApp de chaque appel', 'Prise de rendez-vous et rappels', '2 contenus par mois au lieu d\'un'], cta: 'Démarrer' },
     ],
-    enterprise: 'Entreprise établie avec un site existant ? Programme de visibilité IA sur mesure dès CHF 299 / mois.',
+    enterprise: 'Entreprise établie avec un site existant ? Programme de visibilité IA sur mesure dès CHF 690 / mois.',
     enterpriseCta: 'Parlons-en',
   },
   founder: {
@@ -103,7 +103,7 @@ const fr = {
       { q: 'Que se passe-t-il si je dis oui ?', a: 'Nous vous répondons sous 24 h. Nous choisissons ensemble le nom de domaine, vous nous envoyez votre logo, vos photos et vos corrections, et le site est en ligne sous 3 à 5 jours ouvrés. Vous ne touchez à rien de technique.' },
       { q: 'Le nom de domaine m\'appartient-il ?', a: 'Oui. Il est enregistré au nom de votre entreprise. Si un jour vous partez, vous le gardez.' },
       { q: 'Puis-je modifier le contenu ?', a: 'Autant que vous voulez, c\'est compris. Un email avec la modification, et elle est en ligne sous 48 h.' },
-      { q: 'Y a-t-il un engagement ou des frais d\'installation ?', a: 'Non. L\'abonnement est mensuel, sans frais d\'installation, et vous pouvez l\'arrêter en tout temps.' },
+      { q: 'Y a-t-il un engagement ou des frais d\'installation ?', a: 'Vous choisissez. Sur 12 mois ou à l\'année, la mise en place est offerte. Sans engagement, vous résiliez chaque mois et la mise en place Visibilité IA coûte CHF 490. Dans tous les cas, garantie 90 jours : si rien ne progresse de façon mesurable, le 4e mois est offert.' },
       { q: 'J\'ai déjà un site. Est-ce utile pour moi ?', a: 'Deux options : nous remplaçons votre site par le nôtre, ou nous travaillons uniquement votre visibilité sur Google et dans les réponses des IA à partir de votre site existant.' },
       { q: 'Travaillez-vous en dehors de la Suisse ?', a: 'Oui. Nous travaillons avec des entreprises en Suisse, en France et à l\'international, en français, en allemand et en anglais, avec le nom de domaine adapté à votre pays (.ch, .fr, .com, .de…).' },
     ],
@@ -148,7 +148,7 @@ const de: typeof fr = {
     received: 'Haben Sie von Antoine eine E-Mail mit Ihrer Website erhalten?',
     receivedLink: 'Website aktivieren',
   },
-  trust: ['Mit Sitz in der Schweiz, in Sitten (Sion)', 'Echte Messung bei ChatGPT, Claude, Gemini und Perplexity', 'Datenschutz (DSG / DSGVO)', 'Ohne Vertragsbindung', 'Antwort innert 24 h'],
+  trust: ['Mit Sitz in der Schweiz, in Sitten (Sion)', 'Echte Messung bei ChatGPT, Claude, Gemini und Perplexity', 'Datenschutz (DSG / DSGVO)', '90-Tage-Garantie', 'Antwort innert 24 h'],
   how: {
     eyebrow: 'So funktioniert es',
     title: 'Drei Schritte, keine Technik auf Ihrer Seite.',
@@ -178,17 +178,17 @@ const de: typeof fr = {
   },
   pricing: {
     eyebrow: 'Preise',
-    title: 'Klare Angebote, ohne Vertragsbindung.',
-    sub: 'Monatlich, ohne Vertragsbindung, jederzeit kündbar. Preise in Schweizer Franken.',
+    title: 'Klare Angebote, messbare Resultate.',
+    sub: 'Drei Zahlungsarten: 12 Monate mit geschenkter Einrichtung, jährlich mit 2 Gratismonaten, oder ohne Bindung. Preise in Schweizer Franken.',
     secure: 'Sichere Zahlung über Stripe (Karte, Apple Pay, Google Pay). Abonnement und Rechnungen verwalten Sie im Kundenbereich.',
     mo: '/ Monat',
     popular: 'Am häufigsten gewählt',
     plans: [
-      { name: 'Website', price: 99, desc: 'Das Wesentliche, gut gemacht.', features: ['Komplette professionelle Website', 'Domain inklusive', 'Schweizer Hosting + SSL', 'Unbegrenzte Änderungen', 'Lokale Suchmaschinenoptimierung', 'Diese Woche online'], cta: 'Website aktivieren' },
-      { name: 'Website + KI-Sichtbarkeit', price: 149, popular: true, desc: 'Um von ChatGPT und Google empfohlen zu werden.', features: ['Alles aus Website, plus:', 'Für KI lesbare Struktur (ChatGPT, Perplexity, Gemini)', 'Optimiertes Google Business Profil', 'Eintrag in lokale Verzeichnisse', 'Monatlicher KI-Sichtbarkeitsbericht'], cta: 'Dieses Angebot wählen' },
-      { name: 'Alles inklusive', price: 229, desc: 'Website, KI-Sichtbarkeit und Telefonassistent.', features: ['Alles aus Website + KI-Sichtbarkeit, plus:', 'Assistent, der abnimmt, wenn Sie beschäftigt sind', 'WhatsApp-Zusammenfassung jedes Anrufs', 'Terminvereinbarung und Rückrufe', 'Eigene Nummer inklusive'], cta: 'Alles inklusive wählen' },
+      { key: 'site', name: 'Website', desc: 'Das Wesentliche, gut gemacht.', features: ['Komplette professionelle Website', 'Domain inklusive', 'Schweizer Hosting + SSL', 'Unbegrenzte Änderungen', 'Lokale Suchmaschinenoptimierung', 'Für KI lesbar'], cta: 'Website aktivieren' },
+      { key: 'visibility', name: 'KI-Sichtbarkeit', popular: true, desc: 'Um auf Google gefunden und von ChatGPT empfohlen zu werden.', features: ['Einrichtung: Google-Profil, Verzeichnisse, strukturierte Daten, FAQ', 'Monatliche Analyse bei 4 KI, mit Bericht', '4 Google-Beiträge pro Monat', 'Ein neuer Inhalt pro Monat', 'Kontrolle der Verzeichnisse und Bewertungen', 'Ihre Website inklusive, falls nötig'], cta: 'Starten' },
+      { key: 'complete', name: 'KI-Sichtbarkeit + Assistent', desc: 'KI-Sichtbarkeit und ein Assistent, der Ihre Anrufe beantwortet.', features: ['Alles aus KI-Sichtbarkeit, plus:', 'Assistent, der abnimmt, wenn Sie beschäftigt sind', 'WhatsApp-Zusammenfassung jedes Anrufs', 'Terminvereinbarung und Rückrufe', '2 Inhalte pro Monat statt einem'], cta: 'Starten' },
     ],
-    enterprise: 'Etabliertes Unternehmen mit bestehender Website? Massgeschneidertes KI-Sichtbarkeitsprogramm ab CHF 299 / Monat.',
+    enterprise: 'Etabliertes Unternehmen mit bestehender Website? Massgeschneidertes KI-Sichtbarkeitsprogramm ab CHF 690 / Monat.',
     enterpriseCta: 'Sprechen wir darüber',
   },
   founder: {
@@ -208,7 +208,7 @@ const de: typeof fr = {
       { q: 'Was passiert, wenn ich Ja sage?', a: 'Wir antworten innert 24 h. Wir wählen gemeinsam die Domain, Sie schicken uns Logo, Fotos und Korrekturen, und die Website ist in 3 bis 5 Arbeitstagen online. Sie müssen nichts Technisches tun.' },
       { q: 'Gehört mir die Domain?', a: 'Ja. Sie wird auf den Namen Ihres Unternehmens registriert. Falls Sie eines Tages gehen, behalten Sie sie.' },
       { q: 'Kann ich den Inhalt ändern?', a: 'So oft Sie wollen, das ist inklusive. Eine E-Mail mit der Änderung, und sie ist innert 48 h online.' },
-      { q: 'Gibt es eine Vertragsbindung oder Einrichtungsgebühren?', a: 'Nein. Das Abo ist monatlich, ohne Einrichtungsgebühr, und Sie können es jederzeit beenden.' },
+      { q: 'Gibt es eine Vertragsbindung oder Einrichtungsgebühren?', a: 'Sie wählen. Bei 12 Monaten oder jährlicher Zahlung ist die Einrichtung geschenkt. Ohne Bindung kündigen Sie monatlich, die Einrichtung KI-Sichtbarkeit kostet CHF 490. In jedem Fall gilt die 90-Tage-Garantie: Wenn sich nichts messbar verbessert, ist der 4. Monat geschenkt.' },
       { q: 'Ich habe bereits eine Website. Ist das für mich sinnvoll?', a: 'Zwei Möglichkeiten: Wir ersetzen Ihre Website durch unsere, oder wir arbeiten nur an Ihrer Sichtbarkeit bei Google und in den Antworten der KI, ausgehend von Ihrer bestehenden Website.' },
       { q: 'Arbeiten Sie auch ausserhalb der Schweiz?', a: 'Ja. Wir arbeiten mit Unternehmen in der Schweiz, in Deutschland, Österreich, Frankreich und international, auf Deutsch, Französisch und Englisch, mit der passenden Domain für Ihr Land (.ch, .de, .at, .com…).' },
     ],
@@ -253,7 +253,7 @@ const en: typeof fr = {
     received: 'Did Antoine email you with your website?',
     receivedLink: 'Activate my site',
   },
-  trust: ['Based in Sion, Switzerland', 'Real measurement on ChatGPT, Claude, Gemini and Perplexity', 'Data protected (nFADP / GDPR)', 'No commitment', 'Reply within 24 h'],
+  trust: ['Based in Sion, Switzerland', 'Real measurement on ChatGPT, Claude, Gemini and Perplexity', 'Data protected (nFADP / GDPR)', '90-day guarantee', 'Reply within 24 h'],
   how: {
     eyebrow: 'How it works',
     title: 'Three steps, nothing technical on your side.',
@@ -283,17 +283,17 @@ const en: typeof fr = {
   },
   pricing: {
     eyebrow: 'Pricing',
-    title: 'Clear offers, no commitment.',
-    sub: 'Monthly, no commitment, cancel anytime. Prices in Swiss francs.',
+    title: 'Clear offers, measured results.',
+    sub: 'Three ways to pay: 12 months with free set-up, yearly with 2 months free, or no commitment. Prices in Swiss francs.',
     secure: 'Secure payment by Stripe (card, Apple Pay, Google Pay). You manage your subscription and invoices in your client area.',
     mo: '/ month',
     popular: 'Most chosen',
     plans: [
-      { name: 'Website', price: 99, desc: 'The essentials, done well.', features: ['Complete professional website', 'Domain name included', 'Swiss hosting + SSL', 'Unlimited changes', 'Local search optimisation', 'Live this week'], cta: 'Activate my site' },
-      { name: 'Website + AI visibility', price: 149, popular: true, desc: 'To be recommended by ChatGPT and Google.', features: ['Everything in Website, plus:', 'AI-readable structure (ChatGPT, Perplexity, Gemini)', 'Optimised Google Business profile', 'Listing in local directories', 'Monthly AI visibility report'], cta: 'Choose this plan' },
-      { name: 'All inclusive', price: 229, desc: 'Website, AI visibility and phone assistant.', features: ['Everything in Website + AI visibility, plus:', 'Assistant that answers when you are busy', 'WhatsApp summary of every call', 'Appointment booking and callbacks', 'Dedicated number included'], cta: 'Choose All inclusive' },
+      { key: 'site', name: 'Website', desc: 'The essentials, done well.', features: ['Complete professional website', 'Domain name included', 'Swiss hosting + SSL', 'Unlimited changes', 'Local search optimisation', 'Readable by AI'], cta: 'Activate my site' },
+      { key: 'visibility', name: 'AI visibility', popular: true, desc: 'To be found on Google and recommended by ChatGPT.', features: ['Set-up: Google profile, directories, structured data, FAQ', 'Monthly analysis on 4 AIs, with report', '4 Google posts a month', 'One new piece of content a month', 'Directories and reviews follow-up', 'Your website included if needed'], cta: 'Get started' },
+      { key: 'complete', name: 'AI visibility + Assistant', desc: 'AI visibility and an assistant that answers your calls.', features: ['Everything in AI visibility, plus:', 'Assistant that answers when you are busy', 'WhatsApp summary of every call', 'Appointment booking and callbacks', '2 pieces of content a month instead of one'], cta: 'Get started' },
     ],
-    enterprise: 'Established business with an existing site? Tailored AI visibility programme from CHF 299 / month.',
+    enterprise: 'Established business with an existing site? Tailored AI visibility programme from CHF 690 / month.',
     enterpriseCta: 'Let\'s talk',
   },
   founder: {
@@ -313,7 +313,7 @@ const en: typeof fr = {
       { q: 'What happens if I say yes?', a: 'We reply within 24 h. We choose the domain name together, you send us your logo, photos and corrections, and the site is live within 3 to 5 working days. You touch nothing technical.' },
       { q: 'Do I own the domain name?', a: 'Yes. It is registered in your company\'s name. If you ever leave, you keep it.' },
       { q: 'Can I change the content?', a: 'As much as you like, it is included. One email with the change and it is live within 48 h.' },
-      { q: 'Is there a commitment or a setup fee?', a: 'No. The subscription is monthly, with no setup fee, and you can stop it at any time.' },
+      { q: 'Is there a commitment or a setup fee?', a: 'Your choice. On 12 months or paid yearly, set-up is included. Without commitment you cancel any month and the AI visibility set-up costs CHF 490. Either way, 90-day guarantee: if nothing improves measurably, the 4th month is free.' },
       { q: 'I already have a website. Is this useful for me?', a: 'Two options: we replace your site with ours, or we work only on your visibility on Google and in AI answers, starting from your existing site.' },
       { q: 'Do you work outside Switzerland?', a: 'Yes. We work with businesses in Switzerland, across Europe and internationally, in English, French and German, with the right domain for your country (.com, .ch, .fr, .co.uk…).' },
     ],

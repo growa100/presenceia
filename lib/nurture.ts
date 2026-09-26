@@ -1,12 +1,13 @@
-// After the free analysis: 3 emails (J+2, J+5, J+10) that lead to the GEO Boost, then a monthly
+// After the free analysis: 3 emails (J+2, J+5, J+10) that lead to Visibilité IA (the core offer), then a monthly
 // re-analysis for every lead who has not opted out. Run by Vercel crons (app/api/cron/*).
-// Never for opted-out leads or for clients who already bought (Boost or subscription).
+// Never for opted-out leads or for clients who already bought (subscription, or a set-up bought on request).
 import { supabaseAdmin } from './supabase'
 import { sendMail } from './mailer'
 import { E, emailShell, mailLang, type MailLang } from './email-layout'
 import { bookingFor } from './links'
 import { magicUrl, unsubscribeToken } from './checker-auth'
-import { BOOST_COPY, PLANS } from './plans'
+import { OFFER, offerPitch, offerUrl } from './plans'
+import { founderOpen } from './stripe'
 import { runVisibilityCheck, ENGINE_VERSION, type BusinessInput, type ScoringResult } from './scoring-engine'
 import { normalize, normalizeName } from './geo/match'
 import { buildReportEmail } from './report-email'
@@ -21,11 +22,8 @@ export const NURTURE_START = process.env.NURTURE_START || '2026-09-27T00:00:00Z'
 export function unsubscribeUrl(base: string, email: string): string {
   return `${base}/api/client/unsubscribe?t=${encodeURIComponent(unsubscribeToken(email))}`
 }
-export function boostUrl(base: string, lang: string): string {
-  return `${base}/api/stripe/checkout?plan=boost&lang=${lang}`
-}
 
-type Ctx = { email: string; lang: MailLang; base: string; r: ScoringResult }
+type Ctx = { email: string; lang: MailLang; base: string; r: ScoringResult; founder: boolean }
 
 const joinNames = (n: string[], lang: MailLang) =>
   n.length <= 1 ? (n[0] || '') : `${n.slice(0, -1).join(', ')} ${lang === 'de' ? 'und' : lang === 'en' ? 'and' : 'et'} ${n.at(-1)}`
@@ -37,7 +35,8 @@ function content(step: number, c: Ctx) {
   const mentions = r.mentions ?? 0
   const comps = (r.competitors || []).slice(0, 3).map(x => x.name)
   const srcs = aggregateSources((r.answers || r.platformResults).filter(a => !a.error), 4).map(s => s.domain)
-  const B = BOOST_COPY[lang]
+  const O = OFFER[lang]
+  const P = offerPitch(lang, c.founder)
   const fr = lang === 'fr', de = lang === 'de'
   if (step === 1) {
     const who = comps.length ? joinNames(comps, lang) : null
@@ -54,11 +53,11 @@ function content(step: number, c: Ctx) {
   if (step === 2) {
     return {
       subject: fr ? `${b} : ce que nous changeons concrètement` : de ? `${b}: was wir konkret ändern` : `${b}: what we change, concretely`,
-      title: B.tagline,
+      title: O.tagline,
       paras: [
-        fr ? 'Le GEO Boost, c\'est un travail précis, en deux semaines :' : de ? 'Der GEO Boost ist präzise Arbeit, in zwei Wochen:' : 'The GEO Boost is precise work, in two weeks:',
+        fr ? 'Visibilité IA, c\'est un travail précis : deux semaines de mise en place, puis un suivi chaque mois.' : de ? 'KI-Sichtbarkeit ist präzise Arbeit: zwei Wochen Einrichtung, danach Begleitung jeden Monat.' : 'AI visibility is precise work: two weeks of set-up, then follow-up every month.',
       ],
-      list: B.items,
+      list: [...O.setup, ...O.monthly.slice(0, 4)],
     }
   }
   return {
@@ -66,7 +65,7 @@ function content(step: number, c: Ctx) {
     title: fr ? 'Trois façons d\'avancer' : de ? 'Drei Wege, weiterzukommen' : 'Three ways forward',
     paras: [
       fr ? '1. Le faire vous-même : les 3 actions de votre rapport sont un bon début.' : de ? '1. Selbst machen: Die 3 Massnahmen aus Ihrem Bericht sind ein guter Anfang.' : '1. Do it yourself: the 3 actions in your report are a good start.',
-      fr ? `2. Nous le confier : le GEO Boost, CHF ${PLANS.boost.chf}, une seule fois.` : de ? `2. Uns beauftragen: der GEO Boost, CHF ${PLANS.boost.chf}, einmalig.` : `2. Hand it to us: the GEO Boost, CHF ${PLANS.boost.chf}, one-time.`,
+      fr ? `2. Nous le confier : Visibilité IA, ${P.price}. ${O.guarantee}` : de ? `2. Uns beauftragen: KI-Sichtbarkeit, ${P.price}. ${O.guarantee}` : `2. Hand it to us: AI visibility, ${P.price}. ${O.guarantee}`,
       fr ? '3. En parler 20 minutes avec moi, sans engagement.' : de ? '3. 20 Minuten mit mir darüber sprechen, unverbindlich.' : '3. Talk it through with me for 20 minutes, no commitment.',
       fr ? 'Je ne vous relancerai plus. Vous recevrez seulement votre analyse mensuelle.' : de ? 'Ich melde mich nicht mehr, Sie erhalten nur noch Ihre monatliche Analyse.' : 'I will not follow up again. You will only get your monthly analysis.',
     ],
@@ -75,7 +74,8 @@ function content(step: number, c: Ctx) {
 
 export async function sendNurture(step: number, c: Ctx): Promise<boolean> {
   const x = content(step, c)
-  const B = BOOST_COPY[c.lang]
+  const P = offerPitch(c.lang, c.founder)
+  const url = offerUrl(c.base, c.lang)
   const unsub = unsubscribeUrl(c.base, c.email)
   const space = magicUrl(c.base, c.email, '7d')
   const book = bookingFor(c.email)
@@ -84,11 +84,11 @@ export async function sendNurture(step: number, c: Ctx): Promise<boolean> {
     : { space: 'Revoir mon analyse', talk: 'En parler 20 minutes', unsub: 'Ne plus recevoir ces conseils' }
   const list = 'list' in x && x.list ? `<ul style="padding-left:18px;margin:0 0 14px;line-height:1.7">${x.list.map(i => `<li>${i.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</li>`).join('')}</ul>` : ''
   const body = E.title(x.title) + x.paras.map(p => E.p(p)).join('') + list +
-    E.box(`<p style="margin:0 0 6px;font-weight:600;color:#0A0A0F">${B.title} · ${B.price}</p><p style="margin:0;line-height:1.6">${B.tagline}</p>${E.button(boostUrl(c.base, c.lang), B.cta)}`) +
+    E.box(`<p style="margin:0 0 6px;font-weight:600;color:#0A0A0F">${OFFER[c.lang].title} · ${P.price}</p><p style="margin:0;line-height:1.6">${OFFER[c.lang].tagline} ${OFFER[c.lang].guarantee}</p>${E.button(url, P.cta)}`) +
     `<p style="margin:16px 0 0;font-size:14px;line-height:1.8">${E.link(book, L.talk)} · ${E.link(space, L.space)}</p>` +
     E.signature(c.lang) + `<p style="margin:18px 0 0;font-size:12px">${E.link(unsub, L.unsub)}</p>`
   const text = [x.title, '', ...x.paras, ...('list' in x && x.list ? ['', ...x.list.map(i => `- ${i}`)] : []), '',
-    `${B.cta} (${B.price}) : ${boostUrl(c.base, c.lang)}`, `${L.talk} : ${book}`, `${L.space} : ${space}`, '',
+    `${P.cta} (${P.price}) : ${url}`, `${L.talk} : ${book}`, `${L.space} : ${space}`, '',
     'Antoine Pury, Présence IA', 'antoine@presenceia.com', '', `${L.unsub} : ${unsub}`].join('\n')
   return sendMail({
     to: c.email, subject: x.subject, text,
@@ -106,6 +106,7 @@ export async function runNurture(base: string, max = 80): Promise<{ sent: number
     .select('email, language, nurture_step, boost_paid_at, subscription_status, stage')
     .eq('marketing_opt_out', false).lt('nurture_step', NURTURE_DAYS.length).limit(1000)
   let sent = 0, checked = 0
+  const founder = await founderOpen()
   for (const l of (leads || []) as LeadRow[]) {
     if (sent >= max) break
     if (isCustomer(l)) continue
@@ -121,7 +122,7 @@ export async function runNurture(base: string, max = 80): Promise<{ sent: number
       .update({ nurture_step: step, nurture_last_at: new Date().toISOString() })
       .eq('email', l.email).eq('nurture_step', l.nurture_step).select('email')
     if (!claimed?.length) continue
-    const ok = await sendNurture(step, { email: l.email, lang: mailLang(l.language || last.language), base, r: last.result as ScoringResult })
+    const ok = await sendNurture(step, { email: l.email, lang: mailLang(l.language || last.language), base, r: last.result as ScoringResult, founder })
     if (ok) sent++
   }
   return { sent, checked }
@@ -139,6 +140,7 @@ export async function runRetests(base: string, max = Number(process.env.GEO_RETE
     .or(`last_retest_at.is.null,last_retest_at.lt.${cutoff}`)
     .limit(500)
   let done = 0, errors = 0
+  const founder = await founderOpen()
   for (const l of (leads || []) as (LeadRow & { last_retest_at: string | null })[]) {
     if (done >= max || Date.now() - t0 > budgetMs) break
     const { data: last } = await supabaseAdmin.from('visibility_checks')
@@ -164,10 +166,10 @@ export async function runRetests(base: string, max = Number(process.env.GEO_RETE
       const lang = mailLang(l.language || language)
       const locale = lang === 'de' ? 'de-CH' : lang === 'en' ? 'en-GB' : 'fr-CH'
       let pdf: Buffer | null = null
-      try { pdf = await renderReportPdf(result, lang, bookingFor(l.email)) } catch (e) { console.error('[retest] pdf', e) }
+      try { pdf = await renderReportPdf(result, lang, bookingFor(l.email), isCustomer(l) ? null : { founder }) } catch (e) { console.error('[retest] pdf', e) }
       const mail = buildReportEmail(result, lang, {
         pdf: !!pdf, spaceUrl: magicUrl(base, l.email, '7d'),
-        boostUrl: isCustomer(l) ? undefined : boostUrl(base, lang),
+        offer: isCustomer(l) ? undefined : { url: offerUrl(base, lang), founder },
         unsubscribeUrl: unsubscribeUrl(base, l.email),
         previous: {
           score: last.overall_score ?? prev.overallScore, mentions: prev.mentions ?? 0, total: prev.totalAnswers ?? 4,

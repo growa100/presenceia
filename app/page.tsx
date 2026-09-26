@@ -7,8 +7,8 @@ import Navbar from '@/components/Navbar'
 import AnalysisDialog from '@/components/AnalysisDialog'
 import AiAnswerMock from '@/components/AiAnswerMock'
 import AuditRequest from '@/components/AuditRequest'
-import CheckoutButton from '@/components/CheckoutButton'
-import { BOOST_COPY, PLAN_KEYS } from '@/lib/plans'
+import Pricing from '@/components/Pricing'
+import { OFFER } from '@/lib/plans'
 import { agencyCopy } from '@/lib/agency-copy'
 import { CONTACT, SHOWCASE, siteCopy } from '@/lib/site-copy'
 import type { Lang } from '@/lib/i18n'
@@ -245,71 +245,7 @@ export default function Home() {
       </section>
 
       {/* ── PRICING ──────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-24 md:py-32 bg-paper-2 border-y border-line">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto">
-            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.pricing.eyebrow}</p>
-            <h2 className="font-display text-4xl md:text-5xl text-ink leading-tight">{c.pricing.title}</h2>
-            <p className="mt-5 text-lg text-ink/65">{c.pricing.sub}</p>
-          </div>
-          {/* GEO Boost: one-time pack, the first step after the free analysis */}
-          <div className="mt-14 rounded-3xl bg-ink text-white p-8 md:p-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
-            <div>
-              <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand-2">{BOOST_COPY[lang].price}</p>
-              <h3 className="font-display text-4xl md:text-5xl mt-2">{BOOST_COPY[lang].title}</h3>
-              <p className="mt-3 text-white/70 text-lg leading-relaxed">{BOOST_COPY[lang].tagline}</p>
-              <CheckoutButton plan="boost" lang={lang} className="mt-7 inline-flex items-center gap-2 bg-brand text-white hover:bg-brand-2 px-7 py-4 rounded-2xl text-base font-semibold">
-                <Sparkles className="w-4 h-4" /> {BOOST_COPY[lang].cta}
-              </CheckoutButton>
-              <p className="mt-3 text-xs text-white/50">{BOOST_COPY[lang].note}</p>
-            </div>
-            <ul className="space-y-3">
-              {BOOST_COPY[lang].items.map(it => (
-                <li key={it} className="flex items-start gap-2.5 text-sm text-white/80 leading-relaxed"><Check className="w-4 h-4 flex-shrink-0 mt-0.5 text-brand-2" />{it}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="mt-8 grid md:grid-cols-3 gap-6 items-stretch">
-            {c.pricing.plans.map((plan, i) => {
-              const popular = 'popular' in plan && plan.popular
-              return (
-                <div key={plan.name} className={`relative rounded-3xl p-8 flex flex-col ${popular ? 'bg-ink text-white shadow-2xl md:-my-3' : 'card'}`}>
-                  {popular && (
-                    <span className="absolute -top-3 left-8 bg-brand text-white text-xs font-semibold px-3 py-1 rounded-full">{c.pricing.popular}</span>
-                  )}
-                  <h3 className={`text-xl font-semibold ${popular ? 'text-white' : 'text-ink'}`}>{plan.name}</h3>
-                  <p className={`mt-1 text-sm ${popular ? 'text-white/60' : 'text-ink/55'}`}>{plan.desc}</p>
-                  <div className="mt-6 flex items-baseline gap-2">
-                    <span className={`font-display text-5xl ${popular ? 'text-white' : 'text-ink'}`}>CHF {plan.price}</span>
-                    <span className={`text-sm ${popular ? 'text-white/50' : 'text-ink/45'}`}>{c.pricing.mo}</span>
-                  </div>
-                  <ul className="mt-8 space-y-3 flex-1">
-                    {plan.features.map(f => (
-                      <li key={f} className={`flex items-start gap-2.5 text-sm leading-relaxed ${popular ? 'text-white/80' : 'text-ink/70'}`}>
-                        <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${popular ? 'text-brand-2' : 'text-brand'}`} />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <CheckoutButton plan={PLAN_KEYS[i]} lang={lang} className={`mt-8 block w-full text-center py-3.5 rounded-xl text-sm font-semibold transition-all ${popular ? 'bg-brand text-white hover:bg-brand-2' : 'btn-outline'}`}>
-                    {plan.cta}
-                  </CheckoutButton>
-                </div>
-              )
-            })}
-          </div>
-          <p className="mt-6 text-center text-sm text-ink/50 inline-flex w-full items-center justify-center gap-2"><ShieldCheck className="w-4 h-4 text-brand" />{c.pricing.secure}</p>
-          <div className="mt-10 card p-6 md:p-8 md:flex md:items-center md:justify-between md:gap-8">
-            <div>
-              <h3 className="text-xl font-semibold text-ink">{a.enterprise.title}</h3>
-              <p className="mt-2 text-ink/65 leading-relaxed max-w-2xl">{a.enterprise.desc}</p>
-            </div>
-            <a href="#audit" className="btn-primary mt-5 md:mt-0 inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-semibold whitespace-nowrap">
-              {a.enterprise.cta} <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
-        </div>
-      </section>
+      <Pricing lang={lang} />
 
       {/* ── FOUNDER ──────────────────────────────────────────────────────── */}
       <section className="py-24 md:py-32">
@@ -391,6 +327,7 @@ export default function Home() {
             <Link href="/blog" className="hover:text-ink">{c.nav.blog}</Link>
             <Link href="/mentions-legales" className="hover:text-ink">{c.footer.legal}</Link>
             <Link href="/confidentialite" className="hover:text-ink">{c.footer.privacy}</Link>
+            <Link href="/conditions" className="hover:text-ink">{OFFER[lang].terms}</Link>
           </div>
           <p className="text-xs text-ink/45">{c.footer.rights}</p>
         </div>
@@ -403,10 +340,11 @@ export default function Home() {
           { '@type': 'WebSite', '@id': 'https://presenceia.com/#website', url: 'https://presenceia.com', name: 'Présence IA', publisher: { '@id': 'https://presenceia.com/#organization' } },
           { '@type': 'Service', name: 'Site web professionnel pour PME', provider: { '@id': 'https://presenceia.com/#organization' }, areaServed: 'Worldwide', offers: [
             { '@type': 'Offer', name: 'Site web', price: '99', priceCurrency: 'CHF', priceSpecification: { '@type': 'UnitPriceSpecification', price: '99', priceCurrency: 'CHF', unitText: 'MONTH' } },
-            { '@type': 'Offer', name: 'Site + Visibilité IA', price: '149', priceCurrency: 'CHF' },
-            { '@type': 'Offer', name: 'Tout compris', price: '229', priceCurrency: 'CHF' },
           ] },
-          { '@type': 'Service', name: 'Visibilité IA (GEO) pour PME', serviceType: 'Generative Engine Optimization', provider: { '@id': 'https://presenceia.com/#organization' }, areaServed: 'Worldwide', description: 'Mesure et amélioration de la visibilité d\'une entreprise dans les réponses de ChatGPT, Gemini, Claude et Perplexity : analyse gratuite, audit complet offert, accompagnement mensuel.' },
+          { '@type': 'Service', name: 'Visibilité IA (GEO) pour PME', serviceType: 'Generative Engine Optimization', provider: { '@id': 'https://presenceia.com/#organization' }, areaServed: 'Worldwide', description: 'Mesure et amélioration de la visibilité d\'une entreprise dans les réponses de ChatGPT, Gemini, Claude et Perplexity : analyse gratuite, audit complet offert, accompagnement mensuel.', offers: [
+            { '@type': 'Offer', name: 'Visibilité IA', price: '249', priceCurrency: 'CHF', priceSpecification: { '@type': 'UnitPriceSpecification', price: '249', priceCurrency: 'CHF', unitText: 'MONTH' } },
+            { '@type': 'Offer', name: 'Visibilité IA + Assistant', price: '390', priceCurrency: 'CHF', priceSpecification: { '@type': 'UnitPriceSpecification', price: '390', priceCurrency: 'CHF', unitText: 'MONTH' } },
+          ] },
           { '@type': 'FAQPage', mainEntity: c.faq.items.map(i => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })) },
         ],
       })}} />

@@ -22,8 +22,8 @@ async function main() {
   mkdirSync('tmp', { recursive: true })
   const { data } = await supabaseAdmin.from('visibility_checks').select('result, language, email').ilike('business_name', `%${process.argv[2] || 'Elite'}%`).order('created_at', { ascending: false }).limit(1).maybeSingle()
   if (!data) throw new Error('no analysis')
-  for (const step of [1, 2, 3]) await sendNurture(step, { email: 'preview@example.com', lang: 'fr', base: 'https://presenceia.com', r: data.result })
-  const m = buildReportEmail(data.result, 'fr', { pdf: true, spaceUrl: 'https://presenceia.com/espace-client', boostUrl: 'https://presenceia.com/api/stripe/checkout?plan=boost&lang=fr',
+  for (const step of [1, 2, 3]) await sendNurture(step, { email: 'preview@example.com', lang: 'fr', base: 'https://presenceia.com', r: data.result, founder: true })
+  const m = buildReportEmail(data.result, 'fr', { pdf: true, spaceUrl: 'https://presenceia.com/espace-client', offer: { url: 'https://presenceia.com/api/stripe/checkout?plan=visibility&term=m12&lang=fr', founder: true },
     unsubscribeUrl: 'https://presenceia.com/api/client/unsubscribe?t=x', previous: { score: 25, mentions: 1, total: 4, date: '26 août' } })
   writeFileSync('tmp/email-monthly.html', m.html)
   console.log(`monthly: ${m.subject}`)

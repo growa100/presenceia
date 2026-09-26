@@ -7,6 +7,7 @@ import { Document, Page, View, Text, Link, StyleSheet, Font, renderToBuffer } fr
 import type { ScoringResult, PlatformResult } from './scoring-engine'
 import { aggregateSources, answerDomains, cleanAnswer } from './geo/present'
 import { mailLang, type MailLang } from './email-layout'
+import { offerPitch, offerUrl } from './plans'
 
 const FONTS = path.join(process.cwd(), 'assets', 'fonts')
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://presenceia.com').replace(/\/$/, '')
@@ -52,7 +53,7 @@ const T = {
     sources: 'Où les IA vont chercher', sourcesSub: 'Les sites sur lesquels les assistants se sont appuyés. C\'est là que votre présence se joue.',
     method: 'Méthode', methodText: (d: string, list: string) => `Le ${d}, nous avons posé à ${list} la question qu'un client poserait, avec leur recherche web activée. Chaque réponse est reproduite telle quelle. Les réponses des IA évoluent d'un jour à l'autre : un suivi mensuel donne la tendance.`,
     next: 'Étape suivante : votre audit complet, offert', nextText: 'En 30 minutes avec Antoine, nous passons en revue votre site, votre fiche Google, les annuaires et vos avis, et nous vous remettons un plan d\'action écrit. Sans engagement.',
-    boost: 'Ou passez directement à l\'action avec le GEO Boost (CHF 490, une fois) :', boostCta: 'Lancer mon GEO Boost', cta: 'Réserver mon audit offert', contact: 'Antoine Pury, fondateur · antoine@presenceia.com',
+    cta: 'Réserver mon audit offert', contact: 'Antoine Pury, fondateur · antoine@presenceia.com',
   },
   de: {
     doc: 'KI-Sichtbarkeitsanalyse', date: (d: string) => `Analyse vom ${d}`,
@@ -64,7 +65,7 @@ const T = {
     sources: 'Wo die KI sucht', sourcesSub: 'Die Websites, auf die sich die Assistenten gestützt haben. Dort entscheidet sich Ihre Sichtbarkeit.',
     method: 'Methode', methodText: (d: string, list: string) => `Am ${d} haben wir ${list} die Frage gestellt, die ein Kunde stellen würde, mit aktivierter Websuche. Jede Antwort ist unverändert wiedergegeben. KI-Antworten ändern sich von Tag zu Tag: Eine monatliche Messung zeigt den Trend.`,
     next: 'Nächster Schritt: Ihr vollständiges Audit, kostenlos', nextText: 'In 30 Minuten mit Antoine prüfen wir Ihre Website, Ihr Google-Profil, Verzeichnisse und Bewertungen und geben Ihnen einen schriftlichen Aktionsplan. Unverbindlich.',
-    boost: 'Oder direkt handeln mit dem GEO Boost (CHF 490, einmalig):', boostCta: 'GEO Boost starten', cta: 'Kostenloses Audit buchen', contact: 'Antoine Pury, Gründer · antoine@presenceia.com',
+    cta: 'Kostenloses Audit buchen', contact: 'Antoine Pury, Gründer · antoine@presenceia.com',
   },
   en: {
     doc: 'AI visibility analysis', date: (d: string) => `Analysis of ${d}`,
@@ -76,7 +77,7 @@ const T = {
     sources: 'Where AI looks', sourcesSub: 'The websites the assistants relied on. This is where your visibility is decided.',
     method: 'Method', methodText: (d: string, list: string) => `On ${d}, we asked ${list} the question a customer would ask, with their web search switched on. Every answer is reproduced as is. AI answers change from day to day: monthly tracking shows the trend.`,
     next: 'Next step: your full audit, free', nextText: 'In 30 minutes with Antoine, we review your website, Google profile, directories and reviews, and give you a written action plan. No commitment.',
-    boost: 'Or take action now with the GEO Boost (CHF 490, one-time):', boostCta: 'Start my GEO Boost', cta: 'Book my free audit', contact: 'Antoine Pury, founder · antoine@presenceia.com',
+    cta: 'Book my free audit', contact: 'Antoine Pury, founder · antoine@presenceia.com',
   },
 }
 
@@ -150,7 +151,8 @@ function Answer({ a, t }: { a: PlatformResult; t: typeof T.fr }) {
   )
 }
 
-function Report({ r, lang, bookUrl, when }: { r: ScoringResult; lang: MailLang; bookUrl: string; when: string }) {
+function Report({ r, lang, bookUrl, when, pitch }: { r: ScoringResult; lang: MailLang; bookUrl: string; when: string; pitch?: { founder: boolean } | null }) {
+  const P = pitch ? offerPitch(lang, pitch.founder) : null
   const t = T[lang]
   const answers = (r.answers?.length ? r.answers : r.platformResults)
   const ok = answers.filter(a => !a.error)
@@ -245,7 +247,7 @@ function Report({ r, lang, bookUrl, when }: { r: ScoringResult; lang: MailLang; 
             <Text style={{ fontFamily: 'Serif', fontSize: 19, color: '#fff', lineHeight: 1.2 }}>{t.next}</Text>
             <Text style={{ fontSize: 9.5, color: '#fff', marginTop: 6, lineHeight: 1.5 }}>{t.nextText}</Text>
             <Link src={bookUrl} style={s.ctaBtn}>{t.cta}</Link>
-            <Text style={{ fontSize: 9, color: '#fff', marginTop: 12 }}>{t.boost} <Link src={`${SITE}/api/stripe/checkout?plan=boost&lang=${lang}`} style={{ color: '#fff', fontWeight: 700 }}>{t.boostCta}</Link></Text>
+            {P && <Text style={{ fontSize: 9, color: '#fff', marginTop: 12, lineHeight: 1.5 }}>{P.title}{lang === 'fr' ? ' : ' : ': '}{P.price}. <Link src={offerUrl(SITE, lang)} style={{ color: '#fff', fontWeight: 700 }}>{P.cta}</Link></Text>}
             <Text style={{ fontSize: 8.5, color: '#FFE3E0', marginTop: 12 }}>{t.contact}</Text>
           </View>
         </View>
@@ -259,9 +261,9 @@ function Report({ r, lang, bookUrl, when }: { r: ScoringResult; lang: MailLang; 
   )
 }
 
-export async function renderReportPdf(r: ScoringResult, language: string, bookUrl: string): Promise<Buffer> {
+export async function renderReportPdf(r: ScoringResult, language: string, bookUrl: string, pitch?: { founder: boolean } | null): Promise<Buffer> {
   registerFonts()
-  return renderToBuffer(<Report r={r} lang={mailLang(language)} bookUrl={bookUrl} when={r.createdAt || new Date().toISOString()} />)
+  return renderToBuffer(<Report r={r} lang={mailLang(language)} bookUrl={bookUrl} pitch={pitch} when={r.createdAt || new Date().toISOString()} />)
 }
 
 export function reportFilename(r: ScoringResult): string {

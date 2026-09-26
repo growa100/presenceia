@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import { aggregateSources, answerDomains, cleanAnswer } from '@/lib/geo/present'
 import AuditRequest from './AuditRequest'
 import CheckoutButton from './CheckoutButton'
+import { useFounderLeft } from './useFounderLeft'
+import { offerPitch } from '@/lib/plans'
 
 interface Props { result: ScoringResult & { reportTo?: string; checkId?: string }; lang: Lang; onReset?: () => void; inDialog?: boolean }
 
@@ -20,7 +22,7 @@ const L = {
     diag: 'Diagnostic', actions: 'Vos 3 actions prioritaires',
     step: 'Étape suivante', auditTitle: 'Votre audit complet, offert', auditSub: 'En 30 minutes avec Antoine : votre site, votre fiche Google, les annuaires et vos avis passés en revue, et un plan d\'action écrit. Sans engagement.',
     auditBullets: ['30 minutes, par téléphone ou visio', 'Plan d\'action écrit, à garder', 'Sans engagement, sans frais'],
-    auditCta: 'Réserver mon audit offert', boostLine: 'Ou passez directement à l\'action : le GEO Boost corrige en 2 semaines ce qui empêche les IA de vous citer. CHF 490, une seule fois.', boostCta: 'Lancer mon GEO Boost',
+    auditCta: 'Réserver mon audit offert',
     report: (e: string) => `Rapport complet envoyé à ${e}`, again: 'Analyser une autre entreprise', example: 'exemple', pdf: 'Télécharger le PDF', space: 'Mon espace client',
   },
   de: {
@@ -32,7 +34,7 @@ const L = {
     diag: 'Diagnose', actions: 'Ihre 3 wichtigsten Massnahmen',
     step: 'Nächster Schritt', auditTitle: 'Ihr vollständiges Audit, kostenlos', auditSub: 'In 30 Minuten mit Antoine: Website, Google-Profil, Verzeichnisse und Bewertungen geprüft, dazu ein schriftlicher Aktionsplan. Unverbindlich.',
     auditBullets: ['30 Minuten, per Telefon oder Video', 'Schriftlicher Aktionsplan zum Behalten', 'Unverbindlich und kostenlos'],
-    auditCta: 'Kostenloses Audit buchen', boostLine: 'Oder direkt handeln: Der GEO Boost behebt in 2 Wochen, was die KI daran hindert, Sie zu nennen. CHF 490, einmalig.', boostCta: 'GEO Boost starten',
+    auditCta: 'Kostenloses Audit buchen',
     report: (e: string) => `Vollständiger Bericht an ${e} gesendet`, again: 'Anderes Unternehmen analysieren', example: 'Beispiel', pdf: 'PDF herunterladen', space: 'Mein Kundenbereich',
   },
   en: {
@@ -44,7 +46,7 @@ const L = {
     diag: 'Diagnosis', actions: 'Your 3 priority actions',
     step: 'Next step', auditTitle: 'Your full audit, free', auditSub: '30 minutes with Antoine: your website, Google profile, directories and reviews reviewed, plus a written action plan. No commitment.',
     auditBullets: ['30 minutes, by phone or video', 'Written action plan to keep', 'No commitment, no cost'],
-    auditCta: 'Book my free audit', boostLine: 'Or take action now: the GEO Boost fixes in 2 weeks what keeps AI from naming you. CHF 490, one-time.', boostCta: 'Start my GEO Boost',
+    auditCta: 'Book my free audit',
     report: (e: string) => `Full report sent to ${e}`, again: 'Analyse another business', example: 'example', pdf: 'Download the PDF', space: 'My client area',
   },
 }
@@ -133,6 +135,8 @@ function AnswerCard({ a, T }: { a: PlatformResult; T: typeof L.fr }) {
 
 export default function ResultsPanel({ result, lang, onReset, inDialog = true }: Props) {
   const T = L[lang]
+  const founderLeft = useFounderLeft()
+  const P = offerPitch(lang, founderLeft === null || founderLeft > 0)
   const answers = (result.answers?.length ? result.answers : result.platformResults)
   const ok = answers.filter(a => !a.error)
   const total = result.totalAnswers ?? ok.length
@@ -239,9 +243,9 @@ export default function ResultsPanel({ result, lang, onReset, inDialog = true }:
           </div>
         )}
         <div className="mt-6 pt-5 border-t border-white/25 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-          <p className="text-sm text-white/90 leading-relaxed">{T.boostLine}</p>
-          <CheckoutButton plan="boost" lang={lang} fallbackHref="/#pricing" className="bg-ink text-white hover:bg-ink/85 px-5 py-3 rounded-xl text-sm font-semibold whitespace-nowrap">
-            {T.boostCta}
+          <p className="text-sm text-white/90 leading-relaxed"><strong className="font-semibold text-white">{P.title}.</strong> {P.text}</p>
+          <CheckoutButton plan="visibility" term="m12" lang={lang} fallbackHref="/#pricing" className="bg-ink text-white hover:bg-ink/85 px-5 py-3 rounded-xl text-sm font-semibold whitespace-nowrap">
+            {P.cta}
           </CheckoutButton>
         </div>
       </div>

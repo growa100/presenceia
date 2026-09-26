@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const [left, lead, checks, updates] = await Promise.all([
     freeChecksLeft(email),
     supabaseAdmin.from('leads')
-      .select('business_name, city, category, stage, client_message, plan, subscription_status, current_period_end, audit_requested_at, audit_done_at, boost_paid_at, stripe_customer_id')
+      .select('*')
       .eq('email', email).maybeSingle(),
     supabaseAdmin.from('visibility_checks')
       .select('id, business_name, city, category, overall_score, grade, created_at, mentions:result->mentions, total:result->totalAnswers')
@@ -26,7 +26,13 @@ export async function GET(req: NextRequest) {
   const l = lead.data
   return NextResponse.json({
     email, left,
-    lead: l ? { ...l, stripe_customer_id: undefined, hasBilling: !!l.stripe_customer_id } : null,
+    lead: l ? {
+      business_name: l.business_name, city: l.city, category: l.category, stage: l.stage, client_message: l.client_message,
+      plan: l.plan, term: l.term ?? null, commitment_until: l.commitment_until ?? null,
+      subscription_status: l.subscription_status, current_period_end: l.current_period_end,
+      audit_requested_at: l.audit_requested_at, audit_done_at: l.audit_done_at, boost_paid_at: l.boost_paid_at,
+      hasBilling: !!l.stripe_customer_id,
+    } : null,
     analyses: checks.data || [],
     updates: updates.data || [],
     bookingUrl: bookingFor(email),

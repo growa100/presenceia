@@ -1,17 +1,16 @@
-// Creates (or finds) the Présence IA products and monthly CHF prices in Stripe, and prints them.
-// npx tsx --env-file=.env.local scripts/stripe-setup.ts
-import { priceFor, stripe, stripeTestMode } from '../lib/stripe'
-import { PLAN_KEYS, PLANS } from '../lib/plans'
+// Creates (or finds) every Présence IA product, price and the founder coupon in Stripe, and prints them.
+// npx tsx --env-file=.env.local scripts/stripe-setup.ts   (run once per Stripe account / mode)
+import { founderCoupon, priceFor, setupPrice, stripe, stripeTestMode } from '../lib/stripe'
+import { PLAN_KEYS, PLANS, TERMS } from '../lib/plans'
 
 async function main() {
   if (!stripe) throw new Error('STRIPE_SECRET_KEY missing in .env.local')
   console.log(stripeTestMode ? 'Stripe TEST mode' : 'Stripe LIVE mode')
   for (const k of PLAN_KEYS) {
-    const id = await priceFor(k)
-    const p = await stripe.prices.retrieve(id, { expand: ['product'] })
-    const name = typeof p.product === 'object' && 'name' in p.product ? p.product.name : p.product
-    console.log(`${k}: ${name}, CHF ${(p.unit_amount || 0) / 100} / ${p.recurring?.interval}, ${id}`)
+    for (const t of TERMS) console.log(`${k} ${t}: CHF ${PLANS[k].prices![t]} -> ${await priceFor(k, t)}`)
   }
-  console.log(`Expected: ${PLAN_KEYS.map(k => `${k} CHF ${PLANS[k].chf}`).join(', ')}`)
+  console.log(`boost once: CHF ${PLANS.boost.once} -> ${await priceFor('boost')}`)
+  console.log(`setup: -> ${await setupPrice()}`)
+  console.log(`founder coupon: ${JSON.stringify(await founderCoupon())}`)
 }
 main().catch(e => { console.error(e.message || e); process.exit(1) })

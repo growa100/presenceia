@@ -1,25 +1,26 @@
 // Keeps the lead row in sync with Stripe and sends the welcome / notification emails.
 import type Stripe from 'stripe'
 import { stripe, planFromPrice, stripeTestMode } from './stripe'
-import { PLANS, type PlanKey } from './plans'
+import { chf, PLANS, planName, type PlanKey, type Term } from './plans'
 import { supabaseAdmin } from './supabase'
 import { sendMail } from './mailer'
 import { E, emailShell, mailLang } from './email-layout'
 import { BOOKING_URL, bookingFor } from './links'
 import { magicUrl, normalizeEmail } from './checker-auth'
 
-type SubInfo = { plan: PlanKey | null; status: string; periodEnd: string | null }
+type SubInfo = { plan: PlanKey | null; term: Term | null; status: string; periodEnd: string | null }
 
 function subInfo(sub: Stripe.Subscription): SubInfo {
   const item = sub.items?.data?.[0]
   const end = item?.current_period_end
-  return { plan: planFromPrice(item?.price), status: sub.status, periodEnd: end ? new Date(end * 1000).toISOString() : null }
+  const { plan, term } = planFromPrice(item?.price)
+  return { plan, term: (sub.metadata?.term as Term) || term, status: sub.status, periodEnd: end ? new Date(end * 1000).toISOString() : null }
 }
 
 const ACTIVE = new Set(['active', 'trialing', 'past_due'])
 
 /** Checkout finished: link the Stripe customer and subscription to the lead. Returns what changed. */
-export async function syncCheckout(sessionId: string): Promise<{ email: string; isNew: boolean; plan: PlanKey | null; business: string | null; lang: string } | null> {
+export async function syncCheckout(sessionId: string): Promise<{ email: string; isNew: boolean; plan: PlanKey | null; term: Term | null; business: string | null; lang: string } | null> {
   if (!stripe) return null
   const s = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['subscription'] })
   if (s.status !== 'complete') return null
@@ -42,18 +43,19 @@ export async function syncCheckout(sessionId: string): Promise<{ email: string; 
       ...(!lead ? { source: 'stripe_checkout', language: lang } : {}),
     }, { onConflict: 'email' })
     if (isNew) await supabaseAdmin.from('client_updates').insert({ email, kind: 'payment', title: 'boost_purchased', body: 'boost' })
-    return { email, isNew, plan: 'boost', business: business || lead?.business_name || null, lang }
+    return { email, isNew, plan: 'boost', term: null, business: business || lead?.business_name || null, lang }
   }
 
   const sub = typeof s.subscription === 'object' ? s.subscription : null
-  const info = sub ? subInfo(sub) : { plan: (s.metadata?.plan as PlanKey) || null, status: 'active', periodEnd: null }
+  const info = sub ? subInfo(sub) : { plan: (s.metadata?.plan as PlanKey) || null, term: (s.metadata?.term as Term) || null, status: 'active', periodEnd: null }
   const { data: lead } = await supabaseAdmin.from('leads').select('business_name, stripe_subscription_id').eq('email', email).maybeSingle()
   const isNew = !lead || lead.stripe_subscription_id !== (sub?.id || null)
   await supabaseAdmin.from('leads').upsert({
     email,
     stripe_customer_id: customerId,
     stripe_subscription_id: sub?.id || null,
-    plan: info.plan, subscription_status: info.status, current_period_end: info.periodEnd,
+    plan: info.plan, term: info.term, subscription_status: info.status, current_period_end: info.periodEnd,
+    ...(isNew && info.term === 'm12' ? { commitment_until: new Date(Date.now() + 365 * 86400_000).toISOString() } : {}),
     stage: 'client',
     ...(!lead?.business_name && business ? { business_name: business } : {}),
     ...(s.customer_details?.phone ? { phone: s.customer_details.phone } : {}),
@@ -62,7 +64,7 @@ export async function syncCheckout(sessionId: string): Promise<{ email: string; 
   if (isNew) {
     await supabaseAdmin.from('client_updates').insert({ email, kind: 'payment', title: 'subscribed', body: info.plan })
   }
-  return { email, isNew, plan: info.plan, business: business || lead?.business_name || null, lang }
+  return { email, isNew, plan: info.plan, term: info.term, business: business || lead?.business_name || null, lang }
 }
 
 /** Subscription created, changed, paused or cancelled. */
@@ -70,7 +72,7 @@ export async function syncSubscription(sub: Stripe.Subscription) {
   const info = subInfo(sub)
   const customer = typeof sub.customer === 'string' ? sub.customer : sub.customer.id
   const patch = {
-    stripe_subscription_id: sub.id, plan: info.plan, subscription_status: info.status, current_period_end: info.periodEnd,
+    stripe_subscription_id: sub.id, plan: info.plan, term: info.term, subscription_status: info.status, current_period_end: info.periodEnd,
     stage: ACTIVE.has(info.status) ? 'client' : 'paused',
   }
   const { data } = await supabaseAdmin.from('leads').update(patch).eq('stripe_customer_id', customer).select('email')
@@ -93,9 +95,9 @@ const WB = {
   en: { s: 'Your GEO Boost is starting', t: 'Thank you, your GEO Boost is starting', b: 'Your payment is in. We need 20 minutes with you to get started (access to your Google profile, photos, services).', next: 'Pick the time that suits you:', book: 'Schedule the kick-off', space: 'Follow each step of the Boost in your client area.', cta: 'Open my client area' },
 }
 
-export async function sendWelcome(o: { email: string; plan: PlanKey | null; business: string | null; lang: string; base: string }) {
+export async function sendWelcome(o: { email: string; plan: PlanKey | null; term?: Term | null; business: string | null; lang: string; base: string }) {
   const lang = mailLang(o.lang)
-  const planName = o.plan ? PLANS[o.plan].name[lang] : 'Présence IA'
+  const name = o.plan ? planName(o.plan, lang) : 'Présence IA'
   const space = magicUrl(o.base, o.email, '7d')
   const book = bookingFor(o.email)
   const once = !!(o.plan && PLANS[o.plan].once)
@@ -104,19 +106,20 @@ export async function sendWelcome(o: { email: string; plan: PlanKey | null; busi
     : W[lang]
   await sendMail({
     to: o.email, subject: w.s,
-    text: [w.b(planName), '', w.next, BOOKING_URL ? book : 'antoine@presenceia.com', '', w.space, space, '', 'Antoine Pury, Présence IA', 'antoine@presenceia.com'].join('\n'),
-    html: emailShell({ lang, preheader: w.b(planName), body:
-      E.title(w.t) + E.p(w.b(planName)) + E.p(w.next) + (BOOKING_URL ? E.button(book, w.book) : '') +
+    text: [w.b(name), '', w.next, BOOKING_URL ? book : 'antoine@presenceia.com', '', w.space, space, '', 'Antoine Pury, Présence IA', 'antoine@presenceia.com'].join('\n'),
+    html: emailShell({ lang, preheader: w.b(name), body:
+      E.title(w.t) + E.p(w.b(name)) + E.p(w.next) + (BOOKING_URL ? E.button(book, w.book) : '') +
       E.box(E.p(w.space, 'margin:0') + E.button(space, w.cta)) + E.signature(lang) }),
   })
-  const price = o.plan ? `CHF ${PLANS[o.plan].chf}${once ? ' (une fois)' : ' / mois'}` : ''
+  const p = o.plan ? PLANS[o.plan] : null
+  const price = !p ? '' : p.once ? `CHF ${chf(p.once)} (une fois)` : o.term && p.prices ? `CHF ${chf(p.prices[o.term])} ${o.term === 'year' ? '/ an' : '/ mois'} (${o.term === 'm12' ? '12 mois' : o.term === 'year' ? 'annuel' : 'sans engagement'})` : ''
   const kind = once ? 'Nouveau GEO Boost' : 'Nouvel abonnement'
   await sendMail({
     to: 'antoine@presenceia.com', replyTo: o.email,
-    subject: `${stripeTestMode ? '[TEST] ' : ''}${kind} : ${o.business || o.email} (${planName})`,
-    text: `${o.business || '-'}\n${o.email}\n${planName} ${price}`,
+    subject: `${stripeTestMode ? '[TEST] ' : ''}${kind} : ${o.business || o.email} (${name})`,
+    text: `${o.business || '-'}\n${o.email}\n${name} ${price}`,
     html: emailShell({ lang: 'fr', body: E.title(`${kind}${stripeTestMode ? ' (test)' : ''}`) +
-      E.rows([['Entreprise', o.business || '-'], ['Email', o.email], ['Offre', `${planName} ${price}`], ['Langue', lang]]) +
+      E.rows([['Entreprise', o.business || '-'], ['Email', o.email], ['Offre', `${name} ${price}`], ['Langue', lang]]) +
       E.button(`mailto:${o.email}`, 'Écrire au client') }),
   })
 }

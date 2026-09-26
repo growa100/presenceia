@@ -5,6 +5,7 @@ import { aggregateSources } from './geo/present'
 import { escapeHtml as h } from './mailer'
 import { E, emailShell, mailLang } from './email-layout'
 import { bookingHref } from './links'
+import { offerPitch } from './plans'
 
 type L = 'fr' | 'de' | 'en'
 
@@ -22,7 +23,6 @@ const T = {
     next: 'En 30 minutes avec Antoine, nous passons en revue votre site, votre fiche Google, les annuaires et vos avis, et nous vous remettons un plan d\'action écrit. Sans engagement.',
     cta: 'Réserver mon audit offert', reply: 'Ou répondez simplement à cet email avec vos disponibilités.',
     sign: 'Antoine Pury, Présence IA', why: 'Vous recevez cet email parce que vous avez demandé une analyse sur presenceia.com.',
-    boostTitle: 'Ou passez directement à l\'action', boostText: 'Le GEO Boost corrige en 2 semaines ce qui empêche les IA de vous citer : fiche Google, annuaires, données structurées, avis. CHF 490, une seule fois.', boostCta: 'Lancer mon GEO Boost',
     pdf: 'Le rapport complet, avec les réponses mot pour mot, est joint en PDF.', space: 'Retrouvez vos analyses et votre suivi dans votre espace client :', spaceCta: 'Ouvrir mon espace client',
   },
   de: {
@@ -38,7 +38,6 @@ const T = {
     next: 'In 30 Minuten mit Antoine prüfen wir Ihre Website, Ihr Google-Profil, Verzeichnisse und Bewertungen und geben Ihnen einen schriftlichen Aktionsplan. Unverbindlich.',
     cta: 'Kostenloses Audit buchen', reply: 'Oder antworten Sie einfach auf diese E-Mail mit Ihren Verfügbarkeiten.',
     sign: 'Antoine Pury, Présence IA', why: 'Sie erhalten diese E-Mail, weil Sie auf presenceia.com eine Analyse angefordert haben.',
-    boostTitle: 'Oder direkt handeln', boostText: 'Der GEO Boost behebt in 2 Wochen, was die KI daran hindert, Sie zu nennen: Google-Profil, Verzeichnisse, strukturierte Daten, Bewertungen. CHF 490, einmalig.', boostCta: 'GEO Boost starten',
     pdf: 'Der vollständige Bericht mit den Antworten im Wortlaut liegt als PDF bei.', space: 'Ihre Analysen und Ihre Begleitung finden Sie im Kundenbereich:', spaceCta: 'Kundenbereich öffnen',
   },
   en: {
@@ -54,13 +53,12 @@ const T = {
     next: 'In 30 minutes with Antoine, we review your website, Google profile, directories and reviews, and give you a written action plan. No commitment.',
     cta: 'Book my free audit', reply: 'Or simply reply to this email with a few times that suit you.',
     sign: 'Antoine Pury, Présence IA', why: 'You receive this email because you requested an analysis on presenceia.com.',
-    boostTitle: 'Or take action now', boostText: 'The GEO Boost fixes in 2 weeks what keeps AI from naming you: Google profile, directories, structured data, reviews. CHF 490, one-time.', boostCta: 'Start my GEO Boost',
     pdf: 'The full report, with the answers word for word, is attached as a PDF.', space: 'Find your analyses and follow-up in your client area:', spaceCta: 'Open my client area',
   },
 }
 
 
-export function buildReportEmail(r: ScoringResult, language: string, opts: { spaceUrl?: string; pdf?: boolean; boostUrl?: string; previous?: { score: number; mentions: number; total: number; date: string }; unsubscribeUrl?: string } = {}): { subject: string; text: string; html: string } {
+export function buildReportEmail(r: ScoringResult, language: string, opts: { spaceUrl?: string; pdf?: boolean; offer?: { url: string; founder: boolean }; previous?: { score: number; mentions: number; total: number; date: string }; unsubscribeUrl?: string } = {}): { subject: string; text: string; html: string } {
   const lang = mailLang(language)
   const t = T[lang as L]
   const AUDIT_URL = bookingHref(lang, r.businessName)
@@ -69,6 +67,7 @@ export function buildReportEmail(r: ScoringResult, language: string, opts: { spa
   const mentions = r.mentions ?? answers.filter(a => a.appeared).length
   const comps = (r.competitors || []).slice(0, 6)
   const srcs = aggregateSources(answers, 6)
+  const P = opts.offer ? offerPitch(lang as L, opts.offer.founder) : null
 
   const text = [
     t.hello, '', opts.previous ? t.monthlyIntro(opts.previous.date, opts.previous.score, opts.previous.mentions, opts.previous.total) : t.intro(r.businessName, r.city, r.category), '',
@@ -79,7 +78,7 @@ export function buildReportEmail(r: ScoringResult, language: string, opts: { spa
     `${t.diag} :`, r.summary, '',
     `${t.actions} :`, ...r.topRecommendations.map((a, i) => `${i + 1}. ${a}`), '',
     t.nextTitle, t.next, `${t.cta} : ${AUDIT_URL}`, t.reply, '',
-    ...(opts.boostUrl ? [t.boostTitle, t.boostText, `${t.boostCta} : ${opts.boostUrl}`, ''] : []),
+    ...(P && opts.offer ? [P.title, P.text, `${P.cta} : ${opts.offer.url}`, ''] : []),
     ...(opts.pdf ? [t.pdf, ''] : []),
     ...(opts.spaceUrl ? [`${t.space} ${opts.spaceUrl}`, ''] : []),
     t.sign, 'antoine@presenceia.com', '', t.why,
@@ -105,7 +104,7 @@ ${E.box(`<p style="margin:0 0 8px;font-family:Georgia,serif;font-size:20px;color
 <p style="margin:0;line-height:1.6">${h(t.next)}</p>
 ${E.button(AUDIT_URL, t.cta)}
 <p style="margin:0;font-size:13px;color:#6B6B80">${h(t.reply)}</p>`)}
-${opts.boostUrl ? E.box(`<p style="margin:0 0 8px;font-family:Georgia,serif;font-size:18px;color:#0A0A0F">${h(t.boostTitle)}</p><p style="margin:0;line-height:1.6">${h(t.boostText)}</p>${E.buttonDark(opts.boostUrl, t.boostCta)}`) : ''}
+${P && opts.offer ? E.box(`<p style="margin:0 0 8px;font-family:Georgia,serif;font-size:18px;color:#0A0A0F">${h(P.title)}</p><p style="margin:0;line-height:1.6">${h(P.text)}</p>${E.buttonDark(opts.offer.url, P.cta)}`) : ''}
 ${opts.pdf ? E.small(t.pdf) : ''}
 ${opts.spaceUrl ? `<p style="margin:14px 0 0;font-size:13px;line-height:1.6;color:#6B6B80">${h(t.space)} ${E.link(opts.spaceUrl, t.spaceCta)}</p>` : ''}
 ${E.signature(lang)}`

@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/login`,    lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.3 },
     { url: `${baseUrl}/mentions-legales`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.2 },
     { url: `${baseUrl}/confidentialite`,  lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.2 },
+    { url: `${baseUrl}/conditions`,       lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.2 },
   ]
 
   const blogPages = blogPosts.map(post => ({

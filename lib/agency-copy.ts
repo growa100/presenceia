@@ -38,7 +38,7 @@ const fr = {
     steps: [
       { tag: 'Gratuit · 20 secondes', title: 'Analyse gratuite', desc: 'Nous posons à ChatGPT, Claude, Gemini et Perplexity la question de vos clients. Vous voyez leurs réponses exactes, qui est recommandé à votre place et sur quelles sources.', cta: 'Lancer l\'analyse', href: '#analyse' },
       { tag: 'Offert · 30 minutes', title: 'Audit complet', desc: 'Nous passons en revue votre site, votre fiche Google, les annuaires, vos avis et vos contenus. Vous repartez avec un plan d\'action écrit et priorisé.', cta: 'Réserver mon audit', href: '#audit' },
-      { tag: 'Dès CHF 149 / mois', title: 'Accompagnement', desc: 'Nous appliquons le plan et le suivons chaque mois : données structurées, fiche Google, annuaires, avis, contenus qui répondent aux questions de vos clients, rapport de visibilité IA.', cta: 'Voir les offres', href: '#pricing' },
+      { tag: 'Dès CHF 249 / mois', title: 'Accompagnement', desc: 'Nous appliquons le plan et le suivons chaque mois : données structurées, fiche Google, annuaires, avis, contenus qui répondent aux questions de vos clients, rapport de visibilité IA.', cta: 'Voir les offres', href: '#pricing' },
     ],
   },
   services: {
@@ -65,7 +65,7 @@ const fr = {
   },
   enterprise: {
     title: 'Entreprise établie, site existant ?',
-    desc: 'Accompagnement visibilité IA sur mesure, sans changer de site, dès CHF 299 / mois. On commence toujours par l\'audit offert.',
+    desc: 'Accompagnement visibilité IA sur mesure, sans changer de site, dès CHF 690 / mois. On commence toujours par l\'audit offert.',
     cta: 'Commencer par l\'audit offert',
   },
 }
@@ -103,7 +103,7 @@ const de: typeof fr = {
     steps: [
       { tag: 'Kostenlos · 20 Sekunden', title: 'Kostenlose Analyse', desc: 'Wir stellen ChatGPT, Claude, Gemini und Perplexity die Frage Ihrer Kunden. Sie sehen die genauen Antworten, wer an Ihrer Stelle empfohlen wird und auf welche Quellen sich die KI stützt.', cta: 'Analyse starten', href: '#analyse' },
       { tag: 'Kostenlos · 30 Minuten', title: 'Vollständiges Audit', desc: 'Wir prüfen Website, Google-Profil, Verzeichnisse, Bewertungen und Inhalte. Sie erhalten einen schriftlichen, priorisierten Aktionsplan.', cta: 'Audit buchen', href: '#audit' },
-      { tag: 'Ab CHF 149 / Monat', title: 'Begleitung', desc: 'Wir setzen den Plan um und begleiten Sie jeden Monat: strukturierte Daten, Google-Profil, Verzeichnisse, Bewertungen, Inhalte zu den Fragen Ihrer Kunden, monatlicher KI-Sichtbarkeitsbericht.', cta: 'Angebote ansehen', href: '#pricing' },
+      { tag: 'Ab CHF 249 / Monat', title: 'Begleitung', desc: 'Wir setzen den Plan um und begleiten Sie jeden Monat: strukturierte Daten, Google-Profil, Verzeichnisse, Bewertungen, Inhalte zu den Fragen Ihrer Kunden, monatlicher KI-Sichtbarkeitsbericht.', cta: 'Angebote ansehen', href: '#pricing' },
     ],
   },
   services: {
@@ -130,7 +130,7 @@ const de: typeof fr = {
   },
   enterprise: {
     title: 'Etablierter Betrieb mit eigener Website?',
-    desc: 'Massgeschneiderte KI-Sichtbarkeitsbegleitung, ohne Website-Wechsel, ab CHF 299 / Monat. Wir beginnen immer mit dem kostenlosen Audit.',
+    desc: 'Massgeschneiderte KI-Sichtbarkeitsbegleitung, ohne Website-Wechsel, ab CHF 690 / Monat. Wir beginnen immer mit dem kostenlosen Audit.',
     cta: 'Mit dem kostenlosen Audit beginnen',
   },
 }
@@ -168,7 +168,7 @@ const en: typeof fr = {
     steps: [
       { tag: 'Free · 20 seconds', title: 'Free analysis', desc: 'We ask ChatGPT, Claude, Gemini and Perplexity your customers\' question. You see their exact answers, who is recommended instead of you and which sources they use.', cta: 'Start the analysis', href: '#analyse' },
       { tag: 'Free · 30 minutes', title: 'Full audit', desc: 'We review your website, Google profile, directories, reviews and content. You leave with a written, prioritised action plan.', cta: 'Book my audit', href: '#audit' },
-      { tag: 'From CHF 149 / month', title: 'Ongoing support', desc: 'We carry out the plan and follow it every month: structured data, Google profile, directories, reviews, content that answers your customers\' questions, monthly AI visibility report.', cta: 'See the offers', href: '#pricing' },
+      { tag: 'From CHF 249 / month', title: 'Ongoing support', desc: 'We carry out the plan and follow it every month: structured data, Google profile, directories, reviews, content that answers your customers\' questions, monthly AI visibility report.', cta: 'See the offers', href: '#pricing' },
     ],
   },
   services: {
@@ -195,7 +195,7 @@ const en: typeof fr = {
   },
   enterprise: {
     title: 'Established business with its own website?',
-    desc: 'Tailored AI visibility support, without changing your website, from CHF 299 / month. We always start with the free audit.',
+    desc: 'Tailored AI visibility support, without changing your website, from CHF 690 / month. We always start with the free audit.',
     cta: 'Start with the free audit',
   },
 }

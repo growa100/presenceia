@@ -10,6 +10,8 @@ import { renderReportPdf, reportFilename } from '@/lib/report-pdf'
 import { baseUrl, bookingHref } from '@/lib/links'
 import { magicUrl } from '@/lib/checker-auth'
 import type { ScoringResult } from '@/lib/scoring-engine'
+import { offerUrl } from '@/lib/plans'
+import { founderOpen } from '@/lib/stripe'
 
 // Grounded answers take 10 to 30 s; they run in parallel, then one analysis call.
 export const maxDuration = 90
@@ -117,14 +119,15 @@ export async function POST(req: NextRequest) {
 // and a 7-day link that logs the visitor into the client space.
 async function sendReport(email: string, result: ScoringResult, language: string, base: string) {
   if (!email) return
+  const founder = await founderOpen()
   let pdf: Buffer | null = null
   try {
-    pdf = await renderReportPdf(result, language, bookingHref(language, result.businessName))
+    pdf = await renderReportPdf(result, language, bookingHref(language, result.businessName), { founder })
   } catch (e) {
     console.error('[check] pdf failed', e)
   }
   const mail = buildReportEmail(result, language, {
-    pdf: !!pdf, spaceUrl: magicUrl(base, email, '7d'), boostUrl: `${base}/api/stripe/checkout?plan=boost&lang=${language}`,
+    pdf: !!pdf, spaceUrl: magicUrl(base, email, '7d'), offer: { url: offerUrl(base, language), founder },
   })
   await sendMail({ to: email, ...mail, ...(pdf ? { attachments: [{ filename: reportFilename(result), content: pdf }] } : {}) })
 }

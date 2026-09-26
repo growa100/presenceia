@@ -13,7 +13,7 @@ async function main() {
   if (error || !data) throw new Error(error?.message || 'no analysis found')
   const l = lang || data.language || 'fr'
   const t0 = Date.now()
-  const pdf = await renderReportPdf(data.result, l, 'https://presenceia.com/#audit')
+  const pdf = await renderReportPdf(data.result, l, 'https://presenceia.com/#audit', { founder: true })
   mkdirSync('tmp', { recursive: true })
   const file = `tmp/${reportFilename(data.result)}`
   writeFileSync(file, pdf)
