@@ -228,7 +228,7 @@ function Field({ label, children, className = '' }: { label: string; children: R
 /* Settings                                                            */
 /* ------------------------------------------------------------------ */
 
-const FIELDS: { key: string; label: string; hint: string; type: 'int' | 'float' | 'text' }[] = [
+const FIELDS: { key: string; label: string; hint: string; type: 'int' | 'float' | 'text' | 'select'; options?: [string, string][] }[] = [
   { key: 'daily_send_cap', label: 'Emails par jour (total)', hint: 'Plafond global toutes boîtes confondues. Montez par paliers (24 → 50 → 100 → 200).', type: 'int' },
   { key: 'daily_cap_per_inbox', label: 'Emails par boîte et par jour', hint: 'Défaut par boîte ; une boîte peut avoir son propre cap dans PRESENCEIA_INBOXES.', type: 'int' },
   { key: 'sends_per_beat', label: 'Emails par battement', hint: 'Combien d’emails partent à chaque tour du planificateur (toutes les quelques minutes). 1 = étalé, naturel.', type: 'int' },
@@ -236,6 +236,8 @@ const FIELDS: { key: string; label: string; hint: string; type: 'int' | 'float' 
   { key: 'daily_site_target', label: 'Sites générés par nuit', hint: 'Combien de sites le générateur produit chaque nuit, pris dans les prospects trouvés.', type: 'int' },
   { key: 'targeting_runs_per_night', label: 'Cibles travaillées par nuit', hint: 'Le robot prend les N cibles actives les plus prioritaires (puis les moins récentes).', type: 'int' },
   { key: 'min_google_rating', label: 'Note Google minimum', hint: 'On n’envoie pas de site aux entreprises en dessous (elles sont moins réceptives).', type: 'float' },
+  { key: 'email_format', label: 'Format du premier email', hint: 'Avec capture = texte + une capture du site. Repasse seul en texte si un fournisseur refuse un email.', type: 'select',
+    options: [['text', 'Texte seul'], ['ab', 'Test A/B (moitié avec capture)'], ['hybrid', 'Avec capture pour tous']] },
 ]
 
 function Settings({ res, reload }: { res: SettingsRes; reload: () => void }) {
@@ -248,7 +250,7 @@ function Settings({ res, reload }: { res: SettingsRes; reload: () => void }) {
     setBusy(true); setMsg(null)
     try {
       const body: Record<string, any> = {}
-      for (const f of FIELDS) body[f.key] = f.type === 'text' ? String(form[f.key]) : Number(form[f.key])
+      for (const f of FIELDS) body[f.key] = f.type === 'text' || f.type === 'select' ? String(form[f.key]) : Number(form[f.key])
       await api('settings', { method: 'PUT', body: JSON.stringify(body) })
       setMsg('Enregistré. Pris en compte dans la minute.'); reload()
     } catch (e: any) { setMsg(e.message) } finally { setBusy(false) }
@@ -261,8 +263,14 @@ function Settings({ res, reload }: { res: SettingsRes; reload: () => void }) {
         {FIELDS.map(f => (
           <div key={f.key}>
             <label className="block text-[11px] font-mono uppercase tracking-wider text-ink/45 mb-1">{f.label}</label>
-            <input value={form[f.key] ?? ''} type={f.type === 'text' ? 'text' : 'number'} step={f.type === 'float' ? 0.1 : 1} min={0}
-              onChange={e => setForm({ ...form, [f.key]: e.target.value })} className={inputCls} />
+            {f.type === 'select' ? (
+              <select value={form[f.key] ?? f.options?.[0]?.[0]} onChange={e => setForm({ ...form, [f.key]: e.target.value })} className={inputCls}>
+                {f.options?.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            ) : (
+              <input value={form[f.key] ?? ''} type={f.type === 'text' ? 'text' : 'number'} step={f.type === 'float' ? 0.1 : 1} min={0}
+                onChange={e => setForm({ ...form, [f.key]: e.target.value })} className={inputCls} />
+            )}
             <p className="text-xs text-ink/45 mt-1">{f.hint}</p>
           </div>
         ))}
