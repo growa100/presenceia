@@ -31,7 +31,8 @@ export async function POST(req: NextRequest) {
       locale: lang,
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
-      phone_number_collection: { enabled: true },
+      // Prices are in CHF on the site: charge CHF, no automatic conversion to the visitor's currency.
+      adaptive_pricing: { enabled: false },
       custom_fields: [{
         key: 'business', type: 'text', label: { type: 'custom', custom: LABEL[lang] },
         ...(lead?.business_name ? { text: { default_value: lead.business_name.slice(0, 255) } } : {}),

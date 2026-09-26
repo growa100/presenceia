@@ -408,29 +408,34 @@ function Contact({ T, me }: { T: TT; me: Me }) {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
+async function fetchMe(): Promise<{ me: Me | null; failed: boolean }> {
+  try {
+    const r = await fetch('/api/client/me', { cache: 'no-store' })
+    if (r.status === 401) return { me: null, failed: false }
+    if (!r.ok) throw new Error()
+    return { me: await r.json(), failed: false }
+  } catch {
+    return { me: null, failed: true }
+  }
+}
+
 export default function ClientSpace() {
   const { lang } = useLang()
   const T = L[lang]
   const [me, setMe] = useState<Me | null | undefined>(undefined)
   const [failed, setFailed] = useState(false)
-  const [flags, setFlags] = useState({ welcome: false, expired: false })
-
-  const load = useCallback(async () => {
-    setFailed(false)
-    try {
-      const r = await fetch('/api/client/me', { cache: 'no-store' })
-      if (r.status === 401) { setMe(null); return }
-      if (!r.ok) throw new Error()
-      setMe(await r.json())
-    } catch { setFailed(true); setMe(null) }
-  }, [])
+  // Read once on the client; not rendered before the first fetch, so no hydration mismatch.
+  const [flags] = useState(() => {
+    if (typeof window === 'undefined') return { welcome: false, expired: false }
+    const q = new URLSearchParams(window.location.search)
+    return { welcome: q.has('bienvenue'), expired: q.get('lien') === 'expire' }
+  })
 
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search)
-    const f = { welcome: q.has('bienvenue'), expired: q.get('lien') === 'expire' }
-    const id = requestAnimationFrame(() => { setFlags(f); load() })
-    return () => cancelAnimationFrame(id)
-  }, [load])
+    let alive = true
+    fetchMe().then(r => { if (alive) { setMe(r.me); setFailed(r.failed) } })
+    return () => { alive = false }
+  }, [])
 
   const logout = async () => {
     await fetch('/api/check/session', { method: 'DELETE' })
