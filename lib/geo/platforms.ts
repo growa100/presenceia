@@ -126,6 +126,7 @@ async function askChatGPT(query: string, city: string) {
         search_context_size: 'low',
         user_location: { type: 'approximate', country: 'CH', city },
       }],
+      tool_choice: 'required',
       max_output_tokens: 2000,
     })
   const p = parseResponsesApi(data)
@@ -154,6 +155,8 @@ async function askClaude(query: string, city: string) {
         type: 'web_search_20250305', name: 'web_search', max_uses: 2,
         user_location: { type: 'approximate', country: 'CH', city },
       }],
+      // Without this Haiku sometimes answers from memory ("je n'ai pas d'informations à jour").
+      tool_choice: { type: 'tool', name: 'web_search' },
     })
   const blocks: any[] = data.content || []
   const lastResultIdx = blocks.map(b => b.type).lastIndexOf('web_search_tool_result')
