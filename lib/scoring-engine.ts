@@ -74,10 +74,11 @@ export function buildQueries(b: BusinessInput): [string, string] {
   }
 }
 
-// Which assistant gets which question. ChatGPT and Gemini (most used) get both.
+// Which assistant gets which question: one answer per assistant (Tony, 2026-09-26: about USD 0.13
+// per check). The two phrasings are spread so both intents are covered.
 const PLAN: [PlatformId, 0 | 1][] = [
-  ['chatgpt', 0], ['chatgpt', 1],
-  ['gemini', 0], ['gemini', 1],
+  ['chatgpt', 0],
+  ['gemini', 1],
   ['claude', 0],
   ['grok', 1],
   ['perplexity', 0],
