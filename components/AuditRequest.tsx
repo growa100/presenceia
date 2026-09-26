@@ -4,8 +4,7 @@ import { CalendarCheck, Loader2, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Lang } from '@/lib/i18n'
 import Turnstile from './Turnstile'
-
-const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || ''
+import { BOOKING_URL } from '@/lib/links'
 
 // Request for the free full audit (30 min + written plan). Used in the results popup (dark)
 // and on the homepage (light). Visitors who confirmed their email skip the human check.

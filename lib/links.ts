@@ -7,8 +7,10 @@ export function baseUrl(req?: NextRequest): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || 'https://presenceia.com').replace(/\/$/, '')
 }
 
-// Antoine's Google Calendar booking page (30-minute free audit). Until it is set, booking falls back to email.
-export const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || ''
+// Antoine's Google Calendar booking page (30-minute free audit). Public link, so it lives in the code;
+// NEXT_PUBLIC_BOOKING_URL can override it.
+export const DEFAULT_BOOKING_URL = 'https://calendar.app.google/n5e4QtoS5YWtPVXE8'
+export const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || DEFAULT_BOOKING_URL
 
 export function bookingHref(lang: string, business?: string): string {
   if (BOOKING_URL) return BOOKING_URL
