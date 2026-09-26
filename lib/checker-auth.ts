@@ -7,6 +7,8 @@ import { createHash, randomInt } from 'crypto'
 import type { NextRequest, NextResponse } from 'next/server'
 import { isAdminEmail } from './cockpit'
 import { supabaseAdmin } from './supabase'
+import { sendMail } from './mailer'
+import { E, emailShell, mailLang } from './email-layout'
 
 const SECRET = process.env.CHECKER_SECRET || process.env.JWT_SECRET || ''
 const IS_PROD = process.env.NODE_ENV === 'production'
@@ -72,40 +74,48 @@ export function verifyChallenge(challenge: string, code: string): string | null 
   }
 }
 
-const MAIL: Record<string, { subject: string; body: (c: string) => string }> = {
-  fr: { subject: 'Votre code Présence IA', body: c => `Votre code pour lancer l'analyse gratuite : ${c}\n\nIl est valable 15 minutes. Si vous n'avez rien demandé, ignorez ce message.\n\nPrésence IA, 41 Labs GmbH, Zug\nantoine@presenceia.com` },
-  de: { subject: 'Ihr Présence IA Code', body: c => `Ihr Code für die kostenlose Analyse: ${c}\n\nEr ist 15 Minuten gültig. Falls Sie nichts angefordert haben, ignorieren Sie diese Nachricht.\n\nPrésence IA, 41 Labs GmbH, Zug\nantoine@presenceia.com` },
-  en: { subject: 'Your Présence IA code', body: c => `Your code to start the free analysis: ${c}\n\nIt is valid for 15 minutes. If you did not ask for it, ignore this message.\n\nPrésence IA, 41 Labs GmbH, Zug\nantoine@presenceia.com` },
+const CODE_MAIL = {
+  fr: { s: 'Votre code Présence IA', t: 'Votre code de connexion', b: 'Saisissez ce code sur presenceia.com pour lancer votre analyse gratuite. Il est valable 15 minutes.', ign: 'Si vous n\'avez rien demandé, ignorez simplement ce message.' },
+  de: { s: 'Ihr Présence IA Code', t: 'Ihr Anmeldecode', b: 'Geben Sie diesen Code auf presenceia.com ein, um Ihre kostenlose Analyse zu starten. Er ist 15 Minuten gültig.', ign: 'Falls Sie nichts angefordert haben, ignorieren Sie diese Nachricht.' },
+  en: { s: 'Your Présence IA code', t: 'Your sign-in code', b: 'Enter this code on presenceia.com to start your free analysis. It is valid for 15 minutes.', ign: 'If you did not ask for it, simply ignore this message.' },
 }
 
 // Returns true when sent. Without RESEND_API_KEY in local dev, the code is only logged.
-export async function sendCode(email: string, code: string, lang: string): Promise<boolean> {
-  const m = MAIL[lang] || MAIL.fr
-  const key = process.env.RESEND_API_KEY
-  if (!key) {
+export async function sendCode(email: string, code: string, language: string): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY) {
     if (IS_PROD) return false
     console.log(`[checker] DEV code for ${email}: ${code}`)
     return true
   }
+  const lang = mailLang(language)
+  const m = CODE_MAIL[lang]
+  return sendMail({
+    to: email,
+    subject: `${m.s}${lang === 'fr' ? ' : ' : ': '}${code}`,
+    text: `${m.t} : ${code}\n\n${m.b}\n\n${m.ign}\n\nPrésence IA, 41 Labs GmbH, Zug\nantoine@presenceia.com`,
+    html: emailShell({ lang, preheader: `${m.t} : ${code}`, body: E.title(m.t) + E.p(m.b) + E.code(code) + E.small(m.ign) }),
+  })
+}
+
+// ─── Magic link (client space) ────────────────────────────────────────────────
+// A signed, short-lived link that opens a session for the email it was sent to.
+// Stateless and reusable until it expires, so inbox link scanners cannot "use it up".
+export function createMagicToken(email: string, ttl: string = '30m'): string {
+  return jwt.sign({ e: email, k: 'magic' }, secret(), { expiresIn: ttl as jwt.SignOptions['expiresIn'] })
+}
+
+export function verifyMagicToken(token: string): string | null {
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: process.env.CHECKER_MAIL_FROM || 'Présence IA <analyse@mail.presenceia.com>',
-        reply_to: 'antoine@presenceia.com',
-        to: [email],
-        subject: `${m.subject}${lang === 'fr' ? ' : ' : ': '}${code}`,
-        text: m.body(code),
-      }),
-      signal: AbortSignal.timeout(10000),
-    })
-    if (!res.ok) console.error('[checker] resend error', res.status, (await res.text()).slice(0, 300))
-    return res.ok
-  } catch (e) {
-    console.error('[checker] resend failed', e)
-    return false
+    const p = jwt.verify(token, secret()) as { e: string; k: string }
+    return p.k === 'magic' ? p.e : null
+  } catch {
+    return null
   }
+}
+
+/** Link that logs the visitor in and lands on `to` (a path on this site). */
+export function magicUrl(base: string, email: string, ttl = '30m', to = '/espace-client'): string {
+  return `${base}/api/client/magic?t=${encodeURIComponent(createMagicToken(email, ttl))}&to=${encodeURIComponent(to)}`
 }
 
 // ─── Session ───────────────────────────────────────────────────────────────────
@@ -117,7 +127,10 @@ export function setSession(res: NextResponse, email: string) {
 }
 
 export function getSessionEmail(req: NextRequest): string | null {
-  const token = req.cookies.get(SESSION_COOKIE)?.value
+  return sessionEmailFromToken(req.cookies.get(SESSION_COOKIE)?.value)
+}
+
+export function sessionEmailFromToken(token: string | undefined): string | null {
   if (!token) return null
   try {
     const p = jwt.verify(token, secret()) as { e: string; k: string }
@@ -139,6 +152,6 @@ export async function freeChecksLeft(email: string): Promise<number> {
   if (isUnlimited(email)) return 99
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
   const { count } = await supabaseAdmin.from('visibility_checks')
-    .select('id', { count: 'exact', head: true }).eq('email', email).gte('created_at', since)
+    .select('id', { count: 'exact', head: true }).eq('email', email).eq('from_cache', false).gte('created_at', since)
   return Math.max(0, FREE_PER_DAY - (count || 0))
 }

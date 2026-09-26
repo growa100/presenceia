@@ -1,8 +1,10 @@
 // The report emailed after each check. Plain wording, the AI results as measured, and one next step:
-// the free full audit (reply to the email or book on presenceia.com/#audit).
+// the free full audit. The PDF of the full report is attached; the client space link logs the visitor in.
 import type { ScoringResult } from './scoring-engine'
 import { aggregateSources } from './geo/present'
 import { escapeHtml as h } from './mailer'
+import { E, emailShell, mailLang } from './email-layout'
+import { bookingHref } from './links'
 
 type L = 'fr' | 'de' | 'en'
 
@@ -19,6 +21,7 @@ const T = {
     next: 'En 30 minutes avec Antoine, nous passons en revue votre site, votre fiche Google, les annuaires et vos avis, et nous vous remettons un plan d\'action écrit. Sans engagement.',
     cta: 'Réserver mon audit offert', reply: 'Ou répondez simplement à cet email avec vos disponibilités.',
     sign: 'Antoine Pury, Présence IA', why: 'Vous recevez cet email parce que vous avez demandé une analyse sur presenceia.com.',
+    pdf: 'Le rapport complet, avec les réponses mot pour mot, est joint en PDF.', space: 'Retrouvez vos analyses et votre suivi dans votre espace client :', spaceCta: 'Ouvrir mon espace client',
   },
   de: {
     subject: (b: string, m: number, t: number) => `Ihre KI-Sichtbarkeitsanalyse: ${b} (${m}/${t} Assistenten)`,
@@ -32,6 +35,7 @@ const T = {
     next: 'In 30 Minuten mit Antoine prüfen wir Ihre Website, Ihr Google-Profil, Verzeichnisse und Bewertungen und geben Ihnen einen schriftlichen Aktionsplan. Unverbindlich.',
     cta: 'Kostenloses Audit buchen', reply: 'Oder antworten Sie einfach auf diese E-Mail mit Ihren Verfügbarkeiten.',
     sign: 'Antoine Pury, Présence IA', why: 'Sie erhalten diese E-Mail, weil Sie auf presenceia.com eine Analyse angefordert haben.',
+    pdf: 'Der vollständige Bericht mit den Antworten im Wortlaut liegt als PDF bei.', space: 'Ihre Analysen und Ihre Begleitung finden Sie im Kundenbereich:', spaceCta: 'Kundenbereich öffnen',
   },
   en: {
     subject: (b: string, m: number, t: number) => `Your AI visibility analysis: ${b} (${m}/${t} assistants)`,
@@ -45,13 +49,15 @@ const T = {
     next: 'In 30 minutes with Antoine, we review your website, Google profile, directories and reviews, and give you a written action plan. No commitment.',
     cta: 'Book my free audit', reply: 'Or simply reply to this email with a few times that suit you.',
     sign: 'Antoine Pury, Présence IA', why: 'You receive this email because you requested an analysis on presenceia.com.',
+    pdf: 'The full report, with the answers word for word, is attached as a PDF.', space: 'Find your analyses and follow-up in your client area:', spaceCta: 'Open my client area',
   },
 }
 
-const AUDIT_URL = 'https://presenceia.com/#audit'
 
-export function buildReportEmail(r: ScoringResult, language: string): { subject: string; text: string; html: string } {
-  const t = T[(language in T ? language : 'fr') as L]
+export function buildReportEmail(r: ScoringResult, language: string, opts: { spaceUrl?: string; pdf?: boolean } = {}): { subject: string; text: string; html: string } {
+  const lang = mailLang(language)
+  const t = T[lang as L]
+  const AUDIT_URL = bookingHref(lang, r.businessName)
   const answers = (r.answers || r.platformResults).filter(a => !a.error)
   const total = r.totalAnswers ?? answers.length
   const mentions = r.mentions ?? answers.filter(a => a.appeared).length
@@ -67,6 +73,8 @@ export function buildReportEmail(r: ScoringResult, language: string): { subject:
     `${t.diag} :`, r.summary, '',
     `${t.actions} :`, ...r.topRecommendations.map((a, i) => `${i + 1}. ${a}`), '',
     t.nextTitle, t.next, `${t.cta} : ${AUDIT_URL}`, t.reply, '',
+    ...(opts.pdf ? [t.pdf, ''] : []),
+    ...(opts.spaceUrl ? [`${t.space} ${opts.spaceUrl}`, ''] : []),
     t.sign, 'antoine@presenceia.com', '', t.why,
   ].join('\n').replace(/ : /g, language === 'fr' ? ' : ' : ': ')
 
@@ -75,11 +83,7 @@ export function buildReportEmail(r: ScoringResult, language: string): { subject:
   const section = (title: string, body: string) =>
     `<h3 style="font-family:Georgia,serif;font-weight:400;font-size:20px;color:#0A0A0F;margin:28px 0 10px">${h(title)}</h3>${body}`
 
-  const html = `<!doctype html><html><body style="margin:0;background:#FAF8F3;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#2A2A38">
-<div style="max-width:600px;margin:0 auto;padding:32px 20px">
-<p style="font-weight:700;color:#0A0A0F;font-size:16px;margin:0 0 24px">présence<span style="color:#E8372A">ia</span></p>
-<div style="background:#fff;border:1px solid #E6E1D6;border-radius:20px;padding:28px">
-<p style="margin:0 0 12px">${h(t.hello)}</p>
+  const body = `<p style="margin:0 0 12px">${h(t.hello)}</p>
 <p style="margin:0 0 20px;line-height:1.6">${h(t.intro(r.businessName, r.city, r.category))}</p>
 <div style="background:#0A0A0F;color:#fff;border-radius:16px;padding:20px 24px">
 <div style="font-family:Georgia,serif;font-size:44px;line-height:1">${r.overallScore}<span style="font-size:16px;color:#9a9aab">/100</span> <span style="font-size:14px;background:#E8372A;border-radius:99px;padding:3px 10px;vertical-align:middle">${h(t.grade)} ${h(r.grade)}</span></div>
@@ -90,16 +94,14 @@ ${comps.length ? section(t.instead, `<ul style="padding-left:18px;margin:0;line-
 ${srcs.length ? section(t.sources, `<p style="margin:0;line-height:1.8;color:#6B6B80">${srcs.map(s => h(s.domain)).join(' · ')}</p>`) : ''}
 ${section(t.diag, `<p style="margin:0;line-height:1.6">${h(r.summary)}</p>`)}
 ${section(t.actions, `<ol style="padding-left:18px;margin:0;line-height:1.6">${r.topRecommendations.map(a => `<li style="margin-bottom:8px">${h(a)}</li>`).join('')}</ol>`)}
-<div style="margin-top:28px;background:#FAF8F3;border:1px solid #E6E1D6;border-radius:16px;padding:22px">
-<p style="margin:0 0 8px;font-family:Georgia,serif;font-size:20px;color:#0A0A0F">${h(t.nextTitle)}</p>
-<p style="margin:0 0 16px;line-height:1.6">${h(t.next)}</p>
-<a href="${AUDIT_URL}" style="display:inline-block;background:#E8372A;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:12px">${h(t.cta)}</a>
-<p style="margin:14px 0 0;font-size:13px;color:#6B6B80">${h(t.reply)}</p>
-</div>
-<p style="margin:28px 0 0">${h(t.sign)}<br><a href="mailto:antoine@presenceia.com" style="color:#E8372A">antoine@presenceia.com</a></p>
-</div>
-<p style="font-size:12px;color:#8a8a99;margin:16px 4px">${h(t.why)} 41 Labs GmbH, Zug.</p>
-</div></body></html>`
+${E.box(`<p style="margin:0 0 8px;font-family:Georgia,serif;font-size:20px;color:#0A0A0F">${h(t.nextTitle)}</p>
+<p style="margin:0;line-height:1.6">${h(t.next)}</p>
+${E.button(AUDIT_URL, t.cta)}
+<p style="margin:0;font-size:13px;color:#6B6B80">${h(t.reply)}</p>`)}
+${opts.pdf ? E.small(t.pdf) : ''}
+${opts.spaceUrl ? `<p style="margin:14px 0 0;font-size:13px;line-height:1.6;color:#6B6B80">${h(t.space)} ${E.link(opts.spaceUrl, t.spaceCta)}</p>` : ''}
+${E.signature(lang)}`
+  const html = emailShell({ lang, body, why: t.why, preheader: t.named(mentions, total) })
 
   return { subject: t.subject(r.businessName, mentions, total), text, html }
 }

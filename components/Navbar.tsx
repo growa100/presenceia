@@ -87,7 +87,7 @@ export default function Navbar({ variant = 'dark' }: { variant?: Variant }) {
                 </button>
               ))}
             </div>
-            <Link href="/login" className={`text-xs font-semibold px-4 py-2 rounded-full ${light ? 'btn-outline' : 'btn-ghost'}`}>{loginLabel}</Link>
+            <Link href="/espace-client" className={`text-xs font-semibold px-4 py-2 rounded-full ${light ? 'btn-outline' : 'btn-ghost'}`}>{loginLabel}</Link>
             <Link href={cta.href} className="btn-primary text-xs font-semibold px-5 py-2.5 rounded-full whitespace-nowrap">{cta.label}</Link>
           </div>
 
@@ -110,7 +110,7 @@ export default function Navbar({ variant = 'dark' }: { variant?: Variant }) {
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
                 className={`block text-sm px-3 py-2.5 rounded-lg ${light ? 'text-ink/80 hover:bg-ink/5' : 'text-white/60 hover:text-white'}`}>{l.label}</Link>
             ))}
-            <Link href="/login" onClick={() => setOpen(false)} className={`block text-sm px-3 py-2.5 ${light ? 'text-ink/60' : 'text-white/50'}`}>{loginLabel}</Link>
+            <Link href="/espace-client" onClick={() => setOpen(false)} className={`block text-sm px-3 py-2.5 ${light ? 'text-ink/60' : 'text-white/50'}`}>{loginLabel}</Link>
             <Link href={cta.href} onClick={() => setOpen(false)} className="btn-primary block text-center text-sm font-semibold px-4 py-3 rounded-xl mt-2">{cta.label}</Link>
           </div>
         )}

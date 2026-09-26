@@ -4,14 +4,35 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { clientIp, getSessionEmail, isValidEmail, normalizeEmail, verifyHuman } from '@/lib/checker-auth'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendMail, escapeHtml as h } from '@/lib/mailer'
+import { sendMail } from '@/lib/mailer'
+import { E, emailShell } from '@/lib/email-layout'
+import { BOOKING_URL, baseUrl } from '@/lib/links'
+import { magicUrl } from '@/lib/checker-auth'
 
 const clip = (v: unknown, n: number) => String(v ?? '').trim().slice(0, n)
 
 const CONFIRM = {
-  fr: { s: 'Votre audit Présence IA est demandé', b: (n: string) => `Bonjour,\n\nMerci, votre demande d'audit complet pour ${n} est bien reçue. Antoine vous contacte sous 24 h (jours ouvrés) pour fixer les 30 minutes qui vous conviennent.\n\nD'ici là, vous pouvez répondre à cet email pour ajouter une information.\n\nAntoine Pury, Présence IA\nantoine@presenceia.com` },
-  de: { s: 'Ihre Présence IA Audit-Anfrage', b: (n: string) => `Guten Tag,\n\nDanke, Ihre Anfrage für ein vollständiges Audit für ${n} ist eingegangen. Antoine meldet sich innert 24 Stunden (Werktage), um die 30 Minuten zu vereinbaren.\n\nSie können auf diese E-Mail antworten, um etwas zu ergänzen.\n\nAntoine Pury, Présence IA\nantoine@presenceia.com` },
-  en: { s: 'Your Présence IA audit request', b: (n: string) => `Hello,\n\nThank you, your request for a full audit of ${n} is in. Antoine will contact you within 24 hours (working days) to set up the 30 minutes.\n\nYou can reply to this email to add anything.\n\nAntoine Pury, Présence IA\nantoine@presenceia.com` },
+  fr: {
+    s: 'Votre audit Présence IA est demandé', title: 'Votre audit offert est demandé',
+    b: (n: string) => `Merci, votre demande d'audit complet pour ${n} est bien reçue.`,
+    book: 'Choisissez dès maintenant le créneau de 30 minutes qui vous convient :', bookCta: 'Choisir mon créneau',
+    noBook: 'Antoine vous contacte sous 24 h (jours ouvrés) pour fixer les 30 minutes qui vous conviennent.',
+    space: 'Votre espace client', spaceCta: 'Suivre ma demande', reply: 'Vous pouvez répondre à cet email pour ajouter une information.',
+  },
+  de: {
+    s: 'Ihre Présence IA Audit-Anfrage', title: 'Ihr kostenloses Audit ist angefragt',
+    b: (n: string) => `Danke, Ihre Anfrage für ein vollständiges Audit für ${n} ist eingegangen.`,
+    book: 'Wählen Sie jetzt die 30 Minuten, die Ihnen passen:', bookCta: 'Termin wählen',
+    noBook: 'Antoine meldet sich innert 24 Stunden (Werktage), um die 30 Minuten zu vereinbaren.',
+    space: 'Ihr Kundenbereich', spaceCta: 'Anfrage verfolgen', reply: 'Sie können auf diese E-Mail antworten, um etwas zu ergänzen.',
+  },
+  en: {
+    s: 'Your Présence IA audit request', title: 'Your free audit is requested',
+    b: (n: string) => `Thank you, your request for a full audit of ${n} is in.`,
+    book: 'Pick the 30 minutes that suit you now:', bookCta: 'Choose my time slot',
+    noBook: 'Antoine will contact you within 24 hours (working days) to set up the 30 minutes.',
+    space: 'Your client area', spaceCta: 'Follow my request', reply: 'You can reply to this email to add anything.',
+  },
 }
 
 export async function POST(req: NextRequest) {
@@ -39,28 +60,47 @@ export async function POST(req: NextRequest) {
   const lastLine = last ? `Dernière analyse : ${last.business_name}, ${last.city}, ${last.overall_score}/100 (note ${last.grade}), cité par ${last.result?.mentions ?? '?'}/${last.result?.totalAnswers ?? '?'} assistants, le ${String(last.created_at).slice(0, 10)}` : 'Pas encore d\'analyse avec cet email.'
 
   // Lead: keep existing notes, append the request.
-  const { data: lead } = await supabaseAdmin.from('leads').select('notes').eq('email', email).maybeSingle()
+  const { data: lead } = await supabaseAdmin.from('leads').select('notes, stage').eq('email', email).maybeSingle()
   const note = `[${new Date().toISOString().slice(0, 10)}] Audit demandé : ${r.businessName}, ${r.city}${r.phone ? `, tel ${r.phone}` : ''}${r.website ? `, site ${r.website}` : ''}${r.message ? `, message : ${r.message}` : ''}`
   await supabaseAdmin.from('leads').upsert({
     email, business_name: r.businessName, city: r.city, category: r.category || null, language: lang,
     source: 'audit_request', notes: [lead?.notes, note].filter(Boolean).join('\n'),
+    ...(r.phone ? { phone: r.phone } : {}),
+    ...(!lead?.stage || lead.stage === 'analysis' ? { stage: 'audit_requested' } : {}),
+    audit_requested_at: new Date().toISOString(),
   }, { onConflict: 'email' })
+  await supabaseAdmin.from('client_updates').insert({
+    email, kind: 'audit', title: 'audit_requested', body: r.message || null,
+  })
 
   const lines = [
     `Entreprise : ${r.businessName}`, `Ville : ${r.city}`, `Secteur : ${r.category || '-'}`,
     `Contact : ${r.contactName || '-'}`, `Email : ${email}${sessionEmail ? ' (vérifié par code)' : ' (non vérifié)'}`,
     `Téléphone : ${r.phone || '-'}`, `Site : ${r.website || '-'}`, `Langue : ${lang}`, '', `Message : ${r.message || '-'}`, '', lastLine,
   ]
+  const base = baseUrl(req)
   after(async () => {
     await sendMail({
       to: 'antoine@presenceia.com', replyTo: email,
       subject: `Audit demandé : ${r.businessName} (${r.city})`,
       text: lines.join('\n'),
-      html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6">${lines.map(l => h(l) || '&nbsp;').join('<br>')}</div>`,
+      html: emailShell({ lang: 'fr', preheader: `${r.businessName}, ${r.city}`, body:
+        E.title(`Audit demandé : ${r.businessName}`) +
+        E.rows(lines.filter(l => l !== lastLine && l.includes(' : ')).map(l => { const i = l.indexOf(' : '); return [l.slice(0, i), l.slice(i + 3)] as [string, string] })) +
+        E.small(lastLine) + E.button(`mailto:${email}`, 'Répondre au client') }),
     })
     if (sessionEmail) {
       const c = CONFIRM[lang]
-      await sendMail({ to: email, subject: c.s, text: c.b(r.businessName) })
+      const space = magicUrl(base, email, '7d')
+      await sendMail({
+        to: email, subject: c.s,
+        text: [c.b(r.businessName), '', BOOKING_URL ? `${c.book} ${BOOKING_URL}` : c.noBook, '', `${c.space} : ${space}`, '', c.reply, '', 'Antoine Pury, Présence IA', 'antoine@presenceia.com'].join('\n'),
+        html: emailShell({ lang, preheader: c.b(r.businessName), body:
+          E.title(c.title) + E.p(c.b(r.businessName)) +
+          (BOOKING_URL ? E.p(c.book) + E.button(BOOKING_URL, c.bookCta) : E.p(c.noBook)) +
+          `<p style="margin:14px 0 0;font-size:14px;line-height:1.6">${E.link(space, c.spaceCta)}</p>` +
+          E.small(c.reply) + E.signature(lang) }),
+      })
     }
   })
 

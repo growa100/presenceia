@@ -6,6 +6,9 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { clientIp, freeChecksLeft, getSessionEmail, isUnlimited } from '@/lib/checker-auth'
 import { sendMail } from '@/lib/mailer'
 import { buildReportEmail } from '@/lib/report-email'
+import { renderReportPdf, reportFilename } from '@/lib/report-pdf'
+import { baseUrl, bookingHref } from '@/lib/links'
+import { magicUrl } from '@/lib/checker-auth'
 import type { ScoringResult } from '@/lib/scoring-engine'
 
 // Grounded answers take 10 to 30 s; they run in parallel, then one analysis call.
@@ -58,10 +61,16 @@ export async function POST(req: NextRequest) {
     .limit(1)
     .maybeSingle()
 
+  const base = baseUrl(req)
   if (cached?.result) {
-    if (email) await saveLead(email, businessName, city, category, language, cached.result)
-    after(() => sendReport(email, cached.result as ScoringResult, language))
-    return NextResponse.json({ ...cached.result, cached: true, reportTo: email })
+    // Kept in this visitor's history (client space), without counting against any limit.
+    const { data: row } = await supabaseAdmin.from('visibility_checks').insert({
+      cache_key: cacheKey, business_name: businessName, city, category, language, email,
+      overall_score: cached.result.overallScore, grade: cached.result.grade, result: cached.result, ip_hash: ipHash, from_cache: true,
+    }).select('id').maybeSingle()
+    await saveLead(email, businessName, city, category, language, cached.result)
+    after(() => sendReport(email, cached.result as ScoringResult, language, base))
+    return NextResponse.json({ ...cached.result, cached: true, reportTo: email, checkId: row?.id })
   }
 
   // Limits on fresh (paid) checks, counted in the database so they survive serverless cold starts:
@@ -69,8 +78,8 @@ export async function POST(req: NextRequest) {
   if (!unlimited) {
     const [left, { count: ipCount }, { count: dayCount }] = await Promise.all([
       freeChecksLeft(sessionEmail),
-      supabaseAdmin.from('visibility_checks').select('id', { count: 'exact', head: true }).eq('ip_hash', ipHash).gte('created_at', since24h),
-      supabaseAdmin.from('visibility_checks').select('id', { count: 'exact', head: true }).gte('created_at', since24h),
+      supabaseAdmin.from('visibility_checks').select('id', { count: 'exact', head: true }).eq('ip_hash', ipHash).eq('from_cache', false).gte('created_at', since24h),
+      supabaseAdmin.from('visibility_checks').select('id', { count: 'exact', head: true }).eq('from_cache', false).gte('created_at', since24h),
     ])
     if (left <= 0) return NextResponse.json({ error: 'daily_limit' }, { status: 429 })
     if ((ipCount || 0) >= RATE_LIMIT) return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
@@ -85,7 +94,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'analysis_failed' }, { status: 502 })
   }
 
-  await supabaseAdmin.from('visibility_checks').insert({
+  const { data: row } = await supabaseAdmin.from('visibility_checks').insert({
     cache_key: cacheKey,
     business_name: businessName,
     city,
@@ -96,19 +105,26 @@ export async function POST(req: NextRequest) {
     grade: result.grade,
     result,
     ip_hash: ipHash,
-  })
+  }).select('id').maybeSingle()
 
-  if (email) await saveLead(email, businessName, city, category, language, result)
-  after(() => sendReport(email, result, language))
+  await saveLead(email, businessName, city, category, language, result)
+  after(() => sendReport(email, result, language, base))
 
-  return NextResponse.json({ ...result, reportTo: email })
+  return NextResponse.json({ ...result, reportTo: email, checkId: row?.id })
 }
 
-// Step 3 of the funnel: the full report by email, with the free audit as next step.
-async function sendReport(email: string, result: ScoringResult, language: string) {
+// Step 3 of the funnel: the full report by email (PDF attached), with the free audit as next step
+// and a 7-day link that logs the visitor into the client space.
+async function sendReport(email: string, result: ScoringResult, language: string, base: string) {
   if (!email) return
-  const mail = buildReportEmail(result, language)
-  await sendMail({ to: email, ...mail })
+  let pdf: Buffer | null = null
+  try {
+    pdf = await renderReportPdf(result, language, bookingHref(language, result.businessName))
+  } catch (e) {
+    console.error('[check] pdf failed', e)
+  }
+  const mail = buildReportEmail(result, language, { pdf: !!pdf, spaceUrl: magicUrl(base, email, '7d') })
+  await sendMail({ to: email, ...mail, ...(pdf ? { attachments: [{ filename: reportFilename(result), content: pdf }] } : {}) })
 }
 
 async function saveLead(email: string, businessName: string, city: string, category: string, language: string, result: { overallScore: number; grade: string }) {

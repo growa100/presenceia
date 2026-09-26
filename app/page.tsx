@@ -7,6 +7,8 @@ import Navbar from '@/components/Navbar'
 import AnalysisDialog from '@/components/AnalysisDialog'
 import AiAnswerMock from '@/components/AiAnswerMock'
 import AuditRequest from '@/components/AuditRequest'
+import CheckoutButton from '@/components/CheckoutButton'
+import { PLAN_KEYS } from '@/lib/plans'
 import { agencyCopy } from '@/lib/agency-copy'
 import { CONTACT, SHOWCASE, siteCopy } from '@/lib/site-copy'
 import type { Lang } from '@/lib/i18n'
@@ -251,7 +253,7 @@ export default function Home() {
             <p className="mt-5 text-lg text-ink/65">{c.pricing.sub}</p>
           </div>
           <div className="mt-14 grid md:grid-cols-3 gap-6 items-stretch">
-            {c.pricing.plans.map(plan => {
+            {c.pricing.plans.map((plan, i) => {
               const popular = 'popular' in plan && plan.popular
               return (
                 <div key={plan.name} className={`relative rounded-3xl p-8 flex flex-col ${popular ? 'bg-ink text-white shadow-2xl md:-my-3' : 'card'}`}>
@@ -272,13 +274,14 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <a href="#activer" className={`mt-8 block text-center py-3.5 rounded-xl text-sm font-semibold transition-all ${popular ? 'bg-brand text-white hover:bg-brand-2' : 'btn-outline'}`}>
+                  <CheckoutButton plan={PLAN_KEYS[i]} lang={lang} className={`mt-8 block w-full text-center py-3.5 rounded-xl text-sm font-semibold transition-all ${popular ? 'bg-brand text-white hover:bg-brand-2' : 'btn-outline'}`}>
                     {plan.cta}
-                  </a>
+                  </CheckoutButton>
                 </div>
               )
             })}
           </div>
+          <p className="mt-6 text-center text-sm text-ink/50 inline-flex w-full items-center justify-center gap-2"><ShieldCheck className="w-4 h-4 text-brand" />{c.pricing.secure}</p>
           <div className="mt-10 card p-6 md:p-8 md:flex md:items-center md:justify-between md:gap-8">
             <div>
               <h3 className="text-xl font-semibold text-ink">{a.enterprise.title}</h3>

@@ -1,19 +1,19 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { CheckCircle2, XCircle, RefreshCw, ArrowRight, ChevronDown, Globe, Mail, Trophy, Quote, Sparkles } from 'lucide-react'
+import { CheckCircle2, XCircle, RefreshCw, ArrowRight, ChevronDown, Globe, Mail, Trophy, Quote, Sparkles, FileDown, LayoutDashboard } from 'lucide-react'
 import type { ScoringResult, PlatformResult } from '@/lib/scoring-engine'
 import type { Lang } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { aggregateSources, answerDomains, cleanAnswer } from '@/lib/geo/present'
 import AuditRequest from './AuditRequest'
 
-interface Props { result: ScoringResult & { reportTo?: string }; lang: Lang; onReset: () => void }
+interface Props { result: ScoringResult & { reportTo?: string; checkId?: string }; lang: Lang; onReset?: () => void; inDialog?: boolean }
 
 const L = {
   fr: {
     named: (m: number, t: number) => m === 0 ? `Aucun des ${t} assistants ne vous cite` : `${m} assistant${m > 1 ? 's' : ''} sur ${t} vous cite${m > 1 ? 'nt' : ''}`,
-    q: 'Question posée', answers: 'Ce que les IA répondent à vos clients', answersSub: 'Réponses réelles, obtenues à l\'instant avec la recherche web activée. Texte non modifié.',
+    q: 'Question posée', answers: 'Ce que les IA répondent à vos clients', answersSub: 'Réponses réelles, obtenues à l\'instant avec la recherche web activée. Texte non modifié.', answersSubPast: 'Réponses réelles, obtenues avec la recherche web activée le jour de l\'analyse. Texte non modifié.',
     yes: (p: number | null) => p ? `Cité, position ${p}` : 'Cité', no: 'Pas cité', more: 'Lire toute la réponse', less: 'Réduire', failed: 'Pas de réponse de cet assistant pour le moment.',
     instead: 'Recommandés à votre place', insteadSub: 'Les entreprises que les IA proposent quand un client cherche votre métier dans votre ville.',
     of: (n: number, t: number) => `${n}/${t}`, sources: 'Où les IA vont chercher', sourcesSub: 'Les sites sur lesquels les assistants se sont appuyés. C\'est là que votre présence se joue.',
@@ -21,11 +21,11 @@ const L = {
     step: 'Étape suivante', auditTitle: 'Votre audit complet, offert', auditSub: 'En 30 minutes avec Antoine : votre site, votre fiche Google, les annuaires et vos avis passés en revue, et un plan d\'action écrit. Sans engagement.',
     auditBullets: ['30 minutes, par téléphone ou visio', 'Plan d\'action écrit, à garder', 'Sans engagement, sans frais'],
     auditCta: 'Réserver mon audit offert', follow: 'Ou directement l\'accompagnement : visibilité IA dès CHF 149 / mois', followLink: 'Voir les offres',
-    report: (e: string) => `Rapport complet envoyé à ${e}`, again: 'Analyser une autre entreprise', example: 'exemple',
+    report: (e: string) => `Rapport complet envoyé à ${e}`, again: 'Analyser une autre entreprise', example: 'exemple', pdf: 'Télécharger le PDF', space: 'Mon espace client',
   },
   de: {
     named: (m: number, t: number) => m === 0 ? `Keiner der ${t} Assistenten nennt Sie` : `${m} von ${t} Assistenten nennen Sie`,
-    q: 'Gestellte Frage', answers: 'Was die KI Ihren Kunden antwortet', answersSub: 'Echte Antworten, soeben mit aktivierter Websuche abgerufen. Text unverändert.',
+    q: 'Gestellte Frage', answers: 'Was die KI Ihren Kunden antwortet', answersSub: 'Echte Antworten, soeben mit aktivierter Websuche abgerufen. Text unverändert.', answersSubPast: 'Echte Antworten, am Tag der Analyse mit aktivierter Websuche abgerufen. Text unverändert.',
     yes: (p: number | null) => p ? `Genannt, Position ${p}` : 'Genannt', no: 'Nicht genannt', more: 'Ganze Antwort lesen', less: 'Weniger', failed: 'Dieser Assistent hat im Moment nicht geantwortet.',
     instead: 'An Ihrer Stelle empfohlen', insteadSub: 'Die Betriebe, die die KI vorschlägt, wenn ein Kunde Ihren Beruf in Ihrem Ort sucht.',
     of: (n: number, t: number) => `${n}/${t}`, sources: 'Wo die KI sucht', sourcesSub: 'Die Websites, auf die sich die Assistenten gestützt haben. Dort entscheidet sich Ihre Sichtbarkeit.',
@@ -33,11 +33,11 @@ const L = {
     step: 'Nächster Schritt', auditTitle: 'Ihr vollständiges Audit, kostenlos', auditSub: 'In 30 Minuten mit Antoine: Website, Google-Profil, Verzeichnisse und Bewertungen geprüft, dazu ein schriftlicher Aktionsplan. Unverbindlich.',
     auditBullets: ['30 Minuten, per Telefon oder Video', 'Schriftlicher Aktionsplan zum Behalten', 'Unverbindlich und kostenlos'],
     auditCta: 'Kostenloses Audit buchen', follow: 'Oder direkt die Begleitung: KI-Sichtbarkeit ab CHF 149 / Monat', followLink: 'Angebote ansehen',
-    report: (e: string) => `Vollständiger Bericht an ${e} gesendet`, again: 'Anderes Unternehmen analysieren', example: 'Beispiel',
+    report: (e: string) => `Vollständiger Bericht an ${e} gesendet`, again: 'Anderes Unternehmen analysieren', example: 'Beispiel', pdf: 'PDF herunterladen', space: 'Mein Kundenbereich',
   },
   en: {
     named: (m: number, t: number) => m === 0 ? `None of the ${t} assistants names you` : `${m} of ${t} assistants name you`,
-    q: 'Question asked', answers: 'What AI tells your customers', answersSub: 'Real answers, just obtained with web search switched on. Text unchanged.',
+    q: 'Question asked', answers: 'What AI tells your customers', answersSub: 'Real answers, just obtained with web search switched on. Text unchanged.', answersSubPast: 'Real answers, obtained with web search switched on on the day of the analysis. Text unchanged.',
     yes: (p: number | null) => p ? `Named, position ${p}` : 'Named', no: 'Not named', more: 'Read the full answer', less: 'Show less', failed: 'No answer from this assistant right now.',
     instead: 'Recommended instead of you', insteadSub: 'The businesses AI suggests when a customer looks for your trade in your town.',
     of: (n: number, t: number) => `${n}/${t}`, sources: 'Where AI looks', sourcesSub: 'The websites the assistants relied on. This is where your visibility is decided.',
@@ -45,7 +45,7 @@ const L = {
     step: 'Next step', auditTitle: 'Your full audit, free', auditSub: '30 minutes with Antoine: your website, Google profile, directories and reviews reviewed, plus a written action plan. No commitment.',
     auditBullets: ['30 minutes, by phone or video', 'Written action plan to keep', 'No commitment, no cost'],
     auditCta: 'Book my free audit', follow: 'Or go straight to ongoing support: AI visibility from CHF 149 / month', followLink: 'See the offers',
-    report: (e: string) => `Full report sent to ${e}`, again: 'Analyse another business', example: 'example',
+    report: (e: string) => `Full report sent to ${e}`, again: 'Analyse another business', example: 'example', pdf: 'Download the PDF', space: 'My client area',
   },
 }
 
@@ -131,7 +131,7 @@ function AnswerCard({ a, T }: { a: PlatformResult; T: typeof L.fr }) {
   )
 }
 
-export default function ResultsPanel({ result, lang, onReset }: Props) {
+export default function ResultsPanel({ result, lang, onReset, inDialog = true }: Props) {
   const T = L[lang]
   const answers = (result.answers?.length ? result.answers : result.platformResults)
   const ok = answers.filter(a => !a.error)
@@ -168,7 +168,7 @@ export default function ResultsPanel({ result, lang, onReset }: Props) {
       {/* Answers */}
       <div>
         <h4 className="font-display text-2xl text-white">{T.answers}</h4>
-        <p className="text-sm text-white/40 mt-1 mb-4">{T.answersSub}</p>
+        <p className="text-sm text-white/40 mt-1 mb-4">{inDialog ? T.answersSub : T.answersSubPast}</p>
         <div className="space-y-3">
           {answers.map((a, i) => <AnswerCard key={a.id || i} a={a} T={T} />)}
         </div>
@@ -240,17 +240,36 @@ export default function ResultsPanel({ result, lang, onReset }: Props) {
         )}
         <p className="mt-5 text-sm text-white/80">
           {T.follow}{' '}
-          <Dialog.Close asChild>
-            <a href="#pricing" className="underline underline-offset-4 font-semibold text-white">{T.followLink}</a>
-          </Dialog.Close>
+          {inDialog ? (
+            <Dialog.Close asChild>
+              <a href="#pricing" className="underline underline-offset-4 font-semibold text-white">{T.followLink}</a>
+            </Dialog.Close>
+          ) : (
+            <a href="#abonnement" className="underline underline-offset-4 font-semibold text-white">{T.followLink}</a>
+          )}
         </p>
       </div>
 
+      {result.checkId && (
+        <div className="flex flex-wrap gap-3">
+          <a href={`/api/client/analysis/${result.checkId}/pdf?lang=${lang}`} className="inline-flex items-center gap-2 text-sm font-semibold text-white border border-white/15 hover:border-white/40 rounded-xl px-4 py-2.5 transition-colors">
+            <FileDown className="w-4 h-4" /> {T.pdf}
+          </a>
+          {inDialog && (
+            <a href="/espace-client" className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white border border-white/10 hover:border-white/30 rounded-xl px-4 py-2.5 transition-colors">
+              <LayoutDashboard className="w-4 h-4" /> {T.space}
+            </a>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-mono">
         {result.reportTo ? <span className="text-white/40 inline-flex items-center gap-2"><Mail className="w-3.5 h-3.5" />{T.report(result.reportTo)}</span> : <span />}
-        <button onClick={onReset} className="text-white/30 hover:text-white/60 inline-flex items-center gap-2 transition-colors">
-          <RefreshCw className="w-3.5 h-3.5" />{T.again}
-        </button>
+        {onReset && (
+          <button onClick={onReset} className="text-white/30 hover:text-white/60 inline-flex items-center gap-2 transition-colors">
+            <RefreshCw className="w-3.5 h-3.5" />{T.again}
+          </button>
+        )}
       </div>
     </div>
   )

@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Brand fonts read from disk by the PDF report (lib/report-pdf.tsx).
+  outputFileTracingIncludes: {
+    '/api/**': ['./assets/fonts/**/*'],
+  },
 };
 
 export default nextConfig;

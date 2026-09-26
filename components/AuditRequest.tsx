@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils'
 import type { Lang } from '@/lib/i18n'
 import Turnstile from './Turnstile'
 
+const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || ''
+
 // Request for the free full audit (30 min + written plan). Used in the results popup (dark)
 // and on the homepage (light). Visitors who confirmed their email skip the human check.
 
@@ -13,18 +15,21 @@ const L = {
     business: 'Entreprise', city: 'Ville', name: 'Votre nom', phone: 'Téléphone', website: 'Site web (si vous en avez un)', email: 'Votre email',
     message: 'Ce que vous aimeriez améliorer (optionnel)', submit: 'Réserver mon audit offert',
     done: 'C\'est noté. Antoine vous contacte sous 24 h (jours ouvrés) pour fixer les 30 minutes.',
+    doneBook: 'C\'est noté. Choisissez maintenant le créneau de 30 minutes qui vous convient.', book: 'Choisir mon créneau',
     err: 'L\'envoi a échoué. Réessayez ou écrivez à antoine@presenceia.com.', human: 'Merci de cocher la vérification anti-robot.',
   },
   de: {
     business: 'Unternehmen', city: 'Ort', name: 'Ihr Name', phone: 'Telefon', website: 'Website (falls vorhanden)', email: 'Ihre E-Mail',
     message: 'Was Sie verbessern möchten (optional)', submit: 'Kostenloses Audit buchen',
     done: 'Notiert. Antoine meldet sich innert 24 Stunden (Werktage), um die 30 Minuten zu vereinbaren.',
+    doneBook: 'Notiert. Wählen Sie jetzt die 30 Minuten, die Ihnen passen.', book: 'Termin wählen',
     err: 'Senden fehlgeschlagen. Bitte erneut versuchen oder an antoine@presenceia.com schreiben.', human: 'Bitte bestätigen Sie die Anti-Roboter-Prüfung.',
   },
   en: {
     business: 'Business', city: 'Town', name: 'Your name', phone: 'Phone', website: 'Website (if you have one)', email: 'Your email',
     message: 'What you would like to improve (optional)', submit: 'Book my free audit',
     done: 'Noted. Antoine will contact you within 24 hours (working days) to set up the 30 minutes.',
+    doneBook: 'Noted. Now pick the 30 minutes that suit you.', book: 'Choose my time slot',
     err: 'Sending failed. Try again or write to antoine@presenceia.com.', human: 'Please complete the anti-robot check.',
   },
 }
@@ -66,7 +71,15 @@ export default function AuditRequest({ lang, variant = 'light', prefill }: { lan
   if (state === 'done') {
     return (
       <div className={cn('flex items-start gap-3 rounded-2xl p-5', dark ? 'bg-green-500/10 text-green-300' : 'bg-green-50 text-green-800')}>
-        <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" /><p className="text-sm leading-relaxed">{T.done}</p>
+        <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm leading-relaxed">{BOOKING_URL ? T.doneBook : T.done}</p>
+          {BOOKING_URL && (
+            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 bg-brand text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-brand-2 transition-colors">
+              <CalendarCheck className="w-4 h-4" /> {T.book}
+            </a>
+          )}
+        </div>
       </div>
     )
   }
