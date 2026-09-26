@@ -241,7 +241,7 @@ export default function ResultsPanel({ result, lang, onReset }: Props) {
         <p className="mt-5 text-sm text-white/80">
           {T.follow}{' '}
           <Dialog.Close asChild>
-            <a href="#tarifs" className="underline underline-offset-4 font-semibold text-white">{T.followLink}</a>
+            <a href="#pricing" className="underline underline-offset-4 font-semibold text-white">{T.followLink}</a>
           </Dialog.Close>
         </p>
       </div>

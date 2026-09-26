@@ -6,10 +6,10 @@ import ScrollReveal from '@/components/ScrollReveal'
 export const metadata: Metadata = {
   metadataBase: new URL('https://presenceia.com'),
   title: {
-    default: 'Présence IA, votre site web professionnel déjà prêt, CHF 99 par mois',
+    default: 'Présence IA, votre entreprise recommandée par ChatGPT, Gemini et Google',
     template: '%s | Présence IA',
   },
-  description: 'Nous préparons le site web de votre entreprise avant de vous écrire. Vous le regardez, vous dites oui, il est en ligne cette semaine sur votre nom de domaine. CHF 99 par mois, tout compris, sans engagement. Artisans, commerces et PME.',
+  description: 'Agence suisse de visibilité IA. Nous mesurons ce que ChatGPT, Gemini, Claude et Perplexity disent de votre entreprise, puis vous rendons visible et recommandé, sur les IA comme sur Google. Analyse gratuite en 20 secondes, audit complet offert, accompagnement dès CHF 149 par mois.',
   keywords: [
     'site web artisan', 'site web PME suisse', 'création site web Valais', 'site web garage', 'site web plombier',
     'GEO', 'Generative Engine Optimization', 'visibilité IA', 'ChatGPT PME suisse',
@@ -31,14 +31,14 @@ export const metadata: Metadata = {
     alternateLocale: ['de_CH', 'en_US'],
     url: 'https://presenceia.com',
     siteName: 'Présence IA',
-    title: 'Présence IA, votre site web professionnel déjà prêt',
-    description: 'Site web complet, nom de domaine inclus, hébergement suisse. CHF 99 par mois, sans engagement. En ligne cette semaine.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Présence IA, votre site web professionnel déjà prêt' }],
+    title: 'Présence IA, votre entreprise recommandée par les IA',
+    description: 'Analyse gratuite de votre visibilité sur ChatGPT, Gemini, Claude et Perplexity. Audit complet offert, accompagnement dès CHF 149 par mois.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Présence IA, votre entreprise recommandée par les IA' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Présence IA, votre site web professionnel déjà prêt',
-    description: 'CHF 99 par mois, tout compris, sans engagement. Artisans, commerces et PME.',
+    title: 'Présence IA, votre entreprise recommandée par les IA',
+    description: 'Analyse gratuite de votre visibilité IA en 20 secondes. Audit complet offert.',
     images: ['/og-image.png'],
   },
   alternates: {

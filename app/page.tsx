@@ -1,10 +1,13 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ArrowUpRight, Check, ChevronDown, Mail, Phone, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BarChart3, Check, ChevronDown, FileSearch, Globe2, Mail, MapPin, MessageSquareQuote, Phone, ShieldCheck, Sparkles, Star, CalendarCheck, Radar } from 'lucide-react'
 import { useLang } from '@/components/LangProvider'
 import Navbar from '@/components/Navbar'
 import AnalysisDialog from '@/components/AnalysisDialog'
+import AiAnswerMock from '@/components/AiAnswerMock'
+import AuditRequest from '@/components/AuditRequest'
+import { agencyCopy } from '@/lib/agency-copy'
 import { CONTACT, SHOWCASE, siteCopy } from '@/lib/site-copy'
 import type { Lang } from '@/lib/i18n'
 
@@ -14,37 +17,43 @@ const mailto = (subject: string, body: string) =>
 export default function Home() {
   const { lang } = useLang()
   const c = siteCopy[lang]
+  const a = agencyCopy[lang]
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   return (
     <div className="page-light min-h-screen">
       <Navbar variant="light" />
 
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
+      {/* ── HERO: AI visibility first ─────────────────────────────────────── */}
+      <section className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden">
         <div className="absolute -top-40 right-[-10%] w-[520px] h-[520px] rounded-full bg-brand/10 blur-[120px] pointer-events-none" />
-        <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
-          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-6">{c.hero.eyebrow}</p>
-          <h1 className="font-display text-5xl md:text-7xl lg:text-[5.5rem] leading-[1.0] text-ink max-w-4xl">
-            {c.hero.h1a}<br />
-            <span className="italic text-brand">{c.hero.h1b}</span>
-          </h1>
-          <p className="mt-8 text-lg md:text-xl text-ink/70 max-w-2xl leading-relaxed">{c.hero.sub}</p>
+        <div className="relative max-w-6xl mx-auto px-6 lg:px-8 grid lg:grid-cols-[1.15fr_0.85fr] gap-12 lg:gap-10 items-center">
+          <div>
+            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-6">{c.hero.eyebrow}</p>
+            <h1 className="font-display text-5xl md:text-6xl lg:text-[4.6rem] leading-[1.02] text-ink">
+              {c.hero.h1a}<br />
+              <span className="italic text-brand">{c.hero.h1b}</span>
+            </h1>
+            <p className="mt-7 text-lg md:text-xl text-ink/70 max-w-xl leading-relaxed">{c.hero.sub}</p>
 
-          <div className="mt-10 flex flex-col sm:flex-row gap-4">
-            <a href="#activer" className="btn-primary inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-base font-semibold">
-              {c.hero.cta1} <ArrowRight className="w-4 h-4" />
-            </a>
-            <a href="#exemples" className="btn-outline inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-base font-medium">
-              {c.hero.cta2}
+            <div className="mt-9 flex flex-col sm:flex-row gap-4">
+              <a href="#analyse" className="btn-primary inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-base font-semibold">
+                <Sparkles className="w-4 h-4" /> {c.hero.cta1}
+              </a>
+              <a href="#parcours" className="btn-outline inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl text-base font-medium">
+                {c.hero.cta2} <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+            <p className="mt-3 text-xs text-ink/45">{c.checker.note}</p>
+
+            <a href="#activer" className="mt-8 inline-flex items-center gap-2 text-sm text-ink/60 hover:text-ink transition-colors">
+              <Mail className="w-4 h-4 text-brand" />
+              <span>{c.hero.received} <span className="underline underline-offset-4 decoration-brand/50">{c.hero.receivedLink}</span></span>
             </a>
           </div>
-
-          <a href="#how" className="mt-8 inline-flex items-center gap-2 text-sm text-ink/60 hover:text-ink transition-colors">
-            <Mail className="w-4 h-4 text-brand" />
-            <span>{c.hero.received} <span className="underline underline-offset-4 decoration-brand/50">{c.hero.receivedLink}</span></span>
-          </a>
+          <AiAnswerMock />
         </div>
+        <AnalysisDialog title={c.checker.title} sub={c.checker.sub} />
       </section>
 
       {/* ── TRUST STRIP ──────────────────────────────────────────────────── */}
@@ -59,28 +68,115 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── FREE ANALYSIS (opens as a popup) ─────────────────────────────── */}
-      <section id="checker" className="py-16 md:py-24">
+      {/* ── WHY NOW ────────────────────────────────────────────────────────── */}
+      <section className="py-20 md:py-28">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="card relative overflow-hidden p-8 md:p-12 md:flex md:items-center md:gap-12">
-            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-brand/10 blur-3xl pointer-events-none" />
-            <div className="relative flex-1">
-              <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.checker.eyebrow}</p>
-              <h2 className="font-display text-3xl md:text-5xl text-ink leading-tight max-w-2xl">{c.checker.title}</h2>
-              <p className="mt-5 text-lg text-ink/65 max-w-2xl">{c.checker.sub}</p>
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{a.shift.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink max-w-3xl leading-tight">{a.shift.title}</h2>
+          <div className="mt-14 grid md:grid-cols-3 gap-6">
+            {a.shift.points.map((p, i) => {
+              const Icon = [MessageSquareQuote, Globe2, Radar][i] || Sparkles
+              return (
+                <div key={p.title} className="card p-8">
+                  <div className="w-11 h-11 rounded-2xl bg-brand/10 text-brand flex items-center justify-center mb-6"><Icon className="w-5 h-5" /></div>
+                  <h3 className="text-xl font-semibold text-ink mb-3">{p.title}</h3>
+                  <p className="text-ink/65 leading-relaxed">{p.desc}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── JOURNEY: analysis -> audit -> accompaniment ────────────────────── */}
+      <section id="parcours" className="py-24 md:py-32 bg-paper-2 border-y border-line">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{a.journey.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink max-w-3xl leading-tight">{a.journey.title}</h2>
+          <div className="mt-14 grid md:grid-cols-3 gap-6 relative">
+            {a.journey.steps.map((step, i) => {
+              const dark = i === 2
+              const Icon = [Sparkles, FileSearch, BarChart3][i]
+              return (
+                <div key={step.title} className={`relative rounded-3xl p-8 flex flex-col ${dark ? 'bg-ink text-white shadow-2xl' : 'card'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="w-11 h-11 rounded-full bg-brand text-white font-display text-2xl flex items-center justify-center">{i + 1}</span>
+                    <Icon className={`w-5 h-5 ${dark ? 'text-brand-2' : 'text-brand'}`} />
+                  </div>
+                  <span className={`mt-6 font-mono text-[11px] tracking-widest uppercase ${dark ? 'text-white/50' : 'text-ink/45'}`}>{step.tag}</span>
+                  <h3 className={`mt-2 text-xl lg:text-2xl font-semibold break-words ${dark ? 'text-white' : 'text-ink'}`}>{step.title}</h3>
+                  <p className={`mt-3 leading-relaxed flex-1 ${dark ? 'text-white/70' : 'text-ink/65'}`}>{step.desc}</p>
+                  <a href={step.href} className={`mt-7 inline-flex items-center gap-2 text-sm font-semibold ${dark ? 'text-brand-2' : 'text-brand'}`}>
+                    {step.cta} <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA BAND: the free analysis ─────────────────────────────────────── */}
+      <section id="checker" className="py-16 md:py-20">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-3xl bg-ink text-white p-8 md:p-12 md:flex md:items-center md:justify-between md:gap-12">
+            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-brand/25 blur-3xl pointer-events-none" />
+            <div className="relative">
+              <h2 className="font-display text-3xl md:text-5xl leading-tight max-w-2xl">{a.band.title}</h2>
+              <p className="mt-4 text-white/65 max-w-xl">{a.band.sub}</p>
             </div>
             <div className="relative mt-8 md:mt-0 flex-shrink-0">
-              <AnalysisDialog
-                title={c.checker.title}
-                sub={c.checker.sub}
-                trigger={
-                  <button className="btn-primary inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl text-base font-semibold">
-                    <Sparkles className="w-4 h-4" /> {c.checker.cta}
-                  </button>
-                }
-              />
-              <p className="mt-3 text-xs text-ink/45 text-center">{c.checker.note}</p>
+              <a href="#analyse" className="btn-primary inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl text-base font-semibold">
+                <Sparkles className="w-4 h-4" /> {a.band.cta}
+              </a>
+              <p className="mt-3 text-xs text-white/45 text-center">{c.checker.note}</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SERVICES ─────────────────────────────────────────────────────────── */}
+      <section id="services" className="py-24 md:py-32">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{a.services.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink max-w-3xl leading-tight">{a.services.title}</h2>
+          <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {a.services.items.map((item, i) => {
+              const Icon = [Radar, Globe2, MapPin, FileSearch, Star, BarChart3][i] || Check
+              return (
+                <div key={item.title} className="card p-7 hover:-translate-y-1 hover:border-brand/40 transition-all duration-300">
+                  <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center"><Icon className="w-5 h-5" /></div>
+                  <h3 className="mt-5 font-semibold text-ink text-lg">{item.title}</h3>
+                  <p className="mt-2 text-ink/65 leading-relaxed">{item.desc}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FREE FULL AUDIT ──────────────────────────────────────────────────── */}
+      <section id="audit" className="py-24 md:py-32 bg-paper-2 border-y border-line">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-start">
+          <div>
+            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{a.audit.eyebrow}</p>
+            <h2 className="font-display text-4xl md:text-5xl text-ink leading-tight">{a.audit.title}</h2>
+            <p className="mt-5 text-lg text-ink/65 leading-relaxed">{a.audit.sub}</p>
+            <ul className="mt-8 space-y-3">
+              {a.audit.bullets.map(b => (
+                <li key={b} className="flex items-start gap-3 text-ink/75">
+                  <span className="w-6 h-6 rounded-full bg-brand/10 text-brand flex items-center justify-center flex-shrink-0 mt-0.5"><Check className="w-3.5 h-3.5" /></span>{b}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-brand text-white font-display text-xl flex items-center justify-center">AP</div>
+              <div><p className="font-semibold text-ink">{c.founder.name}</p><p className="text-sm text-ink/55">{c.founder.role}</p></div>
+            </div>
+          </div>
+          <div className="card p-6 md:p-8">
+            <div className="flex items-center gap-2 mb-6 text-ink font-semibold"><CalendarCheck className="w-5 h-5 text-brand" />{a.audit.eyebrow}</div>
+            <AuditRequest lang={lang} variant="light" />
           </div>
         </div>
       </section>
@@ -88,8 +184,9 @@ export default function Home() {
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
       <section id="how" className="py-24 md:py-32">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{c.how.eyebrow}</p>
-          <h2 className="font-display text-4xl md:text-5xl text-ink max-w-3xl leading-tight">{c.how.title}</h2>
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-4">{a.sites.eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink max-w-3xl leading-tight">{a.sites.title}</h2>
+          <p className="mt-5 text-lg text-ink/65 max-w-2xl">{c.how.title}</p>
           <div className="mt-14 grid md:grid-cols-3 gap-6">
             {c.how.steps.map(step => (
               <div key={step.n} className="card p-8">
@@ -182,10 +279,15 @@ export default function Home() {
               )
             })}
           </div>
-          <p className="mt-10 text-center text-sm text-ink/55">
-            {c.pricing.enterprise}{' '}
-            <a href={mailto('Programme visibilité IA', '')} className="text-brand font-semibold underline underline-offset-4">{c.pricing.enterpriseCta}</a>
-          </p>
+          <div className="mt-10 card p-6 md:p-8 md:flex md:items-center md:justify-between md:gap-8">
+            <div>
+              <h3 className="text-xl font-semibold text-ink">{a.enterprise.title}</h3>
+              <p className="mt-2 text-ink/65 leading-relaxed max-w-2xl">{a.enterprise.desc}</p>
+            </div>
+            <a href="#audit" className="btn-primary mt-5 md:mt-0 inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-semibold whitespace-nowrap">
+              {a.enterprise.cta} <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       </section>
 
@@ -284,6 +386,7 @@ export default function Home() {
             { '@type': 'Offer', name: 'Site + Visibilité IA', price: '149', priceCurrency: 'CHF' },
             { '@type': 'Offer', name: 'Tout compris', price: '229', priceCurrency: 'CHF' },
           ] },
+          { '@type': 'Service', name: 'Visibilité IA (GEO) pour PME', serviceType: 'Generative Engine Optimization', provider: { '@id': 'https://presenceia.com/#organization' }, areaServed: 'Worldwide', description: 'Mesure et amélioration de la visibilité d\'une entreprise dans les réponses de ChatGPT, Gemini, Claude et Perplexity : analyse gratuite, audit complet offert, accompagnement mensuel.' },
           { '@type': 'FAQPage', mainEntity: c.faq.items.map(i => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })) },
         ],
       })}} />

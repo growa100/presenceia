@@ -1,18 +1,41 @@
 'use client'
 import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import CheckerForm from '@/components/CheckerForm'
 
 /**
- * The free ChatGPT visibility analysis, as a popup. The trigger lives on
- * the light homepage; the form itself keeps its dark styling inside the
- * dialog, which reads as a focused tool rather than a page section.
+ * The free AI visibility analysis, as a popup (dark, inside the light page).
+ * Opens from its trigger, from any link ending in "#analyse" (navbar, hero, journey, report email),
+ * and when the page is loaded with #analyse.
  */
-export default function AnalysisDialog({ trigger, title, sub }: { trigger: ReactNode; title: string; sub: string }) {
+export default function AnalysisDialog({ trigger, title, sub }: { trigger?: ReactNode; title: string; sub: string }) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const onHash = () => { if (window.location.hash === '#analyse') setOpen(true) }
+    const first = requestAnimationFrame(onHash) // page loaded with #analyse (e.g. from the report email)
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement | null)?.closest?.('a[href$="#analyse"]') as HTMLAnchorElement | null
+      if (!a) return
+      const url = new URL(a.href, window.location.href)
+      if (url.pathname !== window.location.pathname) return
+      e.preventDefault()
+      setOpen(true)
+    }
+    document.addEventListener('click', onClick)
+    window.addEventListener('hashchange', onHash)
+    return () => { cancelAnimationFrame(first); document.removeEventListener('click', onClick); window.removeEventListener('hashchange', onHash) }
+  }, [])
+
+  const onOpenChange = (v: boolean) => {
+    setOpen(v)
+    if (!v && window.location.hash === '#analyse') history.replaceState(null, '', window.location.pathname + window.location.search)
+  }
+
   return (
-    <Dialog.Root>
-      <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[60] bg-ink/70 backdrop-blur-sm data-[state=open]:animate-in" />
         <Dialog.Content

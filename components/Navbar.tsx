@@ -27,9 +27,9 @@ export default function Navbar({ variant = 'dark' }: { variant?: Variant }) {
 
   const links = light
     ? [
-        { href: '/#checker', label: c.analysis },
+        { href: '/#parcours', label: c.journey },
+        { href: '/#services', label: c.services },
         { href: '/#exemples', label: c.examples },
-        { href: '/#how', label: c.how },
         { href: '/#pricing', label: c.pricing },
         { href: '/#faq', label: c.faq },
         { href: '/blog', label: c.blog },
@@ -39,7 +39,7 @@ export default function Navbar({ variant = 'dark' }: { variant?: Variant }) {
         { href: '/#pricing', label: t.nav.pricing },
         { href: '/blog', label: t.nav.blog },
       ]
-  const cta = light ? { href: '/#activer', label: c.cta } : { href: '/#checker', label: t.nav.cta }
+  const cta = light ? { href: '/#analyse', label: c.cta } : { href: '/#analyse', label: t.nav.cta }
   const loginLabel = light ? c.login : t.nav.login
 
   const shell = light
@@ -72,13 +72,13 @@ export default function Navbar({ variant = 'dark' }: { variant?: Variant }) {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className={`hidden ${light ? 'lg:flex gap-6' : 'md:flex gap-8'} items-center`}>
             {links.map(l => (
-              <Link key={l.href} href={l.href} className={`text-sm font-medium transition-colors ${linkCls}`}>{l.label}</Link>
+              <Link key={l.href} href={l.href} className={`text-sm font-medium whitespace-nowrap transition-colors ${linkCls}`}>{l.label}</Link>
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-4">
+          <div className={`hidden ${light ? 'lg:flex' : 'md:flex'} items-center gap-4`}>
             <div className={`flex items-center gap-1 rounded-full px-2 py-1 ${langBox}`}>
               {(['fr', 'de', 'en'] as Lang[]).map(l => (
                 <button key={l} onClick={() => setLang(l)}
@@ -88,16 +88,16 @@ export default function Navbar({ variant = 'dark' }: { variant?: Variant }) {
               ))}
             </div>
             <Link href="/login" className={`text-xs font-semibold px-4 py-2 rounded-full ${light ? 'btn-outline' : 'btn-ghost'}`}>{loginLabel}</Link>
-            <Link href={cta.href} className="btn-primary text-xs font-semibold px-5 py-2.5 rounded-full">{cta.label}</Link>
+            <Link href={cta.href} className="btn-primary text-xs font-semibold px-5 py-2.5 rounded-full whitespace-nowrap">{cta.label}</Link>
           </div>
 
-          <button onClick={() => setOpen(!open)} className={`md:hidden p-2 ${light ? 'text-ink' : 'text-white/70'}`} aria-label="Menu">
+          <button onClick={() => setOpen(!open)} className={`${light ? 'lg:hidden' : 'md:hidden'} p-2 ${light ? 'text-ink' : 'text-white/70'}`} aria-label="Menu">
             {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
 
         {open && (
-          <div className={`md:hidden rounded-2xl p-4 mb-4 space-y-1 border ${light ? 'bg-paper border-line shadow-xl' : 'glass-dark border-white/5'}`}>
+          <div className={`${light ? 'lg:hidden' : 'md:hidden'} rounded-2xl p-4 mb-4 space-y-1 border ${light ? 'bg-paper border-line shadow-xl' : 'glass-dark border-white/5'}`}>
             <div className="flex gap-2 px-3 pb-3">
               {(['fr', 'de', 'en'] as Lang[]).map(l => (
                 <button key={l} onClick={() => { setLang(l); setOpen(false) }}
