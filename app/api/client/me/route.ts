@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { freeChecksLeft, getSessionEmail } from '@/lib/checker-auth'
 import { supabaseAdmin } from '@/lib/supabase'
-import { BOOKING_URL } from '@/lib/links'
+import { bookingFor } from '@/lib/links'
 import { stripe, stripeTestMode } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     lead: l ? { ...l, stripe_customer_id: undefined, hasBilling: !!l.stripe_customer_id } : null,
     analyses: checks.data || [],
     updates: updates.data || [],
-    bookingUrl: BOOKING_URL || null,
+    bookingUrl: bookingFor(email),
     payments: !!stripe, paymentsTest: stripeTestMode,
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

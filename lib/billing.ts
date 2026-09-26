@@ -5,7 +5,7 @@ import { PLANS, type PlanKey } from './plans'
 import { supabaseAdmin } from './supabase'
 import { sendMail } from './mailer'
 import { E, emailShell, mailLang } from './email-layout'
-import { BOOKING_URL } from './links'
+import { BOOKING_URL, bookingFor } from './links'
 import { magicUrl, normalizeEmail } from './checker-auth'
 
 type SubInfo = { plan: PlanKey | null; status: string; periodEnd: string | null }
@@ -75,11 +75,12 @@ export async function sendWelcome(o: { email: string; plan: PlanKey | null; busi
   const w = W[lang]
   const planName = o.plan ? PLANS[o.plan].name[lang] : 'Présence IA'
   const space = magicUrl(o.base, o.email, '7d')
+  const book = bookingFor(o.email)
   await sendMail({
     to: o.email, subject: w.s,
-    text: [w.b(planName), '', w.next, BOOKING_URL || 'antoine@presenceia.com', '', w.space, space, '', 'Antoine Pury, Présence IA', 'antoine@presenceia.com'].join('\n'),
+    text: [w.b(planName), '', w.next, BOOKING_URL ? book : 'antoine@presenceia.com', '', w.space, space, '', 'Antoine Pury, Présence IA', 'antoine@presenceia.com'].join('\n'),
     html: emailShell({ lang, preheader: w.b(planName), body:
-      E.title(w.t) + E.p(w.b(planName)) + E.p(w.next) + (BOOKING_URL ? E.button(BOOKING_URL, w.book) : '') +
+      E.title(w.t) + E.p(w.b(planName)) + E.p(w.next) + (BOOKING_URL ? E.button(book, w.book) : '') +
       E.box(E.p(w.space, 'margin:0') + E.button(space, w.cta)) + E.signature(lang) }),
   })
   const price = o.plan ? `CHF ${PLANS[o.plan].chf} / mois` : ''

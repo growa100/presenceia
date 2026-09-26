@@ -6,7 +6,7 @@ import { clientIp, getSessionEmail, isValidEmail, normalizeEmail, verifyHuman } 
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendMail } from '@/lib/mailer'
 import { E, emailShell } from '@/lib/email-layout'
-import { BOOKING_URL, baseUrl } from '@/lib/links'
+import { BOOKING_URL, baseUrl, bookingFor } from '@/lib/links'
 import { magicUrl } from '@/lib/checker-auth'
 
 const clip = (v: unknown, n: number) => String(v ?? '').trim().slice(0, n)
@@ -92,12 +92,13 @@ export async function POST(req: NextRequest) {
     if (sessionEmail) {
       const c = CONFIRM[lang]
       const space = magicUrl(base, email, '7d')
+      const book = bookingFor(email)
       await sendMail({
         to: email, subject: c.s,
-        text: [c.b(r.businessName), '', BOOKING_URL ? `${c.book} ${BOOKING_URL}` : c.noBook, '', `${c.space} : ${space}`, '', c.reply, '', 'Antoine Pury, Présence IA', 'antoine@presenceia.com'].join('\n'),
+        text: [c.b(r.businessName), '', BOOKING_URL ? `${c.book} ${book}` : c.noBook, '', `${c.space} : ${space}`, '', c.reply, '', 'Antoine Pury, Présence IA', 'antoine@presenceia.com'].join('\n'),
         html: emailShell({ lang, preheader: c.b(r.businessName), body:
           E.title(c.title) + E.p(c.b(r.businessName)) +
-          (BOOKING_URL ? E.p(c.book) + E.button(BOOKING_URL, c.bookCta) : E.p(c.noBook)) +
+          (BOOKING_URL ? E.p(c.book) + E.button(book, c.bookCta) : E.p(c.noBook)) +
           `<p style="margin:14px 0 0;font-size:14px;line-height:1.6">${E.link(space, c.spaceCta)}</p>` +
           E.small(c.reply) + E.signature(lang) }),
       })

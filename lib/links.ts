@@ -7,10 +7,16 @@ export function baseUrl(req?: NextRequest): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || 'https://presenceia.com').replace(/\/$/, '')
 }
 
-// Antoine's Google Calendar booking page (30-minute free audit). Public link, so it lives in the code;
+// Antoine's Calendly booking page (30-minute free audit). Public link, so it lives in the code;
 // NEXT_PUBLIC_BOOKING_URL can override it.
-export const DEFAULT_BOOKING_URL = 'https://calendar.app.google/n5e4QtoS5YWtPVXE8'
+export const DEFAULT_BOOKING_URL = 'https://calendly.com/antoine-pury-41labs/parlons-de-votre-situation-concretement'
 export const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || DEFAULT_BOOKING_URL
+
+/** Booking link with the email already filled in (Calendly reads ?email=), one field less for the client. */
+export function bookingFor(email?: string | null): string {
+  if (!email || !BOOKING_URL.includes('calendly.com')) return BOOKING_URL
+  return `${BOOKING_URL}${BOOKING_URL.includes('?') ? '&' : '?'}email=${encodeURIComponent(email)}`
+}
 
 export function bookingHref(lang: string, business?: string): string {
   if (BOOKING_URL) return BOOKING_URL
