@@ -94,6 +94,7 @@ Fill the report tool. Rules:
 - Competitors: businesses named in the answers other than the one checked, with how many answers name each.
 - Diagnosis in ${lang}, 3 to 5 short sentences, addressed to the owner ("vous" in French, "Sie" in German): how many of the ${usable.length} answers name the business, which competitors the assistants recommend instead, and which kinds of sources the assistants rely on (directories, review sites, press, own websites), based on the sources cited.
 - Actions in ${lang}: exactly 3, concrete, ordered by impact, specific to what these answers and sources show (for example which directory or review platform to be present on). No generic marketing advice.
+- You do not know the business's current website, listings or reviews. Never state that it is absent from a directory, has no website or has few reviews; phrase actions as checks or steps ("assurez-vous d'être présent sur local.ch").
 - Plain, sober tone. Never use the em dash character. No exclamation marks.`
 
   for (const model of [ANALYST_MODEL, FALLBACK_MODEL]) {
