@@ -25,7 +25,7 @@ export const MODELS = {
   claude: process.env.GEO_CLAUDE_MODEL || 'claude-haiku-4-5',
   gemini: process.env.GEO_GEMINI_MODEL || 'gemini-3.5-flash-lite',
   grok: process.env.GEO_GROK_MODEL || 'grok-4.3',
-  perplexity: process.env.GEO_PERPLEXITY_MODEL || 'sonar',
+  perplexity: process.env.GEO_PERPLEXITY_PRESET || 'fast',
 }
 
 export const PLATFORM_LABELS: Record<PlatformId, string> = {
@@ -140,7 +140,11 @@ async function askGrok(query: string) {
     { model, input: [{ role: 'user', content: query }], tools: [{ type: 'web_search' }], max_output_tokens: 2000 })
   const p = parseResponsesApi(data)
   const searches = data.usage?.server_side_tool_usage_details?.web_search_calls ?? p.searches
-  return { ...p, searches, model: data.model || model, costUsd: estimateCost(model, data.usage?.input_tokens || 0, data.usage?.output_tokens || 0, Math.max(1, searches)) }
+  // xAI reports the exact cost in ticks (1 USD = 1e10 ticks).
+  const ticks = data.usage?.cost_in_usd_ticks
+  const costUsd = typeof ticks === 'number' ? ticks / 1e10
+    : estimateCost(model, data.usage?.input_tokens || 0, data.usage?.output_tokens || 0, Math.max(1, searches))
+  return { ...p, searches, model: data.model || model, costUsd }
 }
 
 async function askClaude(query: string, city: string) {
@@ -188,24 +192,31 @@ async function askGemini(query: string) {
   return { text, sources, searches, model: data.modelVersion || model, costUsd: estimateCost(model, u.promptTokenCount || 0, outTok, searches) }
 }
 
+// Perplexity moved Sonar to the Agent API (Sept 2026). Preset "fast" is the Sonar equivalent,
+// web search is built in. Perplexity reports the exact cost in usage.cost.total_cost.
 async function askPerplexity(query: string) {
-  const model = MODELS.perplexity
-  const data = await postJson('https://api.perplexity.ai/chat/completions',
+  const preset = MODELS.perplexity
+  const data = await postJson('https://api.perplexity.ai/v1/agent',
     { Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}` },
-    {
-      model,
-      messages: [{ role: 'user', content: query }],
-      web_search_options: { search_context_size: 'low', user_location: { country: 'CH' } },
-    })
-  const text = data.choices?.[0]?.message?.content || ''
-  const sources: GeoSource[] = [
-    ...(data.search_results || []).map((r: any) => ({ url: r.url, title: r.title })),
-    ...(data.citations || []).map((u: string) => ({ url: u })),
-  ]
+    { preset, input: query })
+  let text = ''
+  const sources: GeoSource[] = []
+  let searches = 0
+  for (const item of data.output || []) {
+    if (item.type === 'search_results') {
+      searches++
+      for (const r of item.results || []) sources.push({ url: r.url, title: r.title })
+    }
+    if (item.type === 'message') {
+      for (const c of item.content || []) if (c.type === 'output_text') text += (text ? '\n' : '') + (c.text || '')
+    }
+  }
   const reported = data.usage?.cost?.total_cost
-  const cost = typeof reported === 'number' ? reported
-    : estimateCost(model, data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0, 0)
-  return { text, sources, searches: 1, model: data.model || model, costUsd: cost }
+  return {
+    text, sources, searches,
+    model: `perplexity-${preset}${data.model ? ` (${data.model})` : ''}`,
+    costUsd: typeof reported === 'number' ? reported : 0.005,
+  }
 }
 
 const ASK: Record<PlatformId, (q: string, city: string) => Promise<{ text: string; sources: GeoSource[]; searches: number; model: string; costUsd: number }>> = {
