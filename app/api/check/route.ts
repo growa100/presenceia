@@ -9,6 +9,7 @@ export const maxDuration = 90
 
 const RATE_LIMIT = Number(process.env.GEO_RATE_LIMIT || 5)      // fresh checks per IP per hour
 const DAILY_CAP = Number(process.env.GEO_DAILY_CAP || 300)      // fresh checks per 24 h, all visitors
+const CACHE_HOURS = Number(process.env.GEO_CACHE_HOURS || 168)  // AI answers move slowly; a week keeps repeat checks free
 const LANGS = new Set(['fr', 'de', 'en', 'it'])
 
 function hashIp(ip: string): string {
@@ -36,14 +37,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  // Cache (24 h) on the normalised name, so "Garage Dupont Sàrl" and "garage dupont" share it.
+  // Cache (7 days by default) on the normalised name, so "Garage Dupont Sàrl" and "garage dupont" share it.
   const cacheKey = `v${ENGINE_VERSION}_${normalizeName(businessName)}_${normalize(city)}_${normalize(category)}_${language}`
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const cacheSince = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000).toISOString()
   const { data: cached } = await supabaseAdmin
     .from('visibility_checks')
     .select('result')
     .eq('cache_key', cacheKey)
-    .gte('created_at', since24h)
+    .gte('created_at', cacheSince)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()

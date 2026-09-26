@@ -21,8 +21,9 @@ export interface AnalystResult {
   costUsd: number
 }
 
-const ANALYST_MODEL = process.env.GEO_ANALYST_MODEL || 'claude-sonnet-5'
-const FALLBACK_MODEL = 'claude-haiku-4-5'
+// Haiku since 2026-09-26 (cost); Sonnet 5 wrote slightly richer diagnoses at twice the price.
+const ANALYST_MODEL = process.env.GEO_ANALYST_MODEL || 'claude-haiku-4-5'
+const FALLBACK_MODEL = ANALYST_MODEL === 'claude-haiku-4-5' ? 'claude-sonnet-5' : 'claude-haiku-4-5'
 
 const LANG_NAME: Record<string, string> = { fr: 'French', de: 'German', en: 'English', it: 'Italian' }
 
@@ -75,7 +76,7 @@ export async function analyseAnswers(
 
   const lang = LANG_NAME[business.language] || 'French'
   const block = usable.map(a =>
-    `<answer id="${a.id}" assistant="${a.platformLabel}" question="${a.query.replace(/"/g, "'")}">\n${a.text.slice(0, 3500)}\n` +
+    `<answer id="${a.id}" assistant="${a.platformLabel}" question="${a.query.replace(/"/g, "'")}">\n${a.text.slice(0, 2500)}\n` +
     (a.sources.length ? `Sources cited: ${a.sources.slice(0, 8).map(s => s.title || s.url).join(' | ')}\n` : '') +
     `</answer>`).join('\n\n')
 
@@ -95,6 +96,7 @@ Fill the report tool. Rules:
 - Diagnosis in ${lang}, 3 to 5 short sentences, addressed to the owner ("vous" in French, "Sie" in German): how many of the ${usable.length} answers name the business, which competitors the assistants recommend instead, and which kinds of sources the assistants rely on (directories, review sites, press, own websites), based on the sources cited.
 - Actions in ${lang}: exactly 3, concrete, ordered by impact, specific to what these answers and sources show (for example which directory or review platform to be present on). No generic marketing advice.
 - You do not know the business's current website, listings or reviews. Never state that it is absent from a directory, has no website or has few reviews; phrase actions as checks or steps ("assurez-vous d'être présent sur local.ch").
+- Write flawless ${lang} with every accent and umlaut (é, è, à, ç, ä, ö, ü). Text without accents is unacceptable.
 - Plain, sober tone. Never use the em dash character. No exclamation marks.`
 
   for (const model of [ANALYST_MODEL, FALLBACK_MODEL]) {

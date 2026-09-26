@@ -103,14 +103,13 @@ export function buildQueries(b: BusinessInput): [string, string] {
   }
 }
 
-// Which assistant gets which question: one answer per assistant (Tony, 2026-09-26: about USD 0.13
-// per check). The two phrasings are spread so both intents are covered.
+// Which assistant gets which question: one answer per assistant. Grok only runs if GEO_ENABLE_GROK=1.
 const PLAN: [PlatformId, 0 | 1][] = [
   ['chatgpt', 0],
   ['gemini', 1],
-  ['claude', 0],
-  ['grok', 1],
+  ['claude', 1],
   ['perplexity', 0],
+  ['grok', 1],
 ]
 
 function scoreOf(appeared: boolean, position: number | null, sentiment: PlatformResult['sentiment']): number {
@@ -125,7 +124,7 @@ function scoreOf(appeared: boolean, position: number | null, sentiment: Platform
 export async function runVisibilityCheck(business: BusinessInput): Promise<ScoringResult> {
   const queries = buildQueries(business)
   const plan = PLAN.filter(([p]) => platformEnabled(p))
-  const skipped = (Object.keys(PLATFORM_LABELS) as PlatformId[]).filter(p => !platformEnabled(p))
+  const skipped = (Object.keys(PLATFORM_LABELS) as PlatformId[]).filter(p => !platformEnabled(p) && !(p === 'grok' && process.env.GEO_ENABLE_GROK !== '1'))
   if (!plan.length) throw new Error('No AI platform configured')
 
   const counters: Record<string, number> = {}

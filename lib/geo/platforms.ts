@@ -41,6 +41,8 @@ export function platformEnabled(p: PlatformId): boolean {
     chatgpt: 'OPENAI_API_KEY', claude: 'ANTHROPIC_API_KEY', gemini: 'GEMINI_API_KEY',
     grok: 'XAI_API_KEY', perplexity: 'PERPLEXITY_API_KEY',
   }[p]
+  // Grok is off by default since 2026-09-26: 3 forced searches per answer, USD 0.045, a third of the cost.
+  if (p === 'grok' && process.env.GEO_ENABLE_GROK !== '1') return false
   return !!process.env[key] && process.env[`GEO_DISABLE_${p.toUpperCase()}`] !== '1'
 }
 
@@ -156,7 +158,7 @@ async function askClaude(query: string, city: string) {
       max_tokens: 1500,
       messages: [{ role: 'user', content: query }],
       tools: [{
-        type: 'web_search_20250305', name: 'web_search', max_uses: 2,
+        type: 'web_search_20250305', name: 'web_search', max_uses: 1,
         user_location: { type: 'approximate', country: 'CH', city },
       }],
       // Without this Haiku sometimes answers from memory ("je n'ai pas d'informations à jour").
@@ -186,7 +188,8 @@ async function askGemini(query: string) {
   const text = (cand?.content?.parts || []).filter((p: any) => p.text && !p.thought).map((p: any) => p.text).join('')
   const gm = cand?.groundingMetadata || {}
   const sources: GeoSource[] = (gm.groundingChunks || []).map((c: any) => ({ url: c.web?.uri, title: c.web?.title }))
-  const searches = gm.webSearchQueries?.length ? 1 : 0 // billed per grounded request, not per query
+  // Billed per grounded request; the first 5,000 per month are free (set GEO_GEMINI_GROUNDING_PAID=1 above that).
+  const searches = gm.webSearchQueries?.length && process.env.GEO_GEMINI_GROUNDING_PAID === '1' ? 1 : 0
   const u = data.usageMetadata || {}
   const outTok = (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0)
   return { text, sources, searches, model: data.modelVersion || model, costUsd: estimateCost(model, u.promptTokenCount || 0, outTok, searches) }
