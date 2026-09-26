@@ -104,7 +104,7 @@ export default function CheckerForm() {
   const [code, setCode] = useState('')
   const [pending, setPending] = useState<FormData | null>(null)
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
   const cat = watch('category')
   const onHuman = useCallback((t: string | null) => setHuman(t), [])
 
@@ -174,6 +174,7 @@ export default function CheckerForm() {
       const json = await res.json().catch(() => ({}))
       if (!res.ok) { showError(json.error || 'generic'); return }
       setSession({ email: json.email, left: 1 })
+      reset(pending) // the form re-mounts after the code step: keep what the visitor typed
       await runCheck(pending)
     } catch { showError('generic') } finally { setBusy(false) }
   }
@@ -235,7 +236,13 @@ export default function CheckerForm() {
       </div>
 
       {loggedIn ? (
-        <p className="text-xs font-mono text-white/40 flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-green-400" />{T.connected(session!.email!)}</p>
+        <p className="text-xs font-mono text-white/40 flex items-center gap-2">
+          <ShieldCheck className="w-3.5 h-3.5 text-green-400" />{T.connected(session!.email!)}
+          <button type="button" className="underline hover:text-white/70"
+            onClick={async () => { await fetch('/api/check/session', { method: 'DELETE' }); setError(''); setHuman(null); refreshSession() }}>
+            {T.back}
+          </button>
+        </p>
       ) : (
         <>
           <div>

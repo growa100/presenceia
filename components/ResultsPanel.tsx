@@ -107,7 +107,7 @@ export default function ResultsPanel({ result, lang, onReset }: Props) {
       {/* Recommendations */}
       <div className="glass-light rounded-2xl p-6 border border-white/5">
         <h4 className="font-mono text-xs text-brand tracking-widest uppercase mb-4">
-          {isEn ? '— Priority actions' : isDe ? '— Prioritätsmaßnahmen' : '— Actions prioritaires'}
+          {isEn ? 'Priority actions' : isDe ? 'Prioritäre Massnahmen' : 'Actions prioritaires'}
         </h4>
         <div className="space-y-3">
           {result.topRecommendations.map((rec, i) => (
