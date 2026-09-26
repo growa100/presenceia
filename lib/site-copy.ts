@@ -35,8 +35,8 @@ const fr = {
   nav: { analysis: 'Analyse gratuite', journey: 'Accompagnement', services: 'Services', examples: 'Sites web', how: 'Comment ça marche', pricing: 'Tarifs', faq: 'Questions', blog: 'Blog', login: 'Espace client', cta: 'Analyse gratuite' },
   hero: {
     eyebrow: 'Agence de visibilité IA · Suisse',
-    h1a: 'Quand vos clients cherchent avec l’IA,',
-    h1b: 'soyez parmi les entreprises recommandées.',
+    h1a: 'Soyez recommandé',
+    h1b: 'par l’IA.',
     sub: 'Présence IA mesure comment ChatGPT, Gemini, Claude et Perplexity parlent de votre entreprise, de vos concurrents et de votre secteur. Nous vous montrons où vous êtes invisible et comment améliorer votre présence sur les IA et Google.',
     cta1: 'Tester ma visibilité IA',
     cta2: 'Voir l\'accompagnement',
@@ -140,8 +140,8 @@ const de: typeof fr = {
   nav: { analysis: 'Kostenlose Analyse', journey: 'Begleitung', services: 'Leistungen', examples: 'Websites', how: 'So funktioniert es', pricing: 'Preise', faq: 'Fragen', blog: 'Blog', login: 'Kundenbereich', cta: 'Kostenlose Analyse' },
   hero: {
     eyebrow: 'KI-Sichtbarkeitsagentur · Schweiz',
-    h1a: 'Wenn Ihre Kunden mit KI suchen,',
-    h1b: 'gehören Sie zu den empfohlenen Betrieben.',
+    h1a: 'Lassen Sie sich',
+    h1b: 'von der KI empfehlen.',
     sub: 'Présence IA misst, wie ChatGPT, Gemini, Claude und Perplexity über Ihren Betrieb, Ihre Mitbewerber und Ihre Branche sprechen. Wir zeigen Ihnen, wo Sie unsichtbar sind und wie Sie Ihre Präsenz bei der KI und auf Google verbessern.',
     cta1: 'KI-Sichtbarkeit testen',
     cta2: 'Begleitung ansehen',
@@ -245,8 +245,8 @@ const en: typeof fr = {
   nav: { analysis: 'Free analysis', journey: 'Our approach', services: 'Services', examples: 'Websites', how: 'How it works', pricing: 'Pricing', faq: 'FAQ', blog: 'Blog', login: 'Client area', cta: 'Free analysis' },
   hero: {
     eyebrow: 'AI visibility agency · Switzerland',
-    h1a: 'When your customers search with AI,',
-    h1b: 'be among the businesses it recommends.',
+    h1a: 'Get recommended',
+    h1b: 'by AI.',
     sub: 'Présence IA measures how ChatGPT, Gemini, Claude and Perplexity talk about your business, your competitors and your sector. We show you where you are invisible and how to improve your presence on AI and on Google.',
     cta1: 'Test my AI visibility',
     cta2: 'See our approach',

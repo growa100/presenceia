@@ -5,6 +5,9 @@ import { CONTACT } from '@/lib/site-copy'
 
 export type LegalSection = { title: string; body: string[] }
 
+// **bold** inside a paragraph
+const rich = (t: string) => t.split(/\*\*(.+?)\*\*/g).map((part, i) => i % 2 ? <strong key={i} className="font-semibold text-ink">{part}</strong> : part)
+
 export default function LegalPage({ title, updated, sections }: { title: string; updated: string; sections: LegalSection[] }) {
   return (
     <div className="page-light min-h-screen">
@@ -17,7 +20,7 @@ export default function LegalPage({ title, updated, sections }: { title: string;
           {sections.map(s => (
             <section key={s.title}>
               <h2 className="text-xl font-semibold text-ink mb-3">{s.title}</h2>
-              {s.body.map((p, i) => <p key={i} className="text-ink/70 leading-relaxed mb-3">{p}</p>)}
+              {s.body.map((p, i) => <p key={i} className="text-ink/70 leading-relaxed mb-3">{rich(p)}</p>)}
             </section>
           ))}
         </div>
