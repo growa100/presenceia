@@ -7,7 +7,7 @@ const KEY = process.env.STRIPE_SECRET_KEY || ''
 export const stripe: Stripe | null = KEY ? new Stripe(KEY) : null
 export const stripeTestMode = KEY.startsWith('sk_test_') || KEY.startsWith('rk_test_')
 
-const lookupKey = (plan: PlanKey) => `pia_${plan}_monthly_chf_${PLANS[plan].chf}`
+const lookupKey = (plan: PlanKey) => `pia_${plan}_${PLANS[plan].once ? 'once' : 'monthly'}_chf_${PLANS[plan].chf}`
 const priceCache = new Map<PlanKey, string>()
 
 export async function priceFor(plan: PlanKey): Promise<string> {
@@ -24,7 +24,7 @@ export async function priceFor(plan: PlanKey): Promise<string> {
     })
     const price = await stripe.prices.create({
       product: product.id, currency: 'chf', unit_amount: PLANS[plan].chf * 100,
-      recurring: { interval: 'month' }, lookup_key: key, metadata: { plan },
+      ...(PLANS[plan].once ? {} : { recurring: { interval: 'month' as const } }), lookup_key: key, metadata: { plan },
     })
     id = price.id
   }
@@ -35,7 +35,7 @@ export async function priceFor(plan: PlanKey): Promise<string> {
 export function planFromPrice(price: Stripe.Price | string | null | undefined): PlanKey | null {
   if (!price || typeof price === 'string') return null
   const p = price.metadata?.plan || price.lookup_key?.split('_')[1]
-  return p === 'site' || p === 'visibility' || p === 'complete' ? p : null
+  return p === 'site' || p === 'visibility' || p === 'complete' || p === 'boost' ? p : null
 }
 
 // Customer portal (invoices, card, cancellation). Created once if the account has none.

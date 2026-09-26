@@ -118,6 +118,19 @@ export function magicUrl(base: string, email: string, ttl = '30m', to = '/espace
   return `${base}/api/client/magic?t=${encodeURIComponent(createMagicToken(email, ttl))}&to=${encodeURIComponent(to)}`
 }
 
+// ─── Marketing opt-out (nurture + monthly analysis emails) ───────────────────────
+export function unsubscribeToken(email: string): string {
+  return jwt.sign({ e: email, k: 'unsub' }, secret(), { expiresIn: '400d' })
+}
+export function verifyUnsubscribeToken(token: string): string | null {
+  try {
+    const p = jwt.verify(token, secret()) as { e: string; k: string }
+    return p.k === 'unsub' ? p.e : null
+  } catch {
+    return null
+  }
+}
+
 // ─── Session ───────────────────────────────────────────────────────────────────
 export function setSession(res: NextResponse, email: string) {
   const token = jwt.sign({ e: email, k: 'session' }, secret(), { expiresIn: `${SESSION_DAYS}d` })
@@ -152,6 +165,6 @@ export async function freeChecksLeft(email: string): Promise<number> {
   if (isUnlimited(email)) return 99
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
   const { count } = await supabaseAdmin.from('visibility_checks')
-    .select('id', { count: 'exact', head: true }).eq('email', email).eq('from_cache', false).gte('created_at', since)
+    .select('id', { count: 'exact', head: true }).eq('email', email).eq('from_cache', false).eq('kind', 'user').gte('created_at', since)
   return Math.max(0, FREE_PER_DAY - (count || 0))
 }

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const [left, lead, checks, updates] = await Promise.all([
     freeChecksLeft(email),
     supabaseAdmin.from('leads')
-      .select('business_name, city, category, stage, client_message, plan, subscription_status, current_period_end, audit_requested_at, audit_done_at, stripe_customer_id')
+      .select('business_name, city, category, stage, client_message, plan, subscription_status, current_period_end, audit_requested_at, audit_done_at, boost_paid_at, stripe_customer_id')
       .eq('email', email).maybeSingle(),
     supabaseAdmin.from('visibility_checks')
       .select('id, business_name, city, category, overall_score, grade, created_at, mentions:result->mentions, total:result->totalAnswers')

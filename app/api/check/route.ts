@@ -123,7 +123,9 @@ async function sendReport(email: string, result: ScoringResult, language: string
   } catch (e) {
     console.error('[check] pdf failed', e)
   }
-  const mail = buildReportEmail(result, language, { pdf: !!pdf, spaceUrl: magicUrl(base, email, '7d') })
+  const mail = buildReportEmail(result, language, {
+    pdf: !!pdf, spaceUrl: magicUrl(base, email, '7d'), boostUrl: `${base}/api/stripe/checkout?plan=boost&lang=${language}`,
+  })
   await sendMail({ to: email, ...mail, ...(pdf ? { attachments: [{ filename: reportFilename(result), content: pdf }] } : {}) })
 }
 

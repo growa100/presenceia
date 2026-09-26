@@ -12,7 +12,7 @@ import AuditRequest from './AuditRequest'
 import CheckoutButton from './CheckoutButton'
 import { useLang } from './LangProvider'
 import { CONTACT } from '@/lib/site-copy'
-import { PLANS, PLAN_KEYS, type PlanKey } from '@/lib/plans'
+import { BOOST_COPY, PLANS, PLAN_KEYS, type PlanKey } from '@/lib/plans'
 import type { ScoringResult } from '@/lib/scoring-engine'
 import type { Lang } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -22,7 +22,7 @@ type Update = { id: string; kind: string; title: string; body: string | null; li
 type Lead = {
   business_name: string | null; city: string | null; category: string | null; stage: string | null; client_message: string | null
   plan: PlanKey | null; subscription_status: string | null; current_period_end: string | null
-  audit_requested_at: string | null; audit_done_at: string | null; hasBilling: boolean
+  audit_requested_at: string | null; audit_done_at: string | null; boost_paid_at: string | null; hasBilling: boolean
 }
 type Me = { email: string; left: number; lead: Lead | null; analyses: Analysis[]; updates: Update[]; bookingUrl: string | null; payments: boolean; paymentsTest: boolean }
 
@@ -34,7 +34,10 @@ const L = {
     expired: 'Ce lien a expiré. Demandez-en un nouveau ci-dessous.', none: 'Pas encore d\'analyse ?', noneCta: 'Lancer l\'analyse gratuite',
     hello: 'Bonjour', logout: 'Se déconnecter',
     welcome: 'Merci, votre abonnement est actif. Antoine vous contacte sous 24 h (jours ouvrés) pour démarrer. Vous pouvez déjà planifier l\'appel de démarrage.',
-    journey: 'Votre parcours', steps: ['Analyse gratuite', 'Audit offert', 'Accompagnement', 'Suivi mensuel'],
+    journey: 'Votre parcours', steps: ['Analyse gratuite', 'Audit offert', 'GEO Boost', 'Suivi mensuel'],
+    nBoost: ['Passez à l\'action : le GEO Boost', 'Vos concurrents sont recommandés à votre place. En 2 semaines, nous corrigeons ce qui empêche les IA de vous citer.'],
+    nBoostPaid: ['Votre GEO Boost est en cours', 'Nous travaillons votre fiche Google, vos annuaires et votre site. Nouvelle analyse sur les 4 IA après 30 jours. Pour garder l\'avance, passez au suivi mensuel.'],
+    orAudit: 'Ou d\'abord l\'audit offert (30 min)', boostPaid: (d: string) => `GEO Boost payé le ${d}`, keepUp: 'Suivi mensuel',
     next: 'Prochaine étape',
     nFirst: ['Lancez votre première analyse', 'Découvrez en 60 secondes si ChatGPT, Claude, Gemini et Perplexity recommandent votre entreprise.'],
     nAudit: ['Réservez votre audit offert', '30 minutes avec Antoine : votre site, votre fiche Google, les annuaires et vos avis passés en revue, et un plan d\'action écrit. Sans engagement.'],
@@ -47,8 +50,8 @@ const L = {
     analyses: 'Vos analyses', newA: 'Nouvelle analyse', left: (n: number) => n > 50 ? 'Analyses illimitées' : n > 0 ? `${n} analyse gratuite disponible aujourd'hui` : 'Prochaine analyse gratuite demain',
     noA: 'Aucune analyse pour le moment.', view: 'Voir', hide: 'Fermer', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `cité par ${m}/${t}`,
     follow: 'Suivi', noF: 'Votre suivi apparaîtra ici : audit, plan d\'action, travaux réalisés et rapports mensuels.',
-    ev: { audit_requested: 'Audit offert demandé', subscribed: (p: string) => `Abonnement activé : ${p}` } as Record<string, string | ((p: string) => string)>,
-    sub: 'Abonnement', plan: 'Offre', status: 'Statut', renew: 'Prochain renouvellement', manage: 'Factures, carte et résiliation',
+    ev: { audit_requested: 'Audit offert demandé', subscribed: (p: string) => `Abonnement activé : ${p}`, boost_purchased: 'GEO Boost commandé', monthly_analysis: (p: string) => `Analyse mensuelle : ${p}/100` } as Record<string, string | ((p: string) => string)>,
+    sub: 'Offres et facturation', plan: 'Offre', status: 'Statut', renew: 'Prochain renouvellement', manage: 'Factures, carte et résiliation',
     statuses: { active: 'Actif', trialing: 'Période d\'essai', past_due: 'Paiement en attente', canceled: 'Résilié', unpaid: 'Impayé', incomplete: 'Incomplet', paused: 'En pause' } as Record<string, string>,
     choose: 'Choisir', perMonth: '/ mois', payNote: 'Paiement sécurisé par Stripe. Mensuel, résiliable en tout temps.', noPay: 'Le paiement en ligne sera bientôt disponible. Écrivez-nous pour démarrer.',
     test: 'Mode test : aucun paiement réel. Carte de test 4242 4242 4242 4242, date future, CVC au choix.',
@@ -62,7 +65,10 @@ const L = {
     expired: 'Dieser Link ist abgelaufen. Fordern Sie unten einen neuen an.', none: 'Noch keine Analyse?', noneCta: 'Kostenlose Analyse starten',
     hello: 'Guten Tag', logout: 'Abmelden',
     welcome: 'Danke, Ihr Abonnement ist aktiv. Antoine meldet sich innert 24 Stunden (Werktage), um zu starten. Sie können das Startgespräch bereits planen.',
-    journey: 'Ihr Weg', steps: ['Kostenlose Analyse', 'Kostenloses Audit', 'Begleitung', 'Monatliches Monitoring'],
+    journey: 'Ihr Weg', steps: ['Kostenlose Analyse', 'Kostenloses Audit', 'GEO Boost', 'Monatliches Monitoring'],
+    nBoost: ['Jetzt handeln: der GEO Boost', 'Ihre Mitbewerber werden an Ihrer Stelle empfohlen. In 2 Wochen beheben wir, was die KI daran hindert, Sie zu nennen.'],
+    nBoostPaid: ['Ihr GEO Boost läuft', 'Wir arbeiten an Ihrem Google-Profil, Ihren Verzeichnissen und Ihrer Website. Neue Analyse bei den 4 KI nach 30 Tagen. Um vorne zu bleiben: monatliche Begleitung.'],
+    orAudit: 'Oder zuerst das kostenlose Audit (30 Min.)', boostPaid: (d: string) => `GEO Boost bezahlt am ${d}`, keepUp: 'Monatliche Begleitung',
     next: 'Nächster Schritt',
     nFirst: ['Starten Sie Ihre erste Analyse', 'Erfahren Sie in 60 Sekunden, ob ChatGPT, Claude, Gemini und Perplexity Ihr Unternehmen empfehlen.'],
     nAudit: ['Buchen Sie Ihr kostenloses Audit', '30 Minuten mit Antoine: Website, Google-Profil, Verzeichnisse und Bewertungen geprüft, dazu ein schriftlicher Aktionsplan. Unverbindlich.'],
@@ -75,8 +81,8 @@ const L = {
     analyses: 'Ihre Analysen', newA: 'Neue Analyse', left: (n: number) => n > 50 ? 'Unbegrenzte Analysen' : n > 0 ? `${n} kostenlose Analyse heute verfügbar` : 'Nächste kostenlose Analyse morgen',
     noA: 'Noch keine Analyse.', view: 'Ansehen', hide: 'Schliessen', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `genannt von ${m}/${t}`,
     follow: 'Verlauf', noF: 'Ihr Verlauf erscheint hier: Audit, Aktionsplan, umgesetzte Arbeiten und Monatsberichte.',
-    ev: { audit_requested: 'Kostenloses Audit angefragt', subscribed: (p: string) => `Abonnement aktiviert: ${p}` } as Record<string, string | ((p: string) => string)>,
-    sub: 'Abonnement', plan: 'Angebot', status: 'Status', renew: 'Nächste Verlängerung', manage: 'Rechnungen, Karte und Kündigung',
+    ev: { audit_requested: 'Kostenloses Audit angefragt', subscribed: (p: string) => `Abonnement aktiviert: ${p}`, boost_purchased: 'GEO Boost bestellt', monthly_analysis: (p: string) => `Monatliche Analyse: ${p}/100` } as Record<string, string | ((p: string) => string)>,
+    sub: 'Angebote und Rechnungen', plan: 'Angebot', status: 'Status', renew: 'Nächste Verlängerung', manage: 'Rechnungen, Karte und Kündigung',
     statuses: { active: 'Aktiv', trialing: 'Testphase', past_due: 'Zahlung ausstehend', canceled: 'Gekündigt', unpaid: 'Unbezahlt', incomplete: 'Unvollständig', paused: 'Pausiert' } as Record<string, string>,
     choose: 'Wählen', perMonth: '/ Monat', payNote: 'Sichere Zahlung über Stripe. Monatlich, jederzeit kündbar.', noPay: 'Die Online-Zahlung ist bald verfügbar. Schreiben Sie uns, um zu starten.',
     test: 'Testmodus: keine echte Zahlung. Testkarte 4242 4242 4242 4242, Datum in der Zukunft, beliebiger CVC.',
@@ -90,7 +96,10 @@ const L = {
     expired: 'This link has expired. Ask for a new one below.', none: 'No analysis yet?', noneCta: 'Run the free analysis',
     hello: 'Hello', logout: 'Sign out',
     welcome: 'Thank you, your subscription is active. Antoine will contact you within 24 hours (working days) to get started. You can already schedule the kick-off call.',
-    journey: 'Your journey', steps: ['Free analysis', 'Free audit', 'Ongoing support', 'Monthly tracking'],
+    journey: 'Your journey', steps: ['Free analysis', 'Free audit', 'GEO Boost', 'Monthly tracking'],
+    nBoost: ['Take action: the GEO Boost', 'Your competitors are recommended instead of you. In 2 weeks, we fix what keeps AI from naming you.'],
+    nBoostPaid: ['Your GEO Boost is under way', 'We are working on your Google profile, directories and website. New analysis on the 4 assistants after 30 days. To stay ahead, move to monthly follow-up.'],
+    orAudit: 'Or first the free audit (30 min)', boostPaid: (d: string) => `GEO Boost paid on ${d}`, keepUp: 'Monthly follow-up',
     next: 'Next step',
     nFirst: ['Run your first analysis', 'Find out in 60 seconds whether ChatGPT, Claude, Gemini and Perplexity recommend your business.'],
     nAudit: ['Book your free audit', '30 minutes with Antoine: your website, Google profile, directories and reviews reviewed, plus a written action plan. No commitment.'],
@@ -103,8 +112,8 @@ const L = {
     analyses: 'Your analyses', newA: 'New analysis', left: (n: number) => n > 50 ? 'Unlimited analyses' : n > 0 ? `${n} free analysis available today` : 'Next free analysis tomorrow',
     noA: 'No analysis yet.', view: 'View', hide: 'Close', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `named by ${m}/${t}`,
     follow: 'Follow-up', noF: 'Your follow-up will appear here: audit, action plan, work done and monthly reports.',
-    ev: { audit_requested: 'Free audit requested', subscribed: (p: string) => `Subscription started: ${p}` } as Record<string, string | ((p: string) => string)>,
-    sub: 'Subscription', plan: 'Plan', status: 'Status', renew: 'Next renewal', manage: 'Invoices, card and cancellation',
+    ev: { audit_requested: 'Free audit requested', subscribed: (p: string) => `Subscription started: ${p}`, boost_purchased: 'GEO Boost ordered', monthly_analysis: (p: string) => `Monthly analysis: ${p}/100` } as Record<string, string | ((p: string) => string)>,
+    sub: 'Plans and billing', plan: 'Plan', status: 'Status', renew: 'Next renewal', manage: 'Invoices, card and cancellation',
     statuses: { active: 'Active', trialing: 'Trial', past_due: 'Payment pending', canceled: 'Cancelled', unpaid: 'Unpaid', incomplete: 'Incomplete', paused: 'Paused' } as Record<string, string>,
     choose: 'Choose', perMonth: '/ month', payNote: 'Secure payment by Stripe. Monthly, cancel anytime.', noPay: 'Online payment is coming soon. Write to us to get started.',
     test: 'Test mode: no real payment. Test card 4242 4242 4242 4242, any future date, any CVC.',
@@ -184,9 +193,9 @@ function Journey({ T, me }: { T: TT; me: Me }) {
   const subscribed = ['active', 'trialing', 'past_due'].includes(l?.subscription_status || '')
   const done = [
     me.analyses.length > 0,
-    !!l?.audit_done_at || l?.stage === 'audit_done' || subscribed,
+    !!l?.audit_done_at || l?.stage === 'audit_done' || !!l?.boost_paid_at || subscribed,
+    !!l?.boost_paid_at || subscribed,
     subscribed,
-    subscribed && me.updates.some(u => u.kind === 'report'),
   ]
   const current = done.findIndex(d => !d)
   return (
@@ -218,23 +227,40 @@ function NextStep({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
     </a>
   )
 
-  let title: string[], action: React.ReactNode = null
+  const auditLink = !l?.audit_requested_at && !l?.audit_done_at && last && (showForm ? (
+    <div className="rounded-2xl bg-ink p-5 mt-2 w-full">
+      <AuditRequest lang={lang} variant="dark" prefill={{ businessName: last.business_name, city: last.city, category: last.category }} />
+    </div>
+  ) : (
+    <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 text-white/90 hover:text-white underline underline-offset-4 px-2 py-3.5 text-sm font-semibold">
+      {T.orAudit} <ArrowRight className="w-4 h-4" />
+    </button>
+  ))
+  const B = BOOST_COPY[lang]
+
+  let title: string[], action: React.ReactNode = null, extra: React.ReactNode = null
   if (subscribed) { title = T.nClient; action = bookBtn(T.bookPoint) }
-  else if (l?.audit_done_at || l?.stage === 'audit_done') {
-    title = T.nPlan
-    action = <a href="#abonnement" className="inline-flex items-center gap-2 bg-white text-brand px-6 py-3.5 rounded-2xl text-sm font-semibold">{T.seePlans} <ArrowRight className="w-4 h-4" /></a>
-  } else if (l?.audit_requested_at) { title = me.bookingUrl ? T.nBooked : T.nBookedNoLink; action = bookBtn(T.book) }
-  else if (last) {
-    title = T.nAudit
-    action = showForm ? (
-      <div className="rounded-2xl bg-ink p-5 mt-2 w-full">
-        <AuditRequest lang={lang} variant="dark" prefill={{ businessName: last.business_name, city: last.city, category: last.category }} />
-      </div>
-    ) : (
-      <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 bg-white text-brand px-6 py-3.5 rounded-2xl text-sm font-semibold hover:bg-white/90 transition-colors">
-        <Sparkles className="w-4 h-4" /> {T.request} <ArrowRight className="w-4 h-4" />
-      </button>
+  else if (l?.boost_paid_at) {
+    title = T.nBoostPaid
+    action = <>
+      {bookBtn(T.bookPoint)}
+      <CheckoutButton plan="visibility" lang={lang} fallbackHref="#abonnement" className="inline-flex items-center gap-2 border border-white/40 text-white px-6 py-3.5 rounded-2xl text-sm font-semibold hover:bg-white/10">
+        {T.keepUp} · CHF {PLANS.visibility.chf} {T.perMonth}
+      </CheckoutButton>
+    </>
+  } else if (last) {
+    title = T.nBoost
+    extra = (
+      <ul className="mt-5 grid sm:grid-cols-2 gap-x-6 gap-y-2 max-w-3xl">
+        {B.items.map(it => <li key={it} className="text-sm text-white/90 flex items-start gap-2"><Check className="w-4 h-4 mt-0.5 flex-shrink-0" />{it}</li>)}
+      </ul>
     )
+    action = <>
+      <CheckoutButton plan="boost" lang={lang} fallbackHref="/#pricing" className="inline-flex items-center gap-2 bg-white text-brand px-6 py-3.5 rounded-2xl text-sm font-semibold hover:bg-white/90 transition-colors">
+        <Sparkles className="w-4 h-4" /> {B.cta} · CHF {PLANS.boost.chf}
+      </CheckoutButton>
+      {l?.audit_requested_at ? bookBtn(T.book) : auditLink}
+    </>
   } else {
     title = T.nFirst
     action = <Link href="/#analyse" className="inline-flex items-center gap-2 bg-white text-brand px-6 py-3.5 rounded-2xl text-sm font-semibold"><Radar className="w-4 h-4" /> {T.start}</Link>
@@ -245,7 +271,9 @@ function NextStep({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
       <p className="font-mono text-xs tracking-widest uppercase text-white/70">{T.next}</p>
       <h2 className="font-display text-3xl md:text-4xl mt-2">{title[0]}</h2>
       <p className="text-white/85 mt-3 leading-relaxed max-w-2xl">{title[1]}</p>
-      {action && <div className="mt-6 flex flex-wrap gap-3">{action}</div>}
+      {extra}
+      {action && <div className="mt-6 flex flex-wrap items-center gap-3">{action}</div>}
+      {title === T.nBoost && <p className="mt-3 text-xs text-white/70">{B.note}</p>}
     </div>
   )
 }
@@ -342,6 +370,8 @@ function FollowUp({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
 function Subscription({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
   const l = me.lead
   const [busy, setBusy] = useState(false)
+  const subscribed = !!l?.subscription_status && l.subscription_status !== 'canceled' && !!l.plan && l.plan !== 'boost'
+  const B = BOOST_COPY[lang]
   const portal = async () => {
     setBusy(true)
     try {
@@ -351,37 +381,57 @@ function Subscription({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
       else setBusy(false)
     } catch { setBusy(false) }
   }
+  const plans = (
+    <div className="mt-5 grid md:grid-cols-3 gap-4">
+      {PLAN_KEYS.map(k => (
+        <div key={k} className={cn('rounded-2xl border p-5 flex flex-col', k === 'visibility' ? 'border-brand bg-brand/[0.03]' : 'border-line')}>
+          <p className="font-semibold text-ink">{PLANS[k].name[lang]}</p>
+          <p className="mt-2"><span className="font-display text-3xl text-ink">CHF {PLANS[k].chf}</span> <span className="text-sm text-ink/45">{T.perMonth}</span></p>
+          <CheckoutButton plan={k} lang={lang} fallbackHref="/#pricing"
+            className={cn('mt-4 w-full py-3 rounded-xl text-sm font-semibold', k === 'visibility' ? 'bg-brand text-white hover:bg-brand-2' : 'btn-outline')}>
+            {T.choose}
+          </CheckoutButton>
+        </div>
+      ))}
+    </div>
+  )
   return (
     <div id="abonnement" className="card p-6 md:p-8 scroll-mt-24">
       <h2 className="font-display text-3xl text-ink">{T.sub}</h2>
-      {l?.hasBilling ? (
+      {subscribed ? (
         <div className="mt-5">
           <dl className="grid sm:grid-cols-3 gap-4">
-            <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{T.plan}</dt><dd className="mt-1 font-semibold text-ink">{l.plan ? `${PLANS[l.plan].name[lang]} · CHF ${PLANS[l.plan].chf}` : '-'}</dd></div>
-            <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{T.status}</dt><dd className="mt-1 font-semibold text-ink">{T.statuses[l.subscription_status || ''] || l.subscription_status || '-'}</dd></div>
-            <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{T.renew}</dt><dd className="mt-1 font-semibold text-ink">{l.current_period_end ? fmtDate(l.current_period_end, lang) : '-'}</dd></div>
+            <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{T.plan}</dt><dd className="mt-1 font-semibold text-ink">{l?.plan ? `${PLANS[l.plan].name[lang]} · CHF ${PLANS[l.plan].chf}` : '-'}</dd></div>
+            <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{T.status}</dt><dd className="mt-1 font-semibold text-ink">{T.statuses[l?.subscription_status || ''] || l?.subscription_status || '-'}</dd></div>
+            <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{T.renew}</dt><dd className="mt-1 font-semibold text-ink">{l?.current_period_end ? fmtDate(l.current_period_end, lang) : '-'}</dd></div>
           </dl>
-          <button onClick={portal} disabled={busy} className="mt-6 btn-outline inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold">
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />} {T.manage}
-          </button>
         </div>
       ) : me.payments ? (
         <>
-          <div className="mt-5 grid md:grid-cols-3 gap-4">
-            {PLAN_KEYS.map(k => (
-              <div key={k} className={cn('rounded-2xl border p-5 flex flex-col', k === 'visibility' ? 'border-brand bg-brand/[0.03]' : 'border-line')}>
-                <p className="font-semibold text-ink">{PLANS[k].name[lang]}</p>
-                <p className="mt-2"><span className="font-display text-3xl text-ink">CHF {PLANS[k].chf}</span> <span className="text-sm text-ink/45">{T.perMonth}</span></p>
-                <CheckoutButton plan={k} lang={lang} fallbackHref="/#pricing"
-                  className={cn('mt-4 w-full py-3 rounded-xl text-sm font-semibold', k === 'visibility' ? 'bg-brand text-white hover:bg-brand-2' : 'btn-outline')}>
-                  {T.choose}
-                </CheckoutButton>
+          {l?.boost_paid_at ? (
+            <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-green-800 bg-green-50 rounded-xl px-3 py-2"><Check className="w-4 h-4" />{T.boostPaid(fmtDate(l.boost_paid_at, lang))}</p>
+          ) : (
+            <div className="mt-5 rounded-2xl bg-ink text-white p-6 md:flex md:items-center md:justify-between md:gap-8">
+              <div>
+                <p className="font-mono text-xs tracking-widest uppercase text-brand-2">{B.price}</p>
+                <p className="font-display text-3xl mt-1">{B.title}</p>
+                <p className="text-white/70 mt-2 text-sm leading-relaxed max-w-xl">{B.tagline}</p>
               </div>
-            ))}
-          </div>
+              <CheckoutButton plan="boost" lang={lang} fallbackHref="/#pricing" className="mt-5 md:mt-0 whitespace-nowrap bg-brand text-white hover:bg-brand-2 px-6 py-3.5 rounded-2xl text-sm font-semibold">
+                {B.cta}
+              </CheckoutButton>
+            </div>
+          )}
+          <p className="mt-6 text-sm font-semibold text-ink">{T.keepUp}</p>
+          {plans}
           <p className="mt-4 text-sm text-ink/50">{T.payNote} <Link href="/#pricing" className="underline underline-offset-4">{T.seePlans}</Link></p>
         </>
       ) : <p className="mt-5 text-ink/60">{T.noPay}</p>}
+      {l?.hasBilling && (
+        <button onClick={portal} disabled={busy} className="mt-6 btn-outline inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold">
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />} {T.manage}
+        </button>
+      )}
       {me.paymentsTest && <p className="mt-4 text-xs font-mono text-amber-700 bg-amber-50 rounded-xl px-3 py-2">{T.test}</p>}
     </div>
   )

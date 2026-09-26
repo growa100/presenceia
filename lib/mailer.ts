@@ -1,7 +1,7 @@
 // Transactional email through Resend (domain mail.presenceia.com). Returns true when accepted.
 export type MailAttachment = { filename: string; content: Buffer }
 
-export async function sendMail(opts: { to: string | string[]; subject: string; text: string; html?: string; replyTo?: string; attachments?: MailAttachment[] }): Promise<boolean> {
+export async function sendMail(opts: { to: string | string[]; subject: string; text: string; html?: string; replyTo?: string; attachments?: MailAttachment[]; headers?: Record<string, string> }): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
   if (!key) {
     console.log(`[mail] RESEND_API_KEY missing, not sent: ${opts.subject}`)
@@ -18,6 +18,7 @@ export async function sendMail(opts: { to: string | string[]; subject: string; t
         subject: opts.subject,
         text: opts.text,
         ...(opts.html ? { html: opts.html } : {}),
+        ...(opts.headers ? { headers: opts.headers } : {}),
         ...(opts.attachments?.length ? { attachments: opts.attachments.map(a => ({ filename: a.filename, content: a.content.toString('base64') })) } : {}),
       }),
       signal: AbortSignal.timeout(opts.attachments?.length ? 20000 : 10000),

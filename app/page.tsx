@@ -8,7 +8,7 @@ import AnalysisDialog from '@/components/AnalysisDialog'
 import AiAnswerMock from '@/components/AiAnswerMock'
 import AuditRequest from '@/components/AuditRequest'
 import CheckoutButton from '@/components/CheckoutButton'
-import { PLAN_KEYS } from '@/lib/plans'
+import { BOOST_COPY, PLAN_KEYS } from '@/lib/plans'
 import { agencyCopy } from '@/lib/agency-copy'
 import { CONTACT, SHOWCASE, siteCopy } from '@/lib/site-copy'
 import type { Lang } from '@/lib/i18n'
@@ -252,7 +252,24 @@ export default function Home() {
             <h2 className="font-display text-4xl md:text-5xl text-ink leading-tight">{c.pricing.title}</h2>
             <p className="mt-5 text-lg text-ink/65">{c.pricing.sub}</p>
           </div>
-          <div className="mt-14 grid md:grid-cols-3 gap-6 items-stretch">
+          {/* GEO Boost: one-time pack, the first step after the free analysis */}
+          <div className="mt-14 rounded-3xl bg-ink text-white p-8 md:p-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
+            <div>
+              <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand-2">{BOOST_COPY[lang].price}</p>
+              <h3 className="font-display text-4xl md:text-5xl mt-2">{BOOST_COPY[lang].title}</h3>
+              <p className="mt-3 text-white/70 text-lg leading-relaxed">{BOOST_COPY[lang].tagline}</p>
+              <CheckoutButton plan="boost" lang={lang} className="mt-7 inline-flex items-center gap-2 bg-brand text-white hover:bg-brand-2 px-7 py-4 rounded-2xl text-base font-semibold">
+                <Sparkles className="w-4 h-4" /> {BOOST_COPY[lang].cta}
+              </CheckoutButton>
+              <p className="mt-3 text-xs text-white/50">{BOOST_COPY[lang].note}</p>
+            </div>
+            <ul className="space-y-3">
+              {BOOST_COPY[lang].items.map(it => (
+                <li key={it} className="flex items-start gap-2.5 text-sm text-white/80 leading-relaxed"><Check className="w-4 h-4 flex-shrink-0 mt-0.5 text-brand-2" />{it}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="mt-8 grid md:grid-cols-3 gap-6 items-stretch">
             {c.pricing.plans.map((plan, i) => {
               const popular = 'popular' in plan && plan.popular
               return (

@@ -36,6 +36,8 @@ export const E = {
   h2: (t: string) => `<h2 style="font-family:${SERIF};font-weight:400;font-size:20px;color:${C.ink};margin:28px 0 10px">${h(t)}</h2>`,
   button: (href: string, label: string) =>
     `<p style="margin:20px 0"><a href="${h(href)}" style="display:inline-block;background:${C.brand};color:#fff;text-decoration:none;font-weight:600;padding:13px 22px;border-radius:12px">${h(label)}</a></p>`,
+  buttonDark: (href: string, label: string) =>
+    `<p style="margin:16px 0 0"><a href="${h(href)}" style="display:inline-block;background:${C.ink};color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:12px">${h(label)}</a></p>`,
   link: (href: string, label: string) => `<a href="${h(href)}" style="color:${C.brand}">${h(label)}</a>`,
   code: (code: string) =>
     `<div style="margin:18px 0;background:${C.ink};border-radius:16px;padding:22px;text-align:center"><span style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:34px;letter-spacing:10px;color:#fff;font-weight:600">${h(code)}</span></div>`,

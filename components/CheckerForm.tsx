@@ -37,7 +37,7 @@ const L = {
   fr: {
     name: 'Nom de l\'entreprise', city: 'Ville', cat: 'Secteur', email: 'Votre email', select: 'Sélectionner…',
     placeholder_name: 'Ex: Plomberie Dupont', placeholder_city: 'Ex: Sion, Genève…', placeholder_email: 'vous@entreprise.ch',
-    emailNote: 'Nous vous envoyons un code pour confirmer votre email. Une analyse gratuite par jour.',
+    emailNote: 'Nous vous envoyons un code pour confirmer votre email. Une analyse gratuite par jour. Vous recevrez le rapport, quelques conseils et une analyse mensuelle (désinscription en un clic).',
     submit: 'Recevoir mon code', run: 'Analyser ma présence IA', analyzing: 'Analyse en cours…',
     codeTitle: 'Entrez le code reçu par email', codeSent: (e: string) => `Code envoyé à ${e}. Vérifiez aussi vos spams.`,
     codeCta: 'Valider et lancer l\'analyse', back: 'Modifier', connected: (e: string) => `Connecté : ${e}`,
@@ -54,7 +54,7 @@ const L = {
   de: {
     name: 'Unternehmensname', city: 'Ort', cat: 'Branche', email: 'Ihre E-Mail', select: 'Auswählen…',
     placeholder_name: 'z.B. Sanitär Müller', placeholder_city: 'z.B. Sitten, Zürich…', placeholder_email: 'sie@firma.ch',
-    emailNote: 'Wir senden Ihnen einen Code zur Bestätigung Ihrer E-Mail. Eine kostenlose Analyse pro Tag.',
+    emailNote: 'Wir senden Ihnen einen Code zur Bestätigung Ihrer E-Mail. Eine kostenlose Analyse pro Tag. Sie erhalten den Bericht, einige Tipps und eine monatliche Analyse (Abmeldung mit einem Klick).',
     submit: 'Code erhalten', run: 'KI-Präsenz analysieren', analyzing: 'Analyse läuft…',
     codeTitle: 'Geben Sie den Code aus der E-Mail ein', codeSent: (e: string) => `Code an ${e} gesendet. Prüfen Sie auch den Spam-Ordner.`,
     codeCta: 'Bestätigen und Analyse starten', back: 'Ändern', connected: (e: string) => `Angemeldet: ${e}`,
@@ -71,7 +71,7 @@ const L = {
   en: {
     name: 'Business name', city: 'Town', cat: 'Category', email: 'Your email', select: 'Select…',
     placeholder_name: 'e.g. Dupont Plumbing', placeholder_city: 'e.g. Sion, Geneva…', placeholder_email: 'you@company.ch',
-    emailNote: 'We send you a code to confirm your email. One free analysis per day.',
+    emailNote: 'We send you a code to confirm your email. One free analysis per day. You will get the report, a few tips and a monthly analysis (unsubscribe in one click).',
     submit: 'Get my code', run: 'Analyse my AI presence', analyzing: 'Analysing…',
     codeTitle: 'Enter the code we emailed you', codeSent: (e: string) => `Code sent to ${e}. Check your spam folder too.`,
     codeCta: 'Confirm and start the analysis', back: 'Change', connected: (e: string) => `Signed in: ${e}`,

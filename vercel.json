@@ -6,5 +6,15 @@
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://nsfbosmbyfpszwpqmcyo.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zZmJvc21ieWZwc3p3cHFtY3lvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4OTM4MTcsImV4cCI6MjA5NTQ2OTgxN30.VXEJFDAxmj663SZ1Bb41WIwBRtvrg4hsbZlRTPrB7zk"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/retest",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/nurture",
+      "schedule": "0 8 * * *"
+    }
+  ]
 }
