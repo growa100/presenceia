@@ -5,7 +5,7 @@
 //   Sur mesure                  from 690/month, quoted after the free audit (not sold online)
 //   GEO Boost (set-up alone)   890 one-time, on request only (not on the public pricing)
 // Founder offer: -30 % for the first 12 months, first 15 clients on Visibilité IA (with or without assistant).
-// Guarantee: if nothing measurable has improved after 90 days, the 4th month is free.
+// Guarantee (see /conditions art. 6): if the AI visibility score has not improved 90 days after set-up, the next month is free.
 export type MonthlyKey = 'site' | 'visibility' | 'complete'
 export type PlanKey = MonthlyKey | 'boost'
 export type Term = 'm12' | 'year' | 'flex'
@@ -44,7 +44,7 @@ export const OFFER = {
     per: { m12: '/ mois', year: '/ an', flex: '/ mois' } as Record<Term, string>,
     founder: (left: number) => `Offre fondateur : -${FOUNDER.percent} % la première année pour les ${FOUNDER.slots} premiers clients Visibilité IA. Encore ${left} place${left > 1 ? 's' : ''}.`,
     founderShort: `-${FOUNDER.percent} % la 1re année`,
-    guarantee: 'Garantie 90 jours : si rien ne progresse de façon mesurable, le 4e mois est offert.',
+    guarantee: 'Garantie 90 jours : si votre score de visibilité IA n\'a pas progressé, le mois suivant est offert.',
     anchor: 'Pour comparaison, une agence SEO facture en général CHF 900 à 2\'000 par mois.',
     title: 'Visibilité IA', tagline: 'Nous corrigeons ce qui empêche les IA de vous recommander, puis nous entretenons votre présence chaque mois.',
     setup: ['Mise en place en 2 semaines : fiche Google, annuaires (local.ch, search.ch, votre métier), données structurées et FAQ, méthode avis'],
@@ -58,7 +58,7 @@ export const OFFER = {
     per: { m12: '/ Monat', year: '/ Jahr', flex: '/ Monat' } as Record<Term, string>,
     founder: (left: number) => `Gründerangebot: -${FOUNDER.percent} % im ersten Jahr für die ${FOUNDER.slots} ersten KI-Sichtbarkeit-Kunden. Noch ${left} Plätze.`,
     founderShort: `-${FOUNDER.percent} % im 1. Jahr`,
-    guarantee: '90-Tage-Garantie: Wenn sich nichts messbar verbessert, ist der 4. Monat geschenkt.',
+    guarantee: '90-Tage-Garantie: Hat sich Ihr KI-Sichtbarkeitsscore nicht verbessert, ist der folgende Monat geschenkt.',
     anchor: 'Zum Vergleich: Eine SEO-Agentur verrechnet meist CHF 900 bis 2\'000 pro Monat.',
     title: 'KI-Sichtbarkeit', tagline: 'Wir beheben, was die KI daran hindert, Sie zu empfehlen, und pflegen Ihre Präsenz jeden Monat.',
     setup: ['Einrichtung in 2 Wochen: Google-Profil, Verzeichnisse (local.ch, search.ch, Ihre Branche), strukturierte Daten und FAQ, Bewertungsmethode'],
@@ -72,7 +72,7 @@ export const OFFER = {
     per: { m12: '/ month', year: '/ year', flex: '/ month' } as Record<Term, string>,
     founder: (left: number) => `Founder offer: -${FOUNDER.percent} % for the first year for our first ${FOUNDER.slots} AI visibility clients. ${left} spot${left > 1 ? 's' : ''} left.`,
     founderShort: `-${FOUNDER.percent} % the 1st year`,
-    guarantee: '90-day guarantee: if nothing improves measurably, the 4th month is free.',
+    guarantee: '90-day guarantee: if your AI visibility score has not improved, the following month is free.',
     anchor: 'For comparison, an SEO agency usually charges CHF 900 to 2,000 a month.',
     title: 'AI visibility', tagline: 'We fix what keeps AI from recommending you, then look after your presence every month.',
     setup: ['Set-up in 2 weeks: Google profile, directories (local.ch, search.ch, your trade), structured data and FAQ, reviews method'],
