@@ -27,7 +27,7 @@ function loadScript(): Promise<void> {
   })
 }
 
-export default function Turnstile({ onToken, lang }: { onToken: (t: string | null) => void; lang: string }) {
+export default function Turnstile({ onToken, lang, theme = 'dark' }: { onToken: (t: string | null) => void; lang: string; theme?: 'dark' | 'light' }) {
   const ref = useRef<HTMLDivElement>(null)
   const idRef = useRef<string | null>(null)
 
@@ -37,7 +37,7 @@ export default function Turnstile({ onToken, lang }: { onToken: (t: string | nul
       if (cancelled || !ref.current || !window.turnstile) return
       idRef.current = window.turnstile.render(ref.current, {
         sitekey: SITE_KEY,
-        theme: 'dark',
+        theme,
         language: lang,
         callback: (t: string) => onToken(t),
         'expired-callback': () => onToken(null),
@@ -48,7 +48,7 @@ export default function Turnstile({ onToken, lang }: { onToken: (t: string | nul
       cancelled = true
       if (idRef.current && window.turnstile) window.turnstile.remove(idRef.current)
     }
-  }, [lang, onToken])
+  }, [lang, onToken, theme])
 
   return <div ref={ref} className="min-h-[65px]" />
 }

@@ -1,9 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { createHash } from 'crypto'
 import { runVisibilityCheck, BusinessInput, ENGINE_VERSION } from '@/lib/scoring-engine'
 import { normalize, normalizeName } from '@/lib/geo/match'
 import { supabaseAdmin } from '@/lib/supabase'
 import { clientIp, freeChecksLeft, getSessionEmail, isUnlimited } from '@/lib/checker-auth'
+import { sendMail } from '@/lib/mailer'
+import { buildReportEmail } from '@/lib/report-email'
+import type { ScoringResult } from '@/lib/scoring-engine'
 
 // Grounded answers take 10 to 30 s; they run in parallel, then one analysis call.
 export const maxDuration = 90
@@ -57,7 +60,8 @@ export async function POST(req: NextRequest) {
 
   if (cached?.result) {
     if (email) await saveLead(email, businessName, city, category, language, cached.result)
-    return NextResponse.json({ ...cached.result, cached: true })
+    after(() => sendReport(email, cached.result as ScoringResult, language))
+    return NextResponse.json({ ...cached.result, cached: true, reportTo: email })
   }
 
   // Limits on fresh (paid) checks, counted in the database so they survive serverless cold starts:
@@ -95,8 +99,16 @@ export async function POST(req: NextRequest) {
   })
 
   if (email) await saveLead(email, businessName, city, category, language, result)
+  after(() => sendReport(email, result, language))
 
-  return NextResponse.json(result)
+  return NextResponse.json({ ...result, reportTo: email })
+}
+
+// Step 3 of the funnel: the full report by email, with the free audit as next step.
+async function sendReport(email: string, result: ScoringResult, language: string) {
+  if (!email) return
+  const mail = buildReportEmail(result, language)
+  await sendMail({ to: email, ...mail })
 }
 
 async function saveLead(email: string, businessName: string, city: string, category: string, language: string, result: { overallScore: number; grade: string }) {
