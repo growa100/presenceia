@@ -117,8 +117,14 @@ Fill the report tool. Rules:
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`)
       const data = await res.json()
-      const input = (data.content || []).find((b: any) => b.type === 'tool_use')?.input
-      if (!input) throw new Error('no tool_use block')
+      const raw = (data.content || []).find((b: any) => b.type === 'tool_use')?.input
+      if (!raw) throw new Error('no tool_use block')
+      // Some models return array fields as JSON strings: normalise before use.
+      const input: any = { ...raw }
+      for (const k of ['answers', 'competitors', 'actions']) {
+        if (typeof input[k] === 'string') { try { input[k] = JSON.parse(input[k]) } catch { input[k] = [] } }
+        if (!Array.isArray(input[k])) input[k] = []
+      }
       return {
         answers: (input.answers || []).map((a: any) => ({
           id: String(a.id), mentioned: !!a.mentioned, rank: typeof a.rank === 'number' ? a.rank : null,

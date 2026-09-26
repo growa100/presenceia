@@ -16,6 +16,7 @@ const GENERIC_WORDS = new Set([
   'fiduciaire', 'immobilier', 'immobiliere', 'architecture', 'architecte', 'avocat', 'avocats', 'etude',
   'dentaire', 'medical', 'services', 'service', 'group', 'groupe', 'swiss', 'suisse', 'schweiz',
   'praxis', 'kanzlei', 'treuhand', 'elektro', 'sanitar',
+  'freres', 'fils', 'soeurs', 'fille', 'filles', 'brothers', 'sons', 'sohne', 'sohn', 'gebruder', 'partner', 'partners', 'associes',
 ])
 
 export function normalize(s: string): string {

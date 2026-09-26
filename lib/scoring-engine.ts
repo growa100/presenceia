@@ -63,14 +63,43 @@ function tradeWord(category: string, lang: string): string {
   return lang === 'de' ? c : c.charAt(0).toLowerCase() + c.slice(1)
 }
 
+// Grammatical gender, so the question reads like a real customer's ("la meilleure boulangerie",
+// "das beste Hotel"). Unknown trades fall back to masculine, which is the most common case.
+function frFeminine(t: string): boolean {
+  const n = t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  return /(erie|ie|ique|ance|ence|ure|ade|ette|ere|euse|trice)$/.test(n)
+    || ['fiduciaire', 'entreprise', 'agence', 'ecole', 'garderie', 'auto-ecole', 'station', 'maison'].includes(n)
+}
+function deGender(t: string): 'm' | 'f' | 'n' {
+  const n = t.toLowerCase()
+  if (['hotel', 'restaurant', 'café', 'cafe', 'büro', 'studio', 'geschäft', 'atelier', 'institut', 'zentrum', 'unternehmen'].includes(n)) return 'n'
+  if (/(ei|erie|ie|ung|heit|keit|praxis|garage|schule|kanzlei|apotheke|klinik)$/.test(n)) return 'f'
+  return 'm'
+}
+
+// Places are asked with "Quel", people with "Qui".
+const FR_PLACES = /^(restaurant|h[oô]tel|garage|cabinet|caf[ée]|bar|salon|magasin|atelier|bureau|centre|studio|institut|camping|spa)\b/i
+
 export function buildQueries(b: BusinessInput): [string, string] {
   const t = tradeWord(b.category, b.language)
   const city = b.city.trim()
   switch (b.language) {
-    case 'de': return [`Wer ist der beste ${t} in ${city}?`, `Kannst du mir einen zuverlässigen ${t} in ${city} empfehlen?`]
+    case 'de': {
+      const g = deGender(t)
+      const q1 = g === 'f' ? `Welche ist die beste ${t} in ${city}?` : g === 'n' ? `Welches ist das beste ${t} in ${city}?` : `Wer ist der beste ${t} in ${city}?`
+      const art = g === 'f' ? 'eine zuverlässige' : g === 'n' ? 'ein zuverlässiges' : 'einen zuverlässigen'
+      // Weak nouns take -en in the accusative ("einen Architekten").
+      const acc = g === 'm' && /(architekt|fotograf|psychologe|kollege)$/i.test(t) ? t.replace(/e?$/, 'en').replace(/een$/, 'en') : t
+      return [q1, `Kannst du mir ${art} ${acc} in ${city} empfehlen?`]
+    }
     case 'en': return [`Who is the best ${t} in ${city}?`, `Can you recommend a reliable ${t} in ${city}?`]
-    case 'it': return [`Chi è il miglior ${t} a ${city}?`, `Mi consigli un ${t} affidabile a ${city}?`]
-    default: return [`Qui est le meilleur ${t} à ${city} ?`, `Peux-tu me recommander un ${t} de confiance à ${city} ?`]
+    case 'it': return [`Qual è il miglior ${t} a ${city}?`, `Mi consigli un ${t} affidabile a ${city}?`]
+    default: {
+      const f = frFeminine(t)
+      return f
+        ? [`Quelle est la meilleure ${t} à ${city} ?`, `Peux-tu me recommander une ${t} de confiance à ${city} ?`]
+        : [`${FR_PLACES.test(t) ? 'Quel' : 'Qui'} est le meilleur ${t} à ${city} ?`, `Peux-tu me recommander un ${t} de confiance à ${city} ?`]
+    }
   }
 }
 
