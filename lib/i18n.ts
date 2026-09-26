@@ -63,7 +63,7 @@ export const translations = {
       sub: 'Chaque semaine qui passe, vos concurrents gagnent du terrain sur les IA. Les premières entreprises à agir domineront leur marché local pour les 5 prochaines années.',
       btn: 'Analyser ma présence IA gratuitement',
     },
-    footer: { rights: '© 2026 Présence IA GmbH — Zug, Suisse', tagline: 'Be the answer.' },
+    footer: { rights: '© 2026 Présence IA, Sion, Suisse', tagline: 'Be the answer.' },
   },
   de: {
     nav: { how: 'So funktioniert es', pricing: 'Preise', blog: 'Blog', login: 'Anmelden', cta: 'Kostenlos testen' },
@@ -108,7 +108,7 @@ export const translations = {
     },
     blog: { title: 'GEO Autorität & Einblicke', sub: 'Die Strategien, die Experten noch nicht geteilt haben', readmore: 'Artikel lesen' },
     cta_section: { title: 'Das Fenster ist offen. Jetzt.', sub: 'Jede Woche, die vergeht, gewinnen Ihre Konkurrenten Boden auf KIs. Die ersten Unternehmen, die handeln, werden ihren lokalen Markt für die nächsten 5 Jahre dominieren.', btn: 'KI-Präsenz kostenlos analysieren' },
-    footer: { rights: '© 2026 Présence IA GmbH — Zug, Schweiz', tagline: 'Be the answer.' },
+    footer: { rights: '© 2026 Présence IA, Sitten (Sion), Schweiz', tagline: 'Be the answer.' },
   },
   en: {
     nav: { how: 'How it works', pricing: 'Pricing', blog: 'Blog', login: 'Login', cta: 'Test for free' },
@@ -153,6 +153,6 @@ export const translations = {
     },
     blog: { title: 'GEO Authority & Insights', sub: 'The strategies experts haven\'t shared yet', readmore: 'Read article' },
     cta_section: { title: 'The window is open. Now.', sub: 'Every week that passes, your competitors gain ground on AIs. The first businesses to act will dominate their local market for the next 5 years.', btn: 'Analyse my AI presence for free' },
-    footer: { rights: '© 2026 Présence IA GmbH — Zug, Switzerland', tagline: 'Be the answer.' },
+    footer: { rights: '© 2026 Présence IA, Sion, Switzerland', tagline: 'Be the answer.' },
   },
 }

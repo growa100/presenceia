@@ -92,7 +92,7 @@ export async function sendCode(email: string, code: string, language: string): P
   return sendMail({
     to: email,
     subject: `${m.s}${lang === 'fr' ? ' : ' : ': '}${code}`,
-    text: `${m.t} : ${code}\n\n${m.b}\n\n${m.ign}\n\nPrésence IA, 41 Labs GmbH, Zug\nantoine@presenceia.com`,
+    text: `${m.t} : ${code}\n\n${m.b}\n\n${m.ign}\n\nPrésence IA, Sion\nantoine@presenceia.com`,
     html: emailShell({ lang, preheader: `${m.t} : ${code}`, body: E.title(m.t) + E.p(m.b) + E.code(code) + E.small(m.ign) }),
   })
 }

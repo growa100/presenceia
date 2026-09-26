@@ -239,7 +239,7 @@ function Report({ r, lang, bookUrl, when }: { r: ScoringResult; lang: MailLang; 
         </View>
 
         <View style={s.footer} fixed>
-          <Text>Présence IA · 41 Labs GmbH, Zug · presenceia.com</Text>
+          <Text>Présence IA · Sion · presenceia.com</Text>
           <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
         </View>
       </Page>

@@ -382,7 +382,7 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',
         '@graph': [
-          { '@type': 'Organization', '@id': 'https://presenceia.com/#organization', name: 'Présence IA', legalName: CONTACT.company, url: 'https://presenceia.com', email: CONTACT.email, telephone: CONTACT.phone, address: { '@type': 'PostalAddress', addressLocality: CONTACT.city, addressCountry: 'CH' }, areaServed: 'Worldwide', knowsLanguage: ['fr', 'de', 'en'] },
+          { '@type': 'Organization', '@id': 'https://presenceia.com/#organization', name: 'Présence IA', founder: { '@type': 'Person', name: CONTACT.owner }, url: 'https://presenceia.com', email: CONTACT.email, telephone: CONTACT.phone, address: { '@type': 'PostalAddress', streetAddress: CONTACT.street, postalCode: CONTACT.zip, addressLocality: CONTACT.city, addressRegion: 'VS', addressCountry: 'CH' }, areaServed: 'Worldwide', knowsLanguage: ['fr', 'de', 'en'] },
           { '@type': 'WebSite', '@id': 'https://presenceia.com/#website', url: 'https://presenceia.com', name: 'Présence IA', publisher: { '@id': 'https://presenceia.com/#organization' } },
           { '@type': 'Service', name: 'Site web professionnel pour PME', provider: { '@id': 'https://presenceia.com/#organization' }, areaServed: 'Worldwide', offers: [
             { '@type': 'Offer', name: 'Site web', price: '99', priceCurrency: 'CHF', priceSpecification: { '@type': 'UnitPriceSpecification', price: '99', priceCurrency: 'CHF', unitText: 'MONTH' } },

@@ -1,4 +1,4 @@
-// Stripe (test mode until 41 Labs is live). Products and prices are created on first use with
+// Stripe (test mode until the company is live). Products and prices are created on first use with
 // stable lookup keys, so the only configuration is STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET.
 import Stripe from 'stripe'
 import { PLANS, type PlanKey } from './plans'

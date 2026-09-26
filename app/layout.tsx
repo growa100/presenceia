@@ -18,8 +18,8 @@ export const metadata: Metadata = {
     'visibilité ChatGPT', 'GEO Switzerland', 'AI visibility Switzerland'
   ],
   authors: [{ name: 'Antoine Pury', url: 'https://presenceia.com' }],
-  creator: '41 Labs GmbH',
-  publisher: '41 Labs GmbH',
+  creator: 'Antoine Pury',
+  publisher: 'Présence IA',
   robots: {
     index: true,
     follow: true,

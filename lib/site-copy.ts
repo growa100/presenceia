@@ -13,8 +13,12 @@ export const CONTACT = {
   email: 'antoine@presenceia.com',
   phone: '+41 78 915 15 73',
   phoneHref: 'tel:+41789151573',
-  company: '41 Labs GmbH',
-  city: 'Zug',
+  // Until 41 Labs GmbH is registered, Présence IA is run by Antoine Pury as an individual.
+  company: 'Présence IA',
+  owner: 'Antoine Pury',
+  street: 'Av. du Bietschhorn 37',
+  zip: '1950',
+  city: 'Sion',
 }
 
 /** Real generated sites, one per sector, shown as examples. */
@@ -39,7 +43,7 @@ const fr = {
     received: 'Vous avez reçu un email d\'Antoine avec votre site ?',
     receivedLink: 'Activer mon site',
   },
-  trust: ['Entreprise suisse, 41 Labs GmbH, Zug', 'Mesure réelle sur ChatGPT, Claude, Gemini et Perplexity', 'Données protégées (nLPD / RGPD)', 'Sans engagement', 'Réponse sous 24 h'],
+  trust: ['Basé en Suisse, à Sion', 'Mesure réelle sur ChatGPT, Claude, Gemini et Perplexity', 'Données protégées (nLPD / RGPD)', 'Sans engagement', 'Réponse sous 24 h'],
   how: {
     eyebrow: 'Comment ça marche',
     title: 'Trois étapes, aucune technique de votre côté.',
@@ -85,7 +89,7 @@ const fr = {
   founder: {
     eyebrow: 'Qui est derrière',
     name: 'Antoine Pury',
-    role: 'Fondateur, 41 Labs GmbH, Zug',
+    role: 'Fondateur de Présence IA, Sion',
     text: 'J\'ai lancé Présence IA parce que la façon dont les clients trouvent un professionnel est en train de changer : ils demandent à une IA. D\'excellentes entreprises disparaissent de ces réponses simplement parce que personne ne s\'occupe de leurs signaux en ligne. Nous mesurons, nous corrigeons, nous suivons. Je lis et je réponds moi-même à chaque email.',
   },
   faq: {
@@ -144,7 +148,7 @@ const de: typeof fr = {
     received: 'Haben Sie von Antoine eine E-Mail mit Ihrer Website erhalten?',
     receivedLink: 'Website aktivieren',
   },
-  trust: ['Schweizer Firma, 41 Labs GmbH, Zug', 'Echte Messung bei ChatGPT, Claude, Gemini und Perplexity', 'Datenschutz (DSG / DSGVO)', 'Ohne Vertragsbindung', 'Antwort innert 24 h'],
+  trust: ['Mit Sitz in der Schweiz, in Sitten (Sion)', 'Echte Messung bei ChatGPT, Claude, Gemini und Perplexity', 'Datenschutz (DSG / DSGVO)', 'Ohne Vertragsbindung', 'Antwort innert 24 h'],
   how: {
     eyebrow: 'So funktioniert es',
     title: 'Drei Schritte, keine Technik auf Ihrer Seite.',
@@ -190,7 +194,7 @@ const de: typeof fr = {
   founder: {
     eyebrow: 'Wer dahinter steht',
     name: 'Antoine Pury',
-    role: 'Gründer, 41 Labs GmbH, Zug',
+    role: 'Gründer von Présence IA, Sitten (Sion)',
     text: 'Ich habe Présence IA gegründet, weil sich gerade ändert, wie Kunden einen Fachbetrieb finden: Sie fragen eine KI. Ausgezeichnete Betriebe verschwinden aus diesen Antworten, nur weil sich niemand um ihre Online-Signale kümmert. Wir messen, wir korrigieren, wir begleiten. Ich lese und beantworte jede E-Mail selbst.',
   },
   faq: {
@@ -249,7 +253,7 @@ const en: typeof fr = {
     received: 'Did Antoine email you with your website?',
     receivedLink: 'Activate my site',
   },
-  trust: ['Swiss company, 41 Labs GmbH, Zug', 'Real measurement on ChatGPT, Claude, Gemini and Perplexity', 'Data protected (nFADP / GDPR)', 'No commitment', 'Reply within 24 h'],
+  trust: ['Based in Sion, Switzerland', 'Real measurement on ChatGPT, Claude, Gemini and Perplexity', 'Data protected (nFADP / GDPR)', 'No commitment', 'Reply within 24 h'],
   how: {
     eyebrow: 'How it works',
     title: 'Three steps, nothing technical on your side.',
@@ -295,7 +299,7 @@ const en: typeof fr = {
   founder: {
     eyebrow: 'Who is behind it',
     name: 'Antoine Pury',
-    role: 'Founder, 41 Labs GmbH, Zug',
+    role: 'Founder of Présence IA, Sion',
     text: 'I started Présence IA because the way customers find a professional is changing: they ask an AI. Excellent businesses disappear from those answers simply because nobody looks after their online signals. We measure, we fix, we follow up. I read and answer every email myself.',
   },
   faq: {

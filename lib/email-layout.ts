@@ -9,9 +9,9 @@ const C = { paper: '#FAF8F3', line: '#E6E1D6', ink: '#0A0A0F', text: '#2A2A38', 
 const SERIF = 'Georgia,\'Times New Roman\',serif'
 
 const FOOT = {
-  fr: 'Présence IA, 41 Labs GmbH, Zug',
-  de: 'Présence IA, 41 Labs GmbH, Zug',
-  en: 'Présence IA, 41 Labs GmbH, Zug, Switzerland',
+  fr: 'Présence IA, Sion',
+  de: 'Présence IA, Sitten (Sion)',
+  en: 'Présence IA, Sion, Switzerland',
 }
 
 /** Wraps body HTML in the branded shell. `preheader` is the grey preview line in the inbox. */

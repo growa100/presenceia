@@ -14,7 +14,7 @@ export default function Confidentialite() {
       updated="Dernière mise à jour : 21 septembre 2026"
       sections={[
         { title: 'Responsable du traitement', body: [
-          '41 Labs GmbH, Zug (Suisse), antoine@presenceia.com. Nous traitons les données personnelles conformément à la loi fédérale suisse sur la protection des données (nLPD) et, lorsque applicable, au Règlement général sur la protection des données de l\'Union européenne (RGPD).',
+          'Antoine Pury, Présence IA, Av. du Bietschhorn 37, 1950 Sion (Suisse), antoine@presenceia.com. Nous traitons les données personnelles conformément à la loi fédérale suisse sur la protection des données (nLPD) et, lorsque applicable, au Règlement général sur la protection des données de l\'Union européenne (RGPD).',
         ]},
         { title: 'Données que nous traitons', body: [
           'Prospection : pour présenter notre service, nous préparons un site de démonstration et écrivons à des entreprises (artisans, PME) en utilisant des coordonnées professionnelles publiques : nom de l\'entreprise, adresse, téléphone, adresse email de contact, site web, avis publics. Base : intérêt légitime à proposer nos services à des professionnels (art. 31 nLPD ; art. 6 al. 1 let. f RGPD). Nous n\'envoyons pas de prospection à des adresses de particuliers.',

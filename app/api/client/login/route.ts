@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   }
   const sent = await sendMail({
     to: email, subject: m.s,
-    text: `${m.t}\n\n${m.b}\n\n${link}\n\n${m.ign}\n\nPrésence IA, 41 Labs GmbH, Zug`,
+    text: `${m.t}\n\n${m.b}\n\n${link}\n\n${m.ign}\n\nPrésence IA, Sion`,
     html: emailShell({ lang, preheader: m.b, body: E.title(m.t) + E.p(m.b) + E.button(link, m.cta) + E.small(m.ign) }),
   })
   if (!sent) return NextResponse.json({ error: 'email_failed' }, { status: 502 })
