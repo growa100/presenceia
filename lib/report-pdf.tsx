@@ -94,7 +94,7 @@ const s = StyleSheet.create({
   gradePill: { marginTop: 6, alignSelf: 'flex-start', backgroundColor: C.brand, color: '#fff', borderRadius: 99, paddingVertical: 2, paddingHorizontal: 8, fontSize: 8.5, fontWeight: 600 },
   named: { fontFamily: 'Serif', fontSize: 17, color: '#fff', lineHeight: 1.25 },
   pills: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 },
-  pill: { fontSize: 7.5, borderRadius: 99, paddingVertical: 2.5, paddingHorizontal: 7, marginRight: 5, marginBottom: 4 },
+  pill: { fontSize: 7.5, lineHeight: 1, borderRadius: 99, paddingTop: 3.5, paddingBottom: 2.5, paddingHorizontal: 7, marginRight: 5, marginBottom: 4 },
   card: { backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 12, padding: 14, marginTop: 10 },
   label: { fontSize: 7.5, color: C.brand, textTransform: 'uppercase', letterSpacing: 1.4, fontWeight: 600, marginBottom: 5 },
   h2: { fontFamily: 'Serif', fontSize: 19, color: C.ink, marginTop: 24, lineHeight: 1.3, paddingBottom: 2 },
@@ -103,7 +103,7 @@ const s = StyleSheet.create({
   ansName: { fontSize: 11, fontWeight: 700, color: C.ink },
   q: { fontSize: 7.5, color: C.muted, marginTop: 4, marginBottom: 6 },
   answer: { fontSize: 9, color: C.text, lineHeight: 1.55 },
-  chip: { fontSize: 7, color: C.muted, borderWidth: 1, borderColor: C.line, borderRadius: 99, paddingVertical: 1.5, paddingHorizontal: 6, marginRight: 4, marginTop: 6 },
+  chip: { fontSize: 7, lineHeight: 1, color: C.muted, borderWidth: 1, borderColor: C.line, borderRadius: 99, paddingTop: 3, paddingBottom: 2, paddingHorizontal: 6, marginRight: 4, marginBottom: 4 },
   row: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
   barBg: { flex: 1, height: 5, backgroundColor: '#EFEBE2', borderRadius: 3, marginHorizontal: 8 },
   num: { width: 18, height: 18, borderRadius: 9, backgroundColor: '#FCE7E5', color: C.brand, fontSize: 8, textAlign: 'center', paddingTop: 3.5, marginRight: 8, fontWeight: 600 },
@@ -111,6 +111,10 @@ const s = StyleSheet.create({
   ctaBtn: { marginTop: 12, alignSelf: 'flex-start', backgroundColor: '#fff', color: C.brand, borderRadius: 10, paddingVertical: 7, paddingHorizontal: 14, fontSize: 9.5, fontWeight: 700, textDecoration: 'none' },
   footer: { position: 'absolute', bottom: 24, left: 44, right: 44, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7, color: '#8a8a99' },
 })
+
+function paragraphs(text: string): string[] {
+  return text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean)
+}
 
 function Answer({ a, t }: { a: PlatformResult; t: typeof T.fr }) {
   const text = pdfSafe(cleanAnswer(a.rawResponse))
@@ -125,13 +129,19 @@ function Answer({ a, t }: { a: PlatformResult; t: typeof T.fr }) {
       </View>
       <Text style={s.q}>{t.q(pdfSafe(a.query))}</Text>
       {a.error || !text ? <Text style={[s.answer, { color: C.muted }]}>{t.failed}</Text> : (
-        <Text style={s.answer}>
-          {i < 0 ? text : <>{text.slice(0, i)}<Text style={{ backgroundColor: '#FDE2DF', color: C.ink }}>{ev}</Text>{text.slice(i + ev.length)}</>}
-        </Text>
+        // One block per paragraph: a page break falls between paragraphs, never inside a short one.
+        paragraphs(text).map((para, k) => {
+          const j = ev && i >= 0 ? para.indexOf(ev) : -1
+          return (
+            <Text key={k} style={[s.answer, k ? { marginTop: 6 } : {}]} wrap={para.length > 900} orphans={3} widows={3}>
+              {j < 0 ? para : <>{para.slice(0, j)}<Text style={{ backgroundColor: '#FDE2DF', color: C.ink }}>{ev}</Text>{para.slice(j + ev.length)}</>}
+            </Text>
+          )
+        })
       )}
       {domains.length > 0 && (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
-          <Text style={{ fontSize: 7, color: C.muted, marginTop: 6, marginRight: 4 }}>{t.src} :</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 8 }} wrap={false}>
+          <Text style={{ fontSize: 7, lineHeight: 1, color: C.muted, marginRight: 4, marginBottom: 4 }}>{t.src} :</Text>
           {domains.map(d => <Text key={d} style={s.chip}>{d}</Text>)}
         </View>
       )}
@@ -220,7 +230,7 @@ function Report({ r, lang, bookUrl, when }: { r: ScoringResult; lang: MailLang; 
             <Text style={s.h2}>{t.sources}</Text>
             <Text style={s.sub}>{t.sourcesSub}</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-              {sources.map(x => <Text key={x.domain} style={[s.chip, { fontSize: 8, color: C.text, backgroundColor: '#fff' }]}>{`${x.domain} · ${x.count}`}</Text>)}
+              {sources.map(x => <Text key={x.domain} style={[s.chip, { fontSize: 8, color: C.text, backgroundColor: '#fff', marginTop: 4 }]}>{`${x.domain} · ${x.count}`}</Text>)}
             </View>
           </View>
         )}
