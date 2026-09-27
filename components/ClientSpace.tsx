@@ -25,7 +25,7 @@ type Lead = {
   plan: PlanKey | null; term: Term | null; commitment_until: string | null; subscription_status: string | null; current_period_end: string | null
   audit_requested_at: string | null; audit_done_at: string | null; boost_paid_at: string | null; hasBilling: boolean
 }
-type Me = { email: string; left: number; lead: Lead | null; analyses: Analysis[]; updates: Update[]; bookingUrl: string | null; payments: boolean; paymentsTest: boolean }
+type Me = { email: string; left: number; lead: Lead | null; analyses: Analysis[]; updates: Update[]; bookingUrl: string | null; payments: boolean; paymentsTest: boolean; isAdmin?: boolean }
 
 const L = {
   fr: {
@@ -529,7 +529,10 @@ export default function ClientSpace() {
                 <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight">{T.hello}{me.lead?.business_name ? `, ${me.lead.business_name}` : ''}</h1>
                 <p className="mt-2 text-sm text-ink/50">{me.email}</p>
               </div>
-              <button onClick={logout} className="self-start sm:self-auto inline-flex items-center gap-2 text-sm text-ink/55 hover:text-ink"><LogOut className="w-4 h-4" /> {T.logout}</button>
+              <div className="self-start sm:self-auto flex items-center gap-4">
+                {me.isAdmin && <Link href="/login" className="text-sm font-semibold text-brand hover:underline">Cockpit →</Link>}
+                <button onClick={logout} className="inline-flex items-center gap-2 text-sm text-ink/55 hover:text-ink"><LogOut className="w-4 h-4" /> {T.logout}</button>
+              </div>
             </div>
             {flags.welcome && (
               <div className="rounded-2xl bg-green-50 text-green-800 p-5 flex gap-3">

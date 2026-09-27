@@ -4,6 +4,7 @@ import { freeChecksLeft, getSessionEmail } from '@/lib/checker-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { bookingFor } from '@/lib/links'
 import { stripe, stripeTestMode } from '@/lib/stripe'
+import { isAdminEmail } from '@/lib/cockpit'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +37,6 @@ export async function GET(req: NextRequest) {
     analyses: checks.data || [],
     updates: updates.data || [],
     bookingUrl: bookingFor(email),
-    payments: !!stripe, paymentsTest: stripeTestMode,
+    payments: !!stripe, paymentsTest: stripeTestMode, isAdmin: isAdminEmail(email),
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
