@@ -25,6 +25,20 @@ export async function GET(req: NextRequest) {
   ])
 
   const l = lead.data
+  // The discount on the subscription (founder offer), so the billing card shows what is really paid.
+  let discount: { percent: number; end: string | null } | null = null
+  if (stripe && l?.stripe_subscription_id && ['active', 'trialing', 'past_due'].includes(l.subscription_status || '')) {
+    try {
+      const sub = await Promise.race([
+        stripe.subscriptions.retrieve(l.stripe_subscription_id, { expand: ['discounts.source.coupon'] }),
+        new Promise<null>(r => setTimeout(() => r(null), 2500)),
+      ])
+      for (const d of sub?.discounts || []) {
+        const c = typeof d === 'object' && typeof d.source?.coupon === 'object' ? d.source.coupon : null
+        if (c?.percent_off) { discount = { percent: c.percent_off, end: typeof d === 'object' && d.end ? new Date(d.end * 1000).toISOString() : null }; break }
+      }
+    } catch { /* billing card falls back to list prices */ }
+  }
   return NextResponse.json({
     email, left,
     lead: l ? {
@@ -32,7 +46,7 @@ export async function GET(req: NextRequest) {
       plan: l.plan, term: l.term ?? null, commitment_until: l.commitment_until ?? null,
       subscription_status: l.subscription_status, current_period_end: l.current_period_end,
       audit_requested_at: l.audit_requested_at, audit_done_at: l.audit_done_at, boost_paid_at: l.boost_paid_at,
-      hasBilling: !!l.stripe_customer_id,
+      hasBilling: !!l.stripe_customer_id, discount,
     } : null,
     analyses: checks.data || [],
     updates: updates.data || [],

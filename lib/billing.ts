@@ -31,6 +31,8 @@ export async function syncCheckout(sessionId: string): Promise<CheckoutResult | 
   if (!stripe) return null
   const s = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['subscription'] })
   if (s.status !== 'complete') return null
+  // A card added for an upgrade (lib/upgrade.ts): nothing to sync, the upgrade does it.
+  if (s.mode === 'setup') return null
   const email = normalizeEmail(s.customer_details?.email || s.customer_email || '')
   if (!email) return null
   const business = s.custom_fields?.find(f => f.key === 'business')?.text?.value?.trim() || null

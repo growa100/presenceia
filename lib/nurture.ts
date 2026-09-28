@@ -141,7 +141,9 @@ export async function runRetests(base: string, max = Number(process.env.GEO_RETE
     .limit(500)
   let done = 0, errors = 0
   const founder = await founderOpen()
-  for (const l of (leads || []) as (LeadRow & { last_retest_at: string | null })[]) {
+  // Clients first: the monthly measurement is part of what they pay for.
+  const rows = ((leads || []) as (LeadRow & { last_retest_at: string | null })[]).sort((a, b) => Number(isCustomer(b)) - Number(isCustomer(a)))
+  for (const l of rows) {
     if (done >= max || Date.now() - t0 > budgetMs) break
     const { data: last } = await supabaseAdmin.from('visibility_checks')
       .select('business_name, city, category, language, overall_score, result, created_at, kind')
@@ -149,7 +151,7 @@ export async function runRetests(base: string, max = Number(process.env.GEO_RETE
     if (!last?.result || last.created_at > cutoff) continue          // analysed less than 30 days ago
     const { data: firstUser } = await supabaseAdmin.from('visibility_checks').select('created_at')
       .eq('email', l.email).eq('kind', 'user').gte('created_at', NURTURE_START).limit(1).maybeSingle()
-    if (!firstUser) continue                                           // no analysis since the consent notice
+    if (!firstUser && !isCustomer(l)) continue                         // no analysis since the consent notice (clients: part of the service)
     // Claim first (two runs never analyse the same lead twice).
     const { data: claimed } = await supabaseAdmin.from('leads').update({ last_retest_at: new Date().toISOString() })
       .eq('email', l.email).select('email')

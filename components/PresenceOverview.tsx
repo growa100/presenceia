@@ -3,13 +3,18 @@
 // made (screenshot, status, address), its real visitors, the Google rating, the AI visibility
 // score, and the signals that make the site readable by Google and AI assistants.
 // Data: /api/client/site (droplet, one entry per site) and /api/client/me (analyses).
-import { ArrowRight, ArrowUpRight, Check, Circle, ExternalLink, Globe, Lock, Radar, Sparkles, Star } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowRight, ArrowUpRight, CalendarCheck, Check, Circle, ExternalLink, FileDown, Globe, Loader2, Lock, Mail, Radar, Sparkles, Star, X as XIcon } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
-import { PLANS, chf, isMonthly, price, type PlanKey, type Term } from '@/lib/plans'
+import { OFFER, PLANS, chf, isMonthly, price, type PlanKey, type Term } from '@/lib/plans'
+import { CONTACT } from '@/lib/site-copy'
+import type { ScoringResult } from '@/lib/scoring-engine'
 import { cn } from '@/lib/utils'
 import type { Site } from './SiteSetup'
+import { setupItem } from './UpgradeSheet'
 
 type Analysis = { id: string; business_name: string; city: string; overall_score: number; created_at: string; mentions: number | null; total: number | null }
+type Update = { id: string; kind: string; title: string; body: string | null; created_at: string }
 
 const L = {
   fr: {
@@ -32,6 +37,13 @@ const L = {
       llms: 'Fichier llms.txt pour les assistants IA', sitemap: 'Plan du site pour Google', legal: 'Mentions légales et confidentialité',
     } as Record<string, string>,
     fix: { domain: 'Choisir', legal: 'Compléter' } as Record<string, string>,
+    upgrade: 'Passer à Visibilité IA', upgradeSub: 'Mise en place en 2 semaines, puis suivi chaque mois. Vous payez seulement la différence.', ask: 'Une question ? Parler à Antoine',
+    prog: 'Visibilité IA', active: 'Programme actif', progSince: (d: string) => `Programme démarré le ${d}`, nextM: (d: string) => `Prochaine mesure : ${d}`,
+    firstPending: 'Première mesure en cours', firstPendingSub: 'ChatGPT, Gemini, Claude et Perplexity sont interrogés sur votre métier et votre ville. Le résultat s\'affiche ici dans quelques minutes.',
+    delta: (n: number, d: string) => `${n > 0 ? '+' : ''}${n} point${Math.abs(n) > 1 ? 's' : ''} depuis le ${d}`, oneMeasure: 'La courbe se construit avec les mesures mensuelles.',
+    assistants: 'Par assistant', cited: (p: number | null) => p ? `cité, n° ${p}` : 'cité', notCited: 'pas cité', instead: 'Les IA recommandent à votre place',
+    details: 'Réponses détaillées', report: 'Rapport PDF', program: 'Votre programme', setupL: 'Mise en place (2 semaines)', monthlyL: 'Chaque mois',
+    latest: 'Derniers travaux', custom: 'Un besoin sur mesure ? Plusieurs adresses, secteur très concurrentiel, lancement : parlons-en.', strategy: 'Point stratégie (30 min)', write: 'Écrire à Antoine',
     plan: (p: string, a: string, per: string) => `${p} · ${a} ${per}`, perMonth: '/ mois', perYear: '/ an',
   },
   de: {
@@ -54,6 +66,13 @@ const L = {
       llms: 'Datei llms.txt für KI-Assistenten', sitemap: 'Sitemap für Google', legal: 'Impressum und Datenschutz',
     } as Record<string, string>,
     fix: { domain: 'Wählen', legal: 'Ergänzen' } as Record<string, string>,
+    upgrade: 'Zu KI-Sichtbarkeit wechseln', upgradeSub: 'Einrichtung in 2 Wochen, danach monatliche Begleitung. Sie bezahlen nur die Differenz.', ask: 'Eine Frage? Mit Antoine sprechen',
+    prog: 'KI-Sichtbarkeit', active: 'Programm aktiv', progSince: (d: string) => `Programm gestartet am ${d}`, nextM: (d: string) => `Nächste Messung: ${d}`,
+    firstPending: 'Erste Messung läuft', firstPendingSub: 'ChatGPT, Gemini, Claude und Perplexity werden zu Ihrem Fach und Ihrem Ort befragt. Das Ergebnis erscheint hier in wenigen Minuten.',
+    delta: (n: number, d: string) => `${n > 0 ? '+' : ''}${n} Punkte seit ${d}`, oneMeasure: 'Die Kurve entsteht mit den monatlichen Messungen.',
+    assistants: 'Pro Assistent', cited: (p: number | null) => p ? `genannt, Nr. ${p}` : 'genannt', notCited: 'nicht genannt', instead: 'Die KI empfiehlt an Ihrer Stelle',
+    details: 'Detaillierte Antworten', report: 'PDF-Bericht', program: 'Ihr Programm', setupL: 'Einrichtung (2 Wochen)', monthlyL: 'Jeden Monat',
+    latest: 'Letzte Arbeiten', custom: 'Ein massgeschneidertes Anliegen? Mehrere Standorte, starke Konkurrenz, Lancierung: sprechen wir darüber.', strategy: 'Strategiegespräch (30 Min.)', write: 'Antoine schreiben',
     plan: (p: string, a: string, per: string) => `${p} · ${a} ${per}`, perMonth: '/ Monat', perYear: '/ Jahr',
   },
   en: {
@@ -76,6 +95,13 @@ const L = {
       llms: 'llms.txt file for AI assistants', sitemap: 'Sitemap for Google', legal: 'Legal notice and privacy',
     } as Record<string, string>,
     fix: { domain: 'Choose', legal: 'Complete' } as Record<string, string>,
+    upgrade: 'Move to AI visibility', upgradeSub: 'Set-up in 2 weeks, then monthly follow-up. You only pay the difference.', ask: 'A question? Talk to Antoine',
+    prog: 'AI visibility', active: 'Programme active', progSince: (d: string) => `Programme started on ${d}`, nextM: (d: string) => `Next measurement: ${d}`,
+    firstPending: 'First measurement under way', firstPendingSub: 'ChatGPT, Gemini, Claude and Perplexity are being asked about your trade and your town. The result shows here within a few minutes.',
+    delta: (n: number, d: string) => `${n > 0 ? '+' : ''}${n} point${Math.abs(n) > 1 ? 's' : ''} since ${d}`, oneMeasure: 'The curve builds up with the monthly measurements.',
+    assistants: 'Per assistant', cited: (p: number | null) => p ? `named, #${p}` : 'named', notCited: 'not named', instead: 'AI recommends instead of you',
+    details: 'Detailed answers', report: 'PDF report', program: 'Your programme', setupL: 'Set-up (2 weeks)', monthlyL: 'Every month',
+    latest: 'Latest work', custom: 'Something tailored? Several locations, a very competitive sector, a launch: let us talk.', strategy: 'Strategy call (30 min)', write: 'Write to Antoine',
     plan: (p: string, a: string, per: string) => `${p} · ${a} ${per}`, perMonth: '/ month', perYear: '/ year',
   },
 }
@@ -119,7 +145,7 @@ function SiteTile({ site, t, lang }: { site: Site; t: TT; lang: Lang }) {
   const url = site.live_url || site.preview_url
   const plan = site.plan && site.plan in PLANS ? site.plan as PlanKey : null
   const term = (site.term === 'm12' || site.term === 'year' || site.term === 'flex' ? site.term : 'm12') as Term
-  const amount = plan && isMonthly(plan) ? price(plan, term) : null
+  const amount = plan === 'site' && isMonthly(plan) ? price(plan, term) : null
   const cur = site.market === 'FR' ? '€' : 'CHF'
   return (
     <div className={cn(tile, 'p-0 md:p-0 overflow-hidden flex flex-col')}>
@@ -143,7 +169,7 @@ function SiteTile({ site, t, lang }: { site: Site; t: TT; lang: Lang }) {
           {site.status === 'live' && <Lock className="w-4 h-4 text-emerald-400 flex-shrink-0" />}{host(url)}
         </a>
         <p className="mt-1 text-sm text-white/50">
-          {[plan && amount !== null ? t.plan(PLANS[plan].name[lang], `${cur} ${chf(amount)}`, term === 'year' ? t.perYear : t.perMonth) : null,
+          {[plan && amount !== null ? t.plan(PLANS[plan].name[lang], `${cur} ${chf(amount)}`, term === 'year' ? t.perYear : t.perMonth) : plan ? PLANS[plan].name[lang] : null,
             site.live_at ? t.liveSince(fmt(site.live_at, lang)) : site.claimed_at ? t.since(fmt(site.claimed_at, lang)) : null].filter(Boolean).join(' · ')}
         </p>
         {s.next && (
@@ -234,7 +260,7 @@ function GoogleTile({ site, t }: { site: Site; t: TT }) {
 }
 
 // ─── AI visibility ─────────────────────────────────────────────────────────────
-function AiTile({ site, analyses, bookingUrl, t, lang }: { site: Site; analyses: Analysis[]; bookingUrl: string | null; t: TT; lang: Lang }) {
+function AiTile({ site, analyses, bookingUrl, t, lang, onUpgrade }: { site: Site; analyses: Analysis[]; bookingUrl: string | null; t: TT; lang: Lang; onUpgrade?: () => void }) {
   const a = analyses[0]
   const biz = site.business_name || ''
   const measureHref = `/?b=${encodeURIComponent(biz)}&v=${encodeURIComponent(site.city || '')}#analyse`
@@ -262,16 +288,26 @@ function AiTile({ site, analyses, bookingUrl, t, lang }: { site: Site; analyses:
           <p className="mt-2 text-sm text-white/55 leading-relaxed">{t.aiNoneSub(biz)}</p>
         </>
       )}
-      <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
-        <a href={measureHref} className="inline-flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-2">
-          <Radar className="w-4 h-4" />{a ? t.remeasure : t.measure}
-        </a>
-        {bookingUrl && site.plan === 'site' && (
-          <a href={bookingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/80 hover:text-white">
-            <Sparkles className="w-4 h-4 text-brand" />{t.aiMore}
+      {onUpgrade ? (
+        <div className="mt-5 rounded-xl bg-brand/10 border border-brand/30 p-4">
+          <p className="text-sm text-white/80 leading-relaxed">{t.upgradeSub}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <button onClick={onUpgrade} className="inline-flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-2">
+              <Sparkles className="w-4 h-4" />{t.upgrade}
+            </button>
+            <a href={measureHref} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/75 hover:text-white">
+              <Radar className="w-4 h-4" />{a ? t.remeasure : t.measure}
+            </a>
+          </div>
+          {bookingUrl && <a href={bookingUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs text-white/55 hover:text-white"><CalendarCheck className="w-3.5 h-3.5" />{t.ask}</a>}
+        </div>
+      ) : (
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <a href={measureHref} className="inline-flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-2">
+            <Radar className="w-4 h-4" />{a ? t.remeasure : t.measure}
           </a>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -308,30 +344,181 @@ function SignalsTile({ site, t }: { site: Site; t: TT }) {
   )
 }
 
+// ─── AI visibility programme (Visibilité IA clients) ──────────────────────────
+const sameBiz = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+
+function History({ points }: { points: { at: string; score: number }[] }) {
+  const w = 320, h = 90, pad = 6
+  const xs = points.map((_, i) => points.length === 1 ? w / 2 : pad + (i * (w - 2 * pad)) / (points.length - 1))
+  const ys = points.map(p => h - pad - (Math.max(0, Math.min(100, p.score)) / 100) * (h - 2 * pad))
+  const line = xs.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-24" preserveAspectRatio="none" aria-hidden>
+      {[25, 50, 75].map(g => <line key={g} x1={0} x2={w} y1={h - pad - (g / 100) * (h - 2 * pad)} y2={h - pad - (g / 100) * (h - 2 * pad)} className="stroke-white/10" strokeDasharray="3 4" />)}
+      {points.length > 1 && <path d={`${line} L${xs.at(-1)},${h} L${xs[0]},${h} Z`} className="fill-brand/15" />}
+      {points.length > 1 && <path d={line} className="fill-none stroke-brand" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />}
+      {xs.map((x, i) => <circle key={i} cx={x} cy={ys[i]} r={3.5} className="fill-white" vectorEffect="non-scaling-stroke" />)}
+    </svg>
+  )
+}
+
+function AiProgram({ site, analyses, pending, t, lang }: { site: Site; analyses: Analysis[]; pending: boolean; t: TT; lang: Lang }) {
+  const latest = analyses[0]
+  const mine = latest ? analyses.filter(a => sameBiz(a.business_name, latest.business_name)) : []
+  const points = [...mine].reverse().map(a => ({ at: a.created_at, score: a.overall_score }))
+  const first = mine.at(-1)
+  const [detail, setDetail] = useState<ScoringResult | null>(null)
+  useEffect(() => {
+    if (!latest) return
+    let alive = true
+    fetch(`/api/client/analysis/${latest.id}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { if (alive) setDetail(d) }).catch(() => {})
+    return () => { alive = false }
+  }, [latest?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const next = latest ? new Date(new Date(latest.created_at).getTime() + 30 * 86400_000).toISOString() : null
+  const score = latest ? Math.max(0, Math.min(100, latest.overall_score)) : 0
+  const R = 40, C = 2 * Math.PI * R
+  const competitors = (detail?.competitors || []).slice(0, 6)
+  const byPlatform = detail?.platformResults || []
+  return (
+    <div className={tile}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <p className={tileLabel}>{t.prog}</p>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-300"><Dot tone="green" />{t.active}</span>
+        </div>
+        {next && <span className="text-xs text-white/45">{t.nextM(fmt(next, lang))}</span>}
+      </div>
+      {!latest ? (
+        <div className="mt-4 flex items-start gap-4">
+          {pending ? <Loader2 className="w-8 h-8 text-brand animate-spin flex-shrink-0" /> : <Radar className="w-8 h-8 text-brand flex-shrink-0" />}
+          <div>
+            <p className="font-display text-2xl text-white">{pending ? t.firstPending : t.aiNone}</p>
+            <p className="mt-1 text-sm text-white/55 leading-relaxed max-w-xl">{pending ? t.firstPendingSub : t.aiNoneSub(site.business_name || '')}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mt-4 grid md:grid-cols-[auto_1fr] gap-6 items-center">
+            <div className="flex items-center gap-4">
+              <svg viewBox="0 0 96 96" className="w-24 h-24 flex-shrink-0 -rotate-90" aria-hidden>
+                <circle cx="48" cy="48" r={R} className="fill-none stroke-white/10" strokeWidth="8" />
+                <circle cx="48" cy="48" r={R} className="fill-none stroke-brand" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${(score / 100) * C} ${C}`} />
+              </svg>
+              <div>
+                <p className="font-display text-5xl text-white leading-none">{score}<span className="text-lg text-white/40">/100</span></p>
+                <p className="mt-1.5 text-sm text-white/55">{t.aiSub(latest.mentions, latest.total)}</p>
+                {first && first.id !== latest.id
+                  ? <p className={cn('text-xs font-semibold mt-0.5', score - first.overall_score >= 0 ? 'text-emerald-400' : 'text-amber-300')}>{t.delta(score - first.overall_score, fmt(first.created_at, lang))}</p>
+                  : <p className="text-xs text-white/40 mt-0.5">{t.measured(fmt(latest.created_at, lang))}</p>}
+              </div>
+            </div>
+            <div>
+              <History points={points} />
+              {points.length < 2 && <p className="text-xs text-white/40">{t.oneMeasure}</p>}
+            </div>
+          </div>
+          {byPlatform.length > 0 && (
+            <div className="mt-5">
+              <p className="text-xs font-mono uppercase tracking-widest text-white/40">{t.assistants}</p>
+              <ul className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
+                {byPlatform.map(p => (
+                  <li key={p.platform} className={cn('rounded-xl border px-3 py-2.5', p.appeared ? 'border-emerald-400/30 bg-emerald-400/[0.06]' : 'border-white/10 bg-white/[0.03]')}>
+                    <p className="text-sm font-semibold text-white">{p.platformLabel}</p>
+                    <p className={cn('text-xs mt-0.5 inline-flex items-center gap-1', p.appeared ? 'text-emerald-300' : 'text-white/45')}>
+                      {p.appeared ? <Check className="w-3.5 h-3.5" /> : <XIcon className="w-3.5 h-3.5" />}{p.appeared ? t.cited(p.position) : t.notCited}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {competitors.length > 0 && (
+            <div className="mt-5">
+              <p className="text-xs font-mono uppercase tracking-widest text-white/40">{t.instead}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {competitors.map(c => <span key={c.name} className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/75">{c.name}{c.count > 1 ? <span className="text-white/40"> ×{c.count}</span> : null}</span>)}
+              </div>
+            </div>
+          )}
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <button onClick={() => goTo('analyses')} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:text-white/80">{t.details}<ArrowRight className="w-4 h-4" /></button>
+            <a href={`/api/client/analysis/${latest.id}/pdf?lang=${lang}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/75 hover:text-white"><FileDown className="w-4 h-4" />{t.report}</a>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function ProgramTile({ since, updates, bookingUrl, t, lang }: { since: string | null; updates: Update[]; bookingUrl: string | null; t: TT; lang: Lang }) {
+  const O = OFFER[lang]
+  const work = updates.filter(u => u.kind === 'work').slice(0, 3)
+  return (
+    <div className={tile}>
+      <p className={tileLabel}>{t.program}</p>
+      {since && <p className="mt-1.5 text-sm text-white/55">{t.progSince(fmt(since, lang))}</p>}
+      <p className="mt-4 text-xs font-mono uppercase tracking-widest text-white/40">{t.setupL}</p>
+      <ul className="mt-2 space-y-1.5">{O.setup.map(x => <li key={x} className="flex gap-2 text-sm text-white/80 leading-relaxed"><Check className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" />{setupItem(x)}</li>)}</ul>
+      <p className="mt-4 text-xs font-mono uppercase tracking-widest text-white/40">{t.monthlyL}</p>
+      <ul className="mt-2 space-y-1.5">{O.monthly.slice(0, 4).map(x => <li key={x} className="flex gap-2 text-sm text-white/80 leading-relaxed"><Check className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" />{x}</li>)}</ul>
+      {work.length > 0 && (
+        <>
+          <p className="mt-4 text-xs font-mono uppercase tracking-widest text-white/40">{t.latest}</p>
+          <ul className="mt-2 space-y-1.5">{work.map(u => <li key={u.id} className="text-sm text-white/75"><span className="text-white/40 text-xs">{fmt(u.created_at, lang)} · </span>{u.title}</li>)}</ul>
+        </>
+      )}
+      <div className="mt-5 rounded-xl bg-white/[0.05] border border-white/10 p-4">
+        <p className="text-sm text-white/70 leading-relaxed">{t.custom}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+          {bookingUrl && <a href={bookingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-white text-ink px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/90"><CalendarCheck className="w-4 h-4" />{t.strategy}</a>}
+          <a href={`mailto:${CONTACT.email}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/75 hover:text-white"><Mail className="w-4 h-4" />{t.write}</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── The panel ─────────────────────────────────────────────────────────────────
-export default function PresenceOverview({ sites, analyses, bookingUrl, lang }: {
-  sites: Site[]; analyses: Analysis[]; bookingUrl: string | null; lang: Lang
+export default function PresenceOverview({ sites, analyses, updates, plan, bookingUrl, lang, onUpgrade, pending }: {
+  sites: Site[]; analyses: Analysis[]; updates: Update[]; plan: string | null; bookingUrl: string | null; lang: Lang
+  onUpgrade: () => void; pending: boolean
 }) {
   const t = L[lang] || L.fr
   if (!sites.length) return null
+  const vis = (p: string | null | undefined) => p === 'visibility' || p === 'complete'
   return (
     <section className="rounded-3xl bg-ink text-white p-5 md:p-8 space-y-5">
       <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand">{t.label}</p>
-      {sites.map(site => (
-        <div key={site.slug} className="space-y-5">
-          <div className="grid lg:grid-cols-[1.35fr_1fr] gap-5">
-            <SiteTile site={site} t={t} lang={lang} />
-            <div className="grid gap-5 content-start">
-              <VisitsTile site={site} t={t} />
-              <GoogleTile site={site} t={t} />
+      {sites.map(site => {
+        const program = vis(plan) || vis(site.plan)
+        const since = updates.find(u => u.title === 'upgraded')?.created_at || (program ? site.claimed_at || null : null)
+        return (
+          <div key={site.slug} className="space-y-5">
+            <div className="grid lg:grid-cols-[1.35fr_1fr] gap-5">
+              <SiteTile site={site} t={t} lang={lang} />
+              <div className="grid gap-5 content-start">
+                <VisitsTile site={site} t={t} />
+                <GoogleTile site={site} t={t} />
+              </div>
             </div>
+            {program ? (
+              <>
+                <AiProgram site={site} analyses={analyses} pending={pending} t={t} lang={lang} />
+                <div className="grid lg:grid-cols-[1fr_1.35fr] gap-5">
+                  <ProgramTile since={since} updates={updates} bookingUrl={bookingUrl} t={t} lang={lang} />
+                  <SignalsTile site={site} t={t} />
+                </div>
+              </>
+            ) : (
+              <div className="grid lg:grid-cols-[1fr_1.35fr] gap-5">
+                <AiTile site={site} analyses={analyses} bookingUrl={bookingUrl} t={t} lang={lang}
+                  onUpgrade={site.status !== 'cancelled' && (plan === 'site' || site.plan === 'site') ? onUpgrade : undefined} />
+                <SignalsTile site={site} t={t} />
+              </div>
+            )}
           </div>
-          <div className="grid lg:grid-cols-[1fr_1.35fr] gap-5">
-            <AiTile site={site} analyses={analyses} bookingUrl={bookingUrl} t={t} lang={lang} />
-            <SignalsTile site={site} t={t} />
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </section>
   )
 }

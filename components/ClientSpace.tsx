@@ -12,6 +12,7 @@ import AuditRequest from './AuditRequest'
 import CheckoutButton from './CheckoutButton'
 import SiteSetup, { loadSites, type Site } from './SiteSetup'
 import PresenceOverview from './PresenceOverview'
+import UpgradeSheet, { type UpgradeState } from './UpgradeSheet'
 import { useLang } from './LangProvider'
 import { CONTACT } from '@/lib/site-copy'
 import { OFFER, PLANS, PLAN_KEYS, TERMS, chf, founderPrice, hasFounder, price, type PlanKey, type Term } from '@/lib/plans'
@@ -26,6 +27,7 @@ type Lead = {
   business_name: string | null; city: string | null; category: string | null; stage: string | null; client_message: string | null
   plan: PlanKey | null; term: Term | null; commitment_until: string | null; subscription_status: string | null; current_period_end: string | null
   audit_requested_at: string | null; audit_done_at: string | null; boost_paid_at: string | null; hasBilling: boolean
+  discount?: { percent: number; end: string | null } | null
 }
 type Me = { email: string; left: number; lead: Lead | null; analyses: Analysis[]; updates: Update[]; bookingUrl: string | null; payments: boolean; paymentsTest: boolean; isAdmin?: boolean }
 
@@ -54,13 +56,15 @@ const L = {
     analyses: 'Vos analyses', newA: 'Nouvelle analyse', left: (n: number) => n > 50 ? 'Analyses illimitées' : n > 0 ? `${n} analyse gratuite disponible aujourd'hui` : 'Prochaine analyse gratuite demain',
     noA: 'Aucune analyse pour le moment.', view: 'Voir', hide: 'Fermer', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `cité par ${m}/${t}`,
     follow: 'Suivi', noF: 'Votre suivi apparaîtra ici : audit, plan d\'action, travaux réalisés et rapports mensuels.',
-    ev: { audit_requested: 'Audit offert demandé', subscribed: (p: string) => `Abonnement activé : ${p}`, boost_purchased: 'Mise en place commandée', monthly_analysis: (p: string) => `Analyse mensuelle : ${p}/100`, site_activated: 'Site activé', domain_chosen: (p: string) => `Domaine choisi : ${p}`, domain_ordered: (p: string) => `Domaine demandé : ${p}`, site_live: (p: string) => `Site en ligne : ${p.replace('https://', '')}` } as Record<string, string | ((p: string) => string)>,
+    ev: { audit_requested: 'Audit offert demandé', subscribed: (p: string) => `Abonnement activé : ${p}`, boost_purchased: 'Mise en place commandée', monthly_analysis: (p: string) => `Analyse mensuelle : ${p}/100`, site_activated: 'Site activé', domain_chosen: (p: string) => `Domaine choisi : ${p}`, domain_ordered: (p: string) => `Domaine demandé : ${p}`, site_live: (p: string) => `Site en ligne : ${p.replace('https://', '')}`, upgraded: 'Passage à Visibilité IA', baseline_analysis: (p: string) => `Première mesure Visibilité IA : ${p}/100` } as Record<string, string | ((p: string) => string)>,
     sub: 'Offres et facturation', plan: 'Offre', status: 'Statut', renew: 'Prochain renouvellement', manage: 'Factures, carte et résiliation',
     statuses: { active: 'Actif', trialing: 'Période d\'essai', past_due: 'Paiement en attente', canceled: 'Résilié', unpaid: 'Impayé', incomplete: 'Incomplet', paused: 'En pause' } as Record<string, string>,
     choose: 'Choisir', perMonth: '/ mois', payNote: 'Paiement sécurisé par Stripe. Vous gérez factures et carte ici.', noPay: 'Le paiement en ligne sera bientôt disponible. Écrivez-nous pour démarrer.',
     test: 'Mode test : aucun paiement réel. Carte de test 4242 4242 4242 4242, date future, CVC au choix.',
     contact: 'Votre interlocuteur', contactSub: 'Antoine Pury, fondateur. Il lit et répond lui-même à chaque message.', write: 'Écrire',
     loadErr: 'Impossible de charger votre espace. Réessayez.',
+    upgrade: 'Passer à Visibilité IA',
+    discount: (p: number, d: string | null) => `-${p} %${d ? ` jusqu'au ${d}` : ''}`,
     billedTo: (e: string) => `L'abonnement de votre site est au nom de ${e}. Pour les factures et la carte, connectez-vous avec cette adresse.`,
   },
   de: {
@@ -87,13 +91,15 @@ const L = {
     analyses: 'Ihre Analysen', newA: 'Neue Analyse', left: (n: number) => n > 50 ? 'Unbegrenzte Analysen' : n > 0 ? `${n} kostenlose Analyse heute verfügbar` : 'Nächste kostenlose Analyse morgen',
     noA: 'Noch keine Analyse.', view: 'Ansehen', hide: 'Schliessen', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `genannt von ${m}/${t}`,
     follow: 'Verlauf', noF: 'Ihr Verlauf erscheint hier: Audit, Aktionsplan, umgesetzte Arbeiten und Monatsberichte.',
-    ev: { audit_requested: 'Kostenloses Audit angefragt', subscribed: (p: string) => `Abonnement aktiviert: ${p}`, boost_purchased: 'Einrichtung bestellt', monthly_analysis: (p: string) => `Monatliche Analyse: ${p}/100` , site_activated: 'Website aktiviert', domain_chosen: (p: string) => `Domain gewählt: ${p}`, domain_ordered: (p: string) => `Domain angefragt: ${p}`, site_live: (p: string) => `Website online: ${p.replace('https://', '')}` } as Record<string, string | ((p: string) => string)>,
+    ev: { audit_requested: 'Kostenloses Audit angefragt', subscribed: (p: string) => `Abonnement aktiviert: ${p}`, boost_purchased: 'Einrichtung bestellt', monthly_analysis: (p: string) => `Monatliche Analyse: ${p}/100` , site_activated: 'Website aktiviert', domain_chosen: (p: string) => `Domain gewählt: ${p}`, domain_ordered: (p: string) => `Domain angefragt: ${p}`, site_live: (p: string) => `Website online: ${p.replace('https://', '')}`, upgraded: 'Wechsel zur KI-Sichtbarkeit', baseline_analysis: (p: string) => `Erste Messung KI-Sichtbarkeit: ${p}/100` } as Record<string, string | ((p: string) => string)>,
     sub: 'Angebote und Rechnungen', plan: 'Angebot', status: 'Status', renew: 'Nächste Verlängerung', manage: 'Rechnungen, Karte und Kündigung',
     statuses: { active: 'Aktiv', trialing: 'Testphase', past_due: 'Zahlung ausstehend', canceled: 'Gekündigt', unpaid: 'Unbezahlt', incomplete: 'Unvollständig', paused: 'Pausiert' } as Record<string, string>,
     choose: 'Wählen', perMonth: '/ Monat', payNote: 'Sichere Zahlung über Stripe. Rechnungen und Karte verwalten Sie hier.', noPay: 'Die Online-Zahlung ist bald verfügbar. Schreiben Sie uns, um zu starten.',
     test: 'Testmodus: keine echte Zahlung. Testkarte 4242 4242 4242 4242, Datum in der Zukunft, beliebiger CVC.',
     contact: 'Ihr Ansprechpartner', contactSub: 'Antoine Pury, Gründer. Er liest und beantwortet jede Nachricht selbst.', write: 'Schreiben',
     loadErr: 'Ihr Bereich konnte nicht geladen werden. Bitte erneut versuchen.',
+    upgrade: 'Zu KI-Sichtbarkeit wechseln',
+    discount: (p: number, d: string | null) => `-${p} %${d ? ` bis ${d}` : ''}`,
     billedTo: (e: string) => `Das Abonnement Ihrer Website läuft auf ${e}. Für Rechnungen und Karte melden Sie sich mit dieser Adresse an.`,
   },
   en: {
@@ -120,13 +126,15 @@ const L = {
     analyses: 'Your analyses', newA: 'New analysis', left: (n: number) => n > 50 ? 'Unlimited analyses' : n > 0 ? `${n} free analysis available today` : 'Next free analysis tomorrow',
     noA: 'No analysis yet.', view: 'View', hide: 'Close', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `named by ${m}/${t}`,
     follow: 'Follow-up', noF: 'Your follow-up will appear here: audit, action plan, work done and monthly reports.',
-    ev: { audit_requested: 'Free audit requested', subscribed: (p: string) => `Subscription started: ${p}`, boost_purchased: 'Set-up ordered', monthly_analysis: (p: string) => `Monthly analysis: ${p}/100` , site_activated: 'Website activated', domain_chosen: (p: string) => `Domain chosen: ${p}`, domain_ordered: (p: string) => `Domain requested: ${p}`, site_live: (p: string) => `Website live: ${p.replace('https://', '')}` } as Record<string, string | ((p: string) => string)>,
+    ev: { audit_requested: 'Free audit requested', subscribed: (p: string) => `Subscription started: ${p}`, boost_purchased: 'Set-up ordered', monthly_analysis: (p: string) => `Monthly analysis: ${p}/100` , site_activated: 'Website activated', domain_chosen: (p: string) => `Domain chosen: ${p}`, domain_ordered: (p: string) => `Domain requested: ${p}`, site_live: (p: string) => `Website live: ${p.replace('https://', '')}`, upgraded: 'Moved to AI visibility', baseline_analysis: (p: string) => `First AI visibility measurement: ${p}/100` } as Record<string, string | ((p: string) => string)>,
     sub: 'Plans and billing', plan: 'Plan', status: 'Status', renew: 'Next renewal', manage: 'Invoices, card and cancellation',
     statuses: { active: 'Active', trialing: 'Trial', past_due: 'Payment pending', canceled: 'Cancelled', unpaid: 'Unpaid', incomplete: 'Incomplete', paused: 'Paused' } as Record<string, string>,
     choose: 'Choose', perMonth: '/ month', payNote: 'Secure payment by Stripe. Manage invoices and card here.', noPay: 'Online payment is coming soon. Write to us to get started.',
     test: 'Test mode: no real payment. Test card 4242 4242 4242 4242, any future date, any CVC.',
     contact: 'Your contact', contactSub: 'Antoine Pury, founder. He reads and answers every message himself.', write: 'Write',
     loadErr: 'Your area could not be loaded. Please try again.',
+    upgrade: 'Move to AI visibility',
+    discount: (p: number, d: string | null) => `-${p} %${d ? ` until ${d}` : ''}`,
     billedTo: (e: string) => `Your website subscription is in the name of ${e}. For invoices and card, sign in with that address.`,
   },
 }
@@ -306,7 +314,7 @@ function Analyses({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
   }
 
   return (
-    <div className="card p-6 md:p-8">
+    <div id="analyses" className="card p-6 md:p-8 scroll-mt-24">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h2 className="font-display text-3xl text-ink">{T.analyses}</h2>
@@ -379,7 +387,7 @@ function FollowUp({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
   )
 }
 
-function Subscription({ T, me, lang, billedTo }: { T: TT; me: Me; lang: Lang; billedTo?: string | null }) {
+function Subscription({ T, me, lang, billedTo, onUpgrade }: { T: TT; me: Me; lang: Lang; billedTo?: string | null; onUpgrade?: () => void }) {
   const l = me.lead
   const O = OFFER[lang]
   const [busy, setBusy] = useState(false)
@@ -396,7 +404,11 @@ function Subscription({ T, me, lang, billedTo }: { T: TT; me: Me; lang: Lang; bi
       else setBusy(false)
     } catch { setBusy(false) }
   }
-  const current = l?.plan && l.plan !== 'boost' && l.term ? `${PLANS[l.plan].name[lang]} · CHF ${chf(price(l.plan, l.term))} ${O.per[l.term]} · ${O.term[l.term]}` : l?.plan ? PLANS[l.plan].name[lang] : '-'
+  const listed = l?.plan && l.plan !== 'boost' && l.term ? price(l.plan, l.term) : null
+  const paid = listed !== null && l?.discount?.percent ? Math.round(listed * (100 - l.discount.percent)) / 100 : listed
+  const current = l?.plan && l.plan !== 'boost' && l.term && paid !== null
+    ? `${PLANS[l.plan].name[lang]} · CHF ${chf(paid)} ${O.per[l.term]} · ${O.term[l.term]}${l.discount?.percent ? ` (${T.discount(l.discount.percent, l.discount.end ? fmtDate(l.discount.end, lang) : null)})` : ''}`
+    : l?.plan ? PLANS[l.plan].name[lang] : '-'
   const plans = (
     <>
       <p className="mt-6 text-sm font-semibold text-ink">{T.howPay}</p>
@@ -438,6 +450,12 @@ function Subscription({ T, me, lang, billedTo }: { T: TT; me: Me; lang: Lang; bi
             <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{T.status}</dt><dd className="mt-1 font-semibold text-ink">{T.statuses[l?.subscription_status || ''] || l?.subscription_status || '-'}</dd></div>
             <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{l?.commitment_until && new Date(l.commitment_until) > new Date() ? T.commit : T.renew}</dt><dd className="mt-1 font-semibold text-ink">{l?.commitment_until && new Date(l.commitment_until) > new Date() ? fmtDate(l.commitment_until, lang) : l?.current_period_end ? fmtDate(l.current_period_end, lang) : '-'}</dd></div>
           </dl>
+          {l?.plan === 'site' && onUpgrade && (
+            <div className="mt-6 rounded-2xl bg-brand/[0.06] border border-brand/25 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+              <p className="flex-1 text-sm text-ink/75 leading-relaxed"><span className="font-semibold text-ink">{OFFER[lang].title}.</span> {OFFER[lang].tagline}</p>
+              <button onClick={onUpgrade} className="btn-primary inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap"><Sparkles className="w-4 h-4" />{T.upgrade}</button>
+            </div>
+          )}
         </div>
       ) : billedTo ? (
         <p className="mt-5 text-ink/65 leading-relaxed">{T.billedTo(billedTo)}</p>
@@ -501,14 +519,23 @@ export default function ClientSpace() {
   const [failed, setFailed] = useState(false)
   // Read once on the client; not rendered before the first fetch, so no hydration mismatch.
   const [flags] = useState(() => {
-    if (typeof window === 'undefined') return { welcome: false, siteWelcome: false, expired: false }
+    if (typeof window === 'undefined') return { welcome: false, siteWelcome: false, expired: false, upgrade: 'closed' as UpgradeState }
     const q = new URLSearchParams(window.location.search)
     const siteWelcome = q.get('bienvenue') === 'site'
-    return { welcome: q.has('bienvenue') && !siteWelcome, siteWelcome, expired: q.get('lien') === 'expire' }
+    const upgrade: UpgradeState = q.get('upgraded') ? 'done' : q.get('upgrade') === 'failed' ? 'failed' : 'closed'
+    return { welcome: q.has('bienvenue') && !siteWelcome, siteWelcome, expired: q.get('lien') === 'expire', upgrade }
   })
+  const [upgradeState, setUpgradeState] = useState<UpgradeState>(flags.upgrade)
+  const [mountedAt] = useState(() => Date.now())
+  const [upgradedHere, setUpgradedHere] = useState(flags.upgrade === 'done')
   const [sites, setSites] = useState<Site[]>([])
   const hasSite = sites.length > 0
   const updateSite = (s: Site) => setSites(prev => prev.map(x => x.slug === s.slug ? { ...x, ...s } : x))
+
+  const reload = useCallback(async () => {
+    const r = await fetchMe()
+    if (r.me) { setMe(r.me); setSites(await loadSites()) }
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -519,6 +546,19 @@ export default function ClientSpace() {
     })
     return () => { alive = false }
   }, [])
+
+  // Just upgraded: the first AI measurement arrives within minutes; refresh until it is there.
+  const upgradedRecently = !!me && (upgradedHere || me.updates.some(u => u.title === 'upgraded' && mountedAt - new Date(u.created_at).getTime() < 15 * 60_000))
+  const baselineDone = !!me && me.updates.some(u => u.title === 'baseline_analysis')
+  const pending = upgradedRecently && !baselineDone
+  useEffect(() => {
+    if (!pending) return
+    const started = Date.now()
+    const id = setInterval(() => { if (Date.now() - started > 8 * 60_000) clearInterval(id); else reload() }, 20_000)
+    return () => clearInterval(id)
+  }, [pending, reload])
+  const openUpgrade = () => setUpgradeState('open')
+  const onUpgraded = () => { setUpgradedHere(true); reload() }
 
   const logout = async () => {
     await fetch('/api/check/session', { method: 'DELETE' })
@@ -555,7 +595,12 @@ export default function ClientSpace() {
               </div>
             )}
             {/* Site clients: the overview (site, visitors, Google, AI), then the site settings (domain + legal details). */}
-            <PresenceOverview sites={sites} analyses={me.analyses} bookingUrl={me.bookingUrl} lang={lang} />
+            <PresenceOverview sites={sites} analyses={me.analyses} updates={me.updates} plan={me.lead?.plan || null} bookingUrl={me.bookingUrl}
+              lang={lang} onUpgrade={openUpgrade} pending={pending} />
+            <UpgradeSheet state={upgradeState} onState={s => {
+              setUpgradeState(s)
+              if (s === 'closed' && (flags.upgrade !== 'closed')) history.replaceState(null, '', '/espace-client')
+            }} lang={lang} bookingUrl={me.bookingUrl} onUpgraded={onUpgraded} />
             <SiteSetup lang={lang} welcome={flags.siteWelcome} sites={sites} onUpdate={updateSite} />
             {!hasSite && <>
               <Journey T={T} me={me} />
@@ -566,7 +611,7 @@ export default function ClientSpace() {
               <FollowUp T={T} me={me} lang={lang} />
               <Contact T={T} me={me} />
             </div>
-            <Subscription T={T} me={me} lang={lang} billedTo={sites.find(x => x.email && x.email !== me.email)?.email || null} />
+            <Subscription T={T} me={me} lang={lang} billedTo={sites.find(x => x.email && x.email !== me.email)?.email || null} onUpgrade={hasSite ? openUpgrade : undefined} />
           </div>
         )}
       </main>
