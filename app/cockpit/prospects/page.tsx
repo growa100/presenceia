@@ -11,6 +11,7 @@ type Prospect = {
   generated_at: string | null; sent_at: string | null; claimed_at: string | null
   visits: number; offer_views: number; first_visited_at: string | null; last_visited_at: string | null
   followup_j4_sent_at: string | null; followup_j8_sent_at: string | null
+  recent_visits?: { at: string; kind: 'site' | 'offre' | 'checkout'; network: string | null; device: string | null; country: string | null }[]
   email_meta: { from_account?: string; last_status?: string; steps?: number; unsubscribed?: boolean }
 }
 type Page = { page: number; per_page: number; total: number; items: Prospect[] }
@@ -21,6 +22,9 @@ const STATUS_TONE: Record<string, 'gray' | 'green' | 'red' | 'amber' | 'blue' | 
 const STATUS_LABEL: Record<string, string> = {
   not_sent: 'pas envoyé', sent: 'envoyé', replied: 'a répondu', interested: 'intéressé', demo_booked: 'RDV', not_interested: 'pas intéressé',
 }
+
+const KIND_LABEL: Record<string, string> = { site: 'site', offre: 'offre', checkout: 'clic Activer' }
+const fmtWhen = (iso: string) => new Date(iso).toLocaleString('fr-CH', { timeZone: 'Europe/Zurich', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 export default function ProspectsPage() {
   return <Suspense fallback={<Spinner />}><Prospects /></Suspense>
@@ -114,6 +118,11 @@ function Prospects() {
                       <span className="font-semibold text-brand">{p.visits}</span>
                       {p.offer_views > 0 && <span className="text-ink/60"> · offre ×{p.offer_views}</span>}
                       <div className="text-[11px] text-ink/40">{fmtDate(p.last_visited_at)}</div>
+                      {p.recent_visits?.slice(0, 3).map((v, i) => (
+                        <div key={i} className="text-[11px] text-ink/50 whitespace-nowrap">
+                          {fmtWhen(v.at)} · {KIND_LABEL[v.kind] || v.kind}{v.network ? ` · ${v.network}` : ''}{v.device ? ` · ${v.device}` : ''}
+                        </div>
+                      ))}
                     </div>
                   ) : <span className="text-ink/30">—</span>}
                 </td>

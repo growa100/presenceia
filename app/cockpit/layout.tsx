@@ -25,6 +25,10 @@ export default function CockpitLayout({ children }: { children: React.ReactNode 
         if (!d.user) { router.replace('/login?next=/cockpit'); return }
         if (d.user.role !== 'admin') { router.replace('/dashboard'); return }
         setUser(d.user); setChecked(true)
+        // Mark this browser and network as the founder's, so his own visits
+        // to the generated sites are not counted as prospect visits.
+        fetch('/api/cockpit-mark', { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+          .then(m => { if (m?.url) { const img = new Image(); img.src = m.url } }).catch(() => {})
       })
       .catch(() => router.replace('/login?next=/cockpit'))
   }, [router])

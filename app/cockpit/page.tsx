@@ -68,14 +68,14 @@ export default function OverviewPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         <Kpi label="Sites prêts" value={f.sites_ready ?? 0} hint={`${p.ready_with_email_not_sent} avec email, pas encore envoyés`} />
         <Kpi label="Prospects contactés" value={f.prospects_contacted ?? 0} hint={`${f.emails_sent} emails (relances incluses)`} />
-        <Kpi label="Ont visité leur site" value={f.visited ?? 0} hint={`taux de visite ${pct(f.visit_rate)}`} accent />
+        <Kpi label="Ont visité leur site" value={f.visited ?? 0} hint={`taux de visite ${pct(f.visit_rate)}${f.robot_hits ? ` · ${f.robot_hits} passages de robots filtrés` : ''}`} accent />
         <Kpi label="Ont ouvert l’offre" value={f.offer_viewed ?? 0} hint={`${pct(f.offer_rate)} des contactés`} />
         <Kpi label="Ont répondu" value={f.replied ?? 0} hint={`taux de réponse ${pct(f.reply_rate)}`} />
         <Kpi label="Gagnés" value={f.won ?? 0} hint={`${pct(f.win_rate)} · intéressés, RDV, activés`} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card title="Envois et visites par jour" sub="La visite du site remplace le taux d’ouverture : les pixels sont bloqués par Gmail/Outlook, une visite est une preuve d’intérêt réel." className="lg:col-span-2">
+        <Card title="Envois et visites par jour" sub="Seules les vraies personnes comptent : réseau suisse ou français, navigateur à jour, après l’envoi. Scanners de liens, robots, VPN et vos propres visites sont exclus." className="lg:col-span-2">
           <LineChart series={[
             { name: 'Emails envoyés', color: '#0A0A0F', points: data.series.sent },
             { name: 'Sites visités', color: '#E8372A', points: data.series.visited_sites },

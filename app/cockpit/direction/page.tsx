@@ -284,6 +284,16 @@ function Settings({ res, reload }: { res: SettingsRes; reload: () => void }) {
             <div className="text-xs text-ink/45">La génération de sites continue ; seuls les emails s’arrêtent.</div>
           </div>
         </div>
+        <div className="flex items-center gap-3 self-end pb-6">
+          <Toggle on={form.offer_view_alerts !== false} onChange={async v => {
+            setForm({ ...form, offer_view_alerts: v })
+            try { await api('settings', { method: 'PUT', body: JSON.stringify({ offer_view_alerts: v }) }); reload() } catch (e: any) { setMsg(e.message) }
+          }} />
+          <div>
+            <div className="text-sm font-medium">Alerte Telegram « offre ouverte »</div>
+            <div className="text-xs text-ink/45">Quand une vraie personne ouvre la page offre de son site ou clique sur Activer : le bon moment pour appeler.</div>
+          </div>
+        </div>
       </div>
       {msg && <p className={`text-sm mt-4 ${msg.startsWith('Enregistré') ? 'text-emerald-700' : 'text-red-600'}`}>{msg}</p>}
     </Card>
