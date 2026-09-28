@@ -104,7 +104,15 @@ export default function CheckerForm() {
   const [code, setCode] = useState('')
   const [pending, setPending] = useState<FormData | null>(null)
 
-  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  // ?b=<business>&v=<city> (link from the client space): the form opens prefilled.
+  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: (() => {
+      if (typeof window === 'undefined') return {}
+      const q = new URLSearchParams(window.location.search)
+      return { businessName: (q.get('b') || '').slice(0, 120), city: (q.get('v') || '').slice(0, 80) }
+    })(),
+  })
   const cat = watch('category')
   const onHuman = useCallback((t: string | null) => setHuman(t), [])
 

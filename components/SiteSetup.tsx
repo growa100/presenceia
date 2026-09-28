@@ -2,7 +2,7 @@
 // Client space: the website we prepared, once paid for. Two steps: where it goes live
 // (the client's own domain, a new one, or later) and the legal details (legal notice and
 // privacy page). The work happens on the droplet through /api/client/site.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Check, Copy, ExternalLink, Globe, Loader2, Mail, RefreshCw, Scale, Search, X } from 'lucide-react'
 import { BOOKING_URL } from '@/lib/links'
 import type { Lang } from '@/lib/i18n'
@@ -17,12 +17,17 @@ export type Site = {
   plan: string | null; term: string | null; preview_url: string; market: string; city: string | null
   domain_mode: 'existing' | 'new' | 'later' | null; domain: string | null; canonical_host: string | null; live_url: string | null
   dns: Dns | null; legal: Record<string, string> | null; legal_done: boolean; ip: string; edge: string; records?: Rec[]
+  // Overview (client space cockpit): only on reads, kept when an action returns the site.
+  claimed_at?: string | null; live_at?: string | null; preview_image?: string | null
+  google?: { rating: number | null; reviews: number | null; url: string | null } | null
+  signals?: Record<string, boolean>
+  stats?: { days: number; visits: number; visitors: number; page_views: number; prev_visits: number; series: { day: string; visits: number }[]; tracking_since: string | null } | null
 }
 type Suggestion = { domain: string; status: 'available' | 'taken' | 'unknown' }
 
 const L = {
   fr: {
-    title: 'Votre site', preview: 'Aperçu', live: 'En ligne', pending: 'En attente du domaine', ready: 'Activé', cancelled: 'Abonnement terminé',
+    title: 'Réglages de votre site', preview: 'Aperçu', live: 'En ligne', pending: 'En attente du domaine', ready: 'Activé', cancelled: 'Abonnement terminé',
     welcome: 'Merci, votre site est à vous. Le bandeau d\'aperçu est retiré. Il reste deux étapes, deux minutes chacune.',
     s1: '1. Où mettre votre site en ligne ?', s2: '2. Vos informations légales',
     s2sub: 'Pour les pages « Mentions légales » et « Protection des données » de votre site, obligatoires pour un site d\'entreprise.',
@@ -56,12 +61,12 @@ const L = {
     company: 'Raison sociale', form: 'Forme juridique', street: 'Rue et numéro', zip: 'NPA', city: 'Localité', ide: 'Numéro IDE (si inscrit au RC)',
     rcs: 'SIREN / RCS', capital: 'Capital social', vat: 'N° TVA (facultatif)', responsible: 'Personne responsable du site', email: 'Email de contact (public)', phone: 'Téléphone (public)',
     forms: ['Raison individuelle', 'Sàrl', 'SA', 'Association', 'Autre'], formsFr: ['Entreprise individuelle', 'SARL', 'SAS', 'SA', 'Autre'],
-    save: 'Publier les pages légales', saved: 'Pages légales publiées.', see: 'Voir :', legalPage: 'Mentions légales', privacyPage: 'Protection des données',
+    edit: 'Modifier', done: 'Pages légales publiées.', save: 'Publier les pages légales', saved: 'Pages légales publiées.', see: 'Voir :', legalPage: 'Mentions légales', privacyPage: 'Protection des données',
     required: 'Merci de remplir les champs obligatoires.', err: 'Une erreur est survenue. Réessayez, ou écrivez-nous.',
     errs: { invalid_domain: 'Ce nom de domaine n\'est pas valide.', domain_not_found: 'Ce domaine n\'existe pas encore.', domain_taken: 'Ce domaine est déjà pris.' } as Record<string, string>,
   },
   de: {
-    title: 'Ihre Website', preview: 'Vorschau', live: 'Online', pending: 'Domain ausstehend', ready: 'Aktiviert', cancelled: 'Abonnement beendet',
+    title: 'Einstellungen Ihrer Website', preview: 'Vorschau', live: 'Online', pending: 'Domain ausstehend', ready: 'Aktiviert', cancelled: 'Abonnement beendet',
     welcome: 'Danke, die Website gehört Ihnen. Das Vorschau-Banner ist entfernt. Noch zwei Schritte, je zwei Minuten.',
     s1: '1. Wo soll Ihre Website online gehen?', s2: '2. Ihre rechtlichen Angaben',
     s2sub: 'Für das Impressum und die Datenschutzerklärung Ihrer Website, Pflicht für eine Firmenwebsite.',
@@ -95,12 +100,12 @@ const L = {
     company: 'Firma', form: 'Rechtsform', street: 'Strasse und Nummer', zip: 'PLZ', city: 'Ort', ide: 'UID-Nummer (falls im Handelsregister)',
     rcs: 'SIREN / RCS', capital: 'Kapital', vat: 'MWST-Nr. (freiwillig)', responsible: 'Verantwortliche Person', email: 'Kontakt-E-Mail (öffentlich)', phone: 'Telefon (öffentlich)',
     forms: ['Einzelunternehmen', 'GmbH', 'AG', 'Verein', 'Andere'], formsFr: ['Entreprise individuelle', 'SARL', 'SAS', 'SA', 'Andere'],
-    save: 'Rechtliche Seiten veröffentlichen', saved: 'Rechtliche Seiten veröffentlicht.', see: 'Ansehen:', legalPage: 'Impressum', privacyPage: 'Datenschutz',
+    edit: 'Ändern', done: 'Rechtliche Seiten veröffentlicht.', save: 'Rechtliche Seiten veröffentlichen', saved: 'Rechtliche Seiten veröffentlicht.', see: 'Ansehen:', legalPage: 'Impressum', privacyPage: 'Datenschutz',
     required: 'Bitte füllen Sie die Pflichtfelder aus.', err: 'Ein Fehler ist aufgetreten. Bitte nochmals versuchen oder uns schreiben.',
     errs: { invalid_domain: 'Diese Domain ist ungültig.', domain_not_found: 'Diese Domain existiert noch nicht.', domain_taken: 'Diese Domain ist vergeben.' } as Record<string, string>,
   },
   en: {
-    title: 'Your website', preview: 'Preview', live: 'Live', pending: 'Waiting for the domain', ready: 'Activated', cancelled: 'Subscription ended',
+    title: 'Your website settings', preview: 'Preview', live: 'Live', pending: 'Waiting for the domain', ready: 'Activated', cancelled: 'Subscription ended',
     welcome: 'Thank you, the website is yours. The preview banner is gone. Two steps left, two minutes each.',
     s1: '1. Where should your website go live?', s2: '2. Your legal details',
     s2sub: 'For the legal notice and privacy pages of your website, required for a business website.',
@@ -134,7 +139,7 @@ const L = {
     company: 'Company name', form: 'Legal form', street: 'Street and number', zip: 'Postcode', city: 'City', ide: 'Company ID (UID, if registered)',
     rcs: 'SIREN / RCS', capital: 'Share capital', vat: 'VAT number (optional)', responsible: 'Person responsible for the website', email: 'Contact email (public)', phone: 'Phone (public)',
     forms: ['Sole proprietorship', 'LLC (Sàrl / GmbH)', 'Corporation (SA / AG)', 'Association', 'Other'], formsFr: ['Entreprise individuelle', 'SARL', 'SAS', 'SA', 'Other'],
-    save: 'Publish the legal pages', saved: 'Legal pages published.', see: 'See:', legalPage: 'Legal notice', privacyPage: 'Privacy',
+    edit: 'Edit', done: 'Legal pages published.', save: 'Publish the legal pages', saved: 'Legal pages published.', see: 'See:', legalPage: 'Legal notice', privacyPage: 'Privacy',
     required: 'Please fill in the required fields.', err: 'Something went wrong. Please try again, or write to us.',
     errs: { invalid_domain: 'This domain name is not valid.', domain_not_found: 'This domain does not exist yet.', domain_taken: 'This domain is already taken.' } as Record<string, string>,
   },
@@ -164,7 +169,7 @@ function CopyBtn({ text, t }: { text: string; t: TT }) {
 function Badge({ site, t }: { site: Site; t: TT }) {
   const [label, cls] = site.status === 'live' ? [t.live, 'bg-green-50 text-green-700'] : site.status === 'domain_pending' ? [t.pending, 'bg-amber-50 text-amber-700']
     : site.status === 'cancelled' ? [t.cancelled, 'bg-ink/5 text-ink/60'] : [t.ready, 'bg-brand/10 text-brand']
-  return <span className={cn('px-3 py-1 rounded-full text-xs font-semibold', cls)}>{label}</span>
+  return <span className={cn('px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap', cls)}>{label}</span>
 }
 
 // ─── Step 1: domain ────────────────────────────────────────────────────────────
@@ -386,14 +391,27 @@ function LegalStep({ site, t, onUpdate }: { site: Site; t: TT; onUpdate: (s: Sit
   }))
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value })
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!f.company || !f.street || !f.zip || !f.city || !f.responsible || !f.email) { setMsg(t.required); return }
     setBusy(true); setMsg(null)
-    try { onUpdate(await call<Site>({ action: 'legal', slug: site.slug, legal: f })); setMsg(t.saved) } catch { setMsg(t.err) } finally { setBusy(false) }
+    try { onUpdate(await call<Site>({ action: 'legal', slug: site.slug, legal: f })); setMsg(t.saved); setEditing(false) } catch { setMsg(t.err) } finally { setBusy(false) }
   }
   const base = site.live_url || site.preview_url
+  if (site.legal_done && !editing) {
+    return (
+      <div className="mt-4 rounded-2xl bg-green-50 text-green-800 p-4 text-sm flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="font-semibold inline-flex items-center gap-2"><Check className="w-4 h-4" />{t.done}</span>
+        <span>
+          <a href={`${base}/mentions-legales/`} target="_blank" rel="noreferrer" className="underline font-semibold">{t.legalPage}</a> ·{' '}
+          <a href={`${base}/confidentialite/`} target="_blank" rel="noreferrer" className="underline font-semibold">{t.privacyPage}</a>
+        </span>
+        <button type="button" onClick={() => { setEditing(true); setMsg(null) }} className="ml-auto text-ink/60 underline">{t.edit}</button>
+      </div>
+    )
+  }
   const field = (k: string, label: string, req = false, type = 'text') => (
     <div>
       <label className={labelCls}>{label}{req && ' *'}</label>
@@ -438,25 +456,31 @@ function LegalStep({ site, t, onUpdate }: { site: Site; t: TT; onUpdate: (s: Sit
 
 // ─── The card ──────────────────────────────────────────────────────────────────
 
-export default function SiteSetup({ lang, welcome, onSites }: { lang: Lang; welcome?: boolean; onSites?: (n: number) => void }) {
+/** The client's sites (loaded once by the client space, shared with the overview). */
+export async function loadSites(): Promise<Site[]> {
+  try {
+    const r = await fetch('/api/client/site', { cache: 'no-store' })
+    const d = r.ok ? await r.json() : { items: [] }
+    return (d.items || []) as Site[]
+  } catch {
+    return []
+  }
+}
+
+export default function SiteSetup({ lang, welcome, sites, onUpdate }: {
+  lang: Lang; welcome?: boolean; sites: Site[]; onUpdate: (s: Site) => void
+}) {
   const t = L[lang] || L.fr
-  const [sites, setSites] = useState<Site[] | null>(null)
-  useEffect(() => {
-    let alive = true
-    fetch('/api/client/site', { cache: 'no-store' }).then(r => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] }))
-      .then(d => { if (!alive) return; const items = (d.items || []) as Site[]; setSites(items); onSites?.(items.length) })
-    return () => { alive = false }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  if (!sites?.length) return null
-  const update = (s: Site) => setSites(prev => (prev || []).map(x => x.slug === s.slug ? { ...x, ...s } : x))
+  if (!sites.length) return null
+  const update = onUpdate
 
   return (
     <>
       {sites.map(site => (
-        <div key={site.slug} className="card p-6 md:p-8">
+        <div key={site.slug} id="site-setup" className="card p-6 md:p-8 scroll-mt-24">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <h2 className="font-display text-3xl text-ink">{t.title}</h2>
                 <Badge site={site} t={t} />
               </div>
@@ -470,11 +494,11 @@ export default function SiteSetup({ lang, welcome, onSites }: { lang: Lang; welc
               <Check className="w-5 h-5 flex-shrink-0" /><p className="leading-relaxed">{t.welcome}</p>
             </div>
           )}
-          <div className="mt-7">
+          <div id="site-domain" className="mt-7 scroll-mt-24">
             <h3 className="font-semibold text-lg text-ink flex items-center gap-2"><Globe className="w-5 h-5 text-brand" />{t.s1}</h3>
             <DomainStep site={site} t={t} onUpdate={update} />
           </div>
-          <div className="mt-9 pt-7 border-t border-line">
+          <div id="site-legal" className="mt-9 pt-7 border-t border-line scroll-mt-24">
             <h3 className="font-semibold text-lg text-ink flex items-center gap-2"><Scale className="w-5 h-5 text-brand" />{t.s2}</h3>
             <p className="text-sm text-ink/55 mt-1">{t.s2sub}</p>
             <LegalStep site={site} t={t} onUpdate={update} />

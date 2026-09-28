@@ -20,6 +20,18 @@ export function verifySiteLink(q: URLSearchParams): SiteLink | null {
 
 export const siteUrl = (slug: string) => `https://${slug}.presenceia.com`
 
+/** The business email the site was sent to: the Stripe checkout is prefilled (and locked) with it,
+ *  so the client account is the address that received the site. Null if unknown or slow. */
+export async function prospectEmail(slug: string): Promise<string | null> {
+  try {
+    const { status, body } = await cockpitFetch(`sites/${slug}/prospect`, { signal: AbortSignal.timeout(2500) })
+    const e = status < 300 ? String(body?.email || '').trim().toLowerCase() : ''
+    return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e) ? e : null
+  } catch {
+    return null
+  }
+}
+
 /** Hand the site over to the client. Idempotent on the droplet (called by the webhook and the success page). */
 export async function claimSite(o: {
   slug: string; email: string; plan: string | null; term: string | null; business: string | null; phone?: string | null

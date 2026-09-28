@@ -6,13 +6,14 @@
 // POST {plan, term, language} from the site; GET ?plan=&term=&lang= from emails (redirects to Stripe).
 // GET with &site=<slug>&biz=&cur=&ts=&sig= comes from the offer page of a site we prepared
 // (signed by the droplet, lib/sites.ts): the site is carried in the metadata so the webhook
-// hands it over, the business name is prefilled, and French businesses pay in EUR.
+// hands it over, the business name is prefilled, French businesses pay in EUR, and the email is
+// the one the site was sent to (asked from the droplet, locked in Stripe): that is the account.
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionEmail } from '@/lib/checker-auth'
 import { hasFounder, isPlanKey, isTerm, PLANS, type PlanKey, type Term } from '@/lib/plans'
 import { founderCoupon, priceFor, setupPrice, stripe, type Currency } from '@/lib/stripe'
 import { baseUrl } from '@/lib/links'
-import { siteUrl, verifySiteLink, type SiteLink } from '@/lib/sites'
+import { prospectEmail, siteUrl, verifySiteLink, type SiteLink } from '@/lib/sites'
 import { supabaseAdmin } from '@/lib/supabase'
 
 type Lang = 'fr' | 'de' | 'en'
@@ -26,15 +27,21 @@ const ACCEPT = {
 async function createSession(req: NextRequest, plan: PlanKey, term: Term, lang: Lang, site: SiteLink | null = null): Promise<string> {
   if (!stripe) throw new Error('payments_unavailable')
   const base = baseUrl(req)
-  const email = site ? null : getSessionEmail(req)
+  const once = !!PLANS[plan].once
+  const currency: Currency = site?.currency || 'chf'
+  // Independent lookups in parallel (each is a network round trip).
+  const [email, price, setup, founder] = await Promise.all([
+    // A prepared site: the account is the business email the site was sent to.
+    site ? prospectEmail(site.slug) : Promise.resolve(getSessionEmail(req)),
+    priceFor(plan, term, currency),
+    !once && term === 'flex' && PLANS[plan].setupFlex ? setupPrice(currency) : Promise.resolve(null),
+    !once && hasFounder(plan) ? founderCoupon() : Promise.resolve(null),
+  ])
   const { data: lead } = email
     ? await supabaseAdmin.from('leads').select('stripe_customer_id, business_name').eq('email', email).maybeSingle()
     : { data: null }
-  const once = !!PLANS[plan].once
-  const currency: Currency = site?.currency || 'chf'
-  const lineItems: { price: string; quantity: number }[] = [{ price: await priceFor(plan, term, currency), quantity: 1 }]
-  if (!once && term === 'flex' && PLANS[plan].setupFlex) lineItems.push({ price: await setupPrice(currency), quantity: 1 })
-  const founder = !once && hasFounder(plan) ? await founderCoupon() : null
+  const lineItems: { price: string; quantity: number }[] = [{ price, quantity: 1 }]
+  if (setup) lineItems.push({ price: setup, quantity: 1 })
   const bizDefault = (site?.business || lead?.business_name || '').slice(0, 255)
   const siteMeta: Record<string, string> = site ? { site_slug: site.slug, currency } : {}
 

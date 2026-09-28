@@ -10,7 +10,8 @@ import Turnstile from './Turnstile'
 import ResultsPanel from './ResultsPanel'
 import AuditRequest from './AuditRequest'
 import CheckoutButton from './CheckoutButton'
-import SiteSetup from './SiteSetup'
+import SiteSetup, { loadSites, type Site } from './SiteSetup'
+import PresenceOverview from './PresenceOverview'
 import { useLang } from './LangProvider'
 import { CONTACT } from '@/lib/site-copy'
 import { OFFER, PLANS, PLAN_KEYS, TERMS, chf, founderPrice, hasFounder, price, type PlanKey, type Term } from '@/lib/plans'
@@ -500,11 +501,17 @@ export default function ClientSpace() {
     const siteWelcome = q.get('bienvenue') === 'site'
     return { welcome: q.has('bienvenue') && !siteWelcome, siteWelcome, expired: q.get('lien') === 'expire' }
   })
-  const [hasSite, setHasSite] = useState(false)
+  const [sites, setSites] = useState<Site[]>([])
+  const hasSite = sites.length > 0
+  const updateSite = (s: Site) => setSites(prev => prev.map(x => x.slug === s.slug ? { ...x, ...s } : x))
 
   useEffect(() => {
     let alive = true
-    fetchMe().then(r => { if (alive) { setMe(r.me); setFailed(r.failed) } })
+    fetchMe().then(r => {
+      if (!alive) return
+      setMe(r.me); setFailed(r.failed)
+      if (r.me) loadSites().then(items => { if (alive) setSites(items) })
+    })
     return () => { alive = false }
   }, [])
 
@@ -529,7 +536,7 @@ export default function ClientSpace() {
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div>
                 <p className="font-mono text-xs tracking-[0.25em] uppercase text-brand mb-3">{T.title}</p>
-                <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight">{T.hello}{me.lead?.business_name ? `, ${me.lead.business_name}` : ''}</h1>
+                <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight">{T.hello}{(me.lead?.business_name || sites[0]?.business_name) ? `, ${me.lead?.business_name || sites[0]?.business_name}` : ''}</h1>
                 <p className="mt-2 text-sm text-ink/50">{me.email}</p>
               </div>
               <div className="self-start sm:self-auto flex items-center gap-4">
@@ -542,8 +549,9 @@ export default function ClientSpace() {
                 <Check className="w-5 h-5 flex-shrink-0 mt-0.5" /><p className="leading-relaxed">{T.welcome}</p>
               </div>
             )}
-            {/* The website we prepared, once paid for: domain + legal details. */}
-            <SiteSetup lang={lang} welcome={flags.siteWelcome} onSites={n => setHasSite(n > 0)} />
+            {/* Site clients: the overview (site, visitors, Google, AI), then the site settings (domain + legal details). */}
+            <PresenceOverview sites={sites} analyses={me.analyses} bookingUrl={me.bookingUrl} lang={lang} />
+            <SiteSetup lang={lang} welcome={flags.siteWelcome} sites={sites} onUpdate={updateSite} />
             {!(hasSite && me.lead?.plan === 'site') && <>
               <Journey T={T} me={me} />
               <NextStep T={T} me={me} lang={lang} />
