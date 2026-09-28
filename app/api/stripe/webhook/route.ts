@@ -1,10 +1,16 @@
 // Stripe webhook: checkout completed, subscription changes. Endpoint: /api/stripe/webhook
 // Events: checkout.session.completed, customer.subscription.created/updated/deleted
-import { NextRequest, NextResponse } from 'next/server'
+import { after, NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { sendWelcome, syncCheckout, syncSubscription } from '@/lib/billing'
 import { baseUrl } from '@/lib/links'
 import { claimSite } from '@/lib/sites'
+import { runBaseline } from '@/lib/upgrade'
+import { cockpitFetch } from '@/lib/cockpit'
+import { mailLang } from '@/lib/email-layout'
+
+// The starting AI measurement of a new Visibilité IA client runs after the response (about a minute).
+export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET
@@ -25,6 +31,17 @@ export async function POST(req: NextRequest) {
         if (r?.site) await claimSite({ ...r, slug: r.site, livemode: r.livemode !== false })
         // With a webhook configured, the welcome emails are sent here only (never by the success page).
         if (r) await sendWelcome({ ...r, base: baseUrl(req) })
+        // New Visibilité IA client: the starting measurement the guarantee compares with (/conditions art. 6).
+        if (r?.isNew && (r.plan === 'visibility' || r.plan === 'complete')) {
+          const res = r
+          after(async () => {
+            let hint: { city?: string | null; sector?: string | null } = {}
+            if (res.site) {
+              try { const p = await cockpitFetch(`sites/${res.site}/prospect`); if (p.status < 300) hint = p.body || {} } catch { /* no hint */ }
+            }
+            await runBaseline(res.email, mailLang(res.lang), { business: res.business, city: hint.city || null, sector: hint.sector || null })
+          })
+        }
         break
       }
       case 'customer.subscription.created':

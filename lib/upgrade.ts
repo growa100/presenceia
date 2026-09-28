@@ -259,25 +259,29 @@ async function notifyAndMeasure(ctx: Ctx, paid: number, base: string): Promise<v
       E.p('Mise en place à démarrer : fiche Google, annuaires, données structurées et FAQ, méthode avis.') +
       E.button(`mailto:${email}`, 'Écrire au client') }),
   })
-  // First measurement (about a minute): the AI cockpit shows it.
-  {
-    try {
-      const { data: last } = await supabaseAdmin.from('visibility_checks').select('business_name, city, category, language')
-        .eq('email', email).order('created_at', { ascending: false }).limit(1).maybeSingle()
-      const input: BusinessInput = {
-        businessName: last?.business_name || ctx.business || site.business_name || '',
-        city: last?.city || site.city || '',
-        category: last?.category || site.sector || 'Autre',
-        language: (['fr', 'de', 'en', 'it'].includes(last?.language) ? last!.language : lang) as BusinessInput['language'],
-      }
-      if (!input.businessName || !input.city) return
-      const result = await runVisibilityCheck(input)
-      const cacheKey = `v${ENGINE_VERSION}_${normalizeName(input.businessName)}_${normalize(input.city)}_${normalize(input.category)}_${input.language}`
-      await supabaseAdmin.from('visibility_checks').insert({
-        cache_key: cacheKey, business_name: input.businessName, city: input.city, category: input.category, language: input.language,
-        email, overall_score: result.overallScore, grade: result.grade, result, kind: 'baseline',
-      })
-      await supabaseAdmin.from('client_updates').insert({ email, kind: 'report', title: 'baseline_analysis', body: `${result.overallScore}`, link: '/espace-client' })
-    } catch (e) { console.error('[upgrade] baseline', e) }
-  }
+  // First measurement (about a minute): the AI cockpit shows it; the guarantee compares with it.
+  await runBaseline(email, lang, { business: ctx.business || site.business_name || null, city: site.city || null, sector: site.sector || null })
+}
+
+/** The starting measurement of a Visibilité IA client (guarantee, /conditions art. 6): the business of his
+ *  latest analysis, else what we know from his site. Skipped without a name and a town. */
+export async function runBaseline(email: string, lang: MailLang, hints: { business: string | null; city: string | null; sector: string | null }): Promise<void> {
+  try {
+    const { data: last } = await supabaseAdmin.from('visibility_checks').select('business_name, city, category, language')
+      .eq('email', email).order('created_at', { ascending: false }).limit(1).maybeSingle()
+    const input: BusinessInput = {
+      businessName: last?.business_name || hints.business || '',
+      city: last?.city || hints.city || '',
+      category: last?.category || hints.sector || 'Autre',
+      language: (['fr', 'de', 'en', 'it'].includes(last?.language) ? last!.language : lang) as BusinessInput['language'],
+    }
+    if (!input.businessName || !input.city) return
+    const result = await runVisibilityCheck(input)
+    const cacheKey = `v${ENGINE_VERSION}_${normalizeName(input.businessName)}_${normalize(input.city)}_${normalize(input.category)}_${input.language}`
+    await supabaseAdmin.from('visibility_checks').insert({
+      cache_key: cacheKey, business_name: input.businessName, city: input.city, category: input.category, language: input.language,
+      email, overall_score: result.overallScore, grade: result.grade, result, kind: 'baseline',
+    })
+    await supabaseAdmin.from('client_updates').insert({ email, kind: 'report', title: 'baseline_analysis', body: `${result.overallScore}`, link: '/espace-client' })
+  } catch (e) { console.error('[baseline]', e) }
 }

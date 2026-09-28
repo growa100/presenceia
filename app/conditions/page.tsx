@@ -3,7 +3,7 @@ import LegalPage from '@/components/LegalPage'
 
 export const metadata: Metadata = {
   title: 'Conditions générales',
-  description: 'Conditions générales des abonnements Présence IA : durée, paiement, résiliation, garantie 90 jours.',
+  description: 'Conditions générales des abonnements Présence IA : durée, paiement, résiliation, garantie 120 jours.',
   robots: { index: false, follow: true },
 }
 
@@ -11,7 +11,7 @@ export default function Conditions() {
   return (
     <LegalPage
       title="Conditions générales"
-      updated="Dernière mise à jour : 26 septembre 2026"
+      updated="Dernière mise à jour : 28 septembre 2026"
       sections={[
         { title: '1. Parties', body: [
           'Les présentes conditions régissent les abonnements souscrits auprès d\'Antoine Pury, Présence IA, Av. du Bietschhorn 37, 1950 Sion, Suisse (ci-après « Présence IA »), par une entreprise ou un indépendant (ci-après « le client »). Les offres de Présence IA sont réservées aux professionnels : en commandant, le client confirme agir pour les besoins de son activité professionnelle.',
@@ -35,9 +35,10 @@ export default function Conditions() {
           'Les prix sont indiqués en francs suisses (CHF). Le paiement s\'effectue par carte, Apple Pay ou Google Pay via Stripe, prestataire de paiement sécurisé. Les montants sont prélevés automatiquement à chaque échéance. Les factures sont disponibles dans l\'espace client.',
           'En cas de défaut de paiement, Présence IA peut suspendre les prestations après un rappel resté sans effet pendant 10 jours.',
         ]},
-        { title: '6. Garantie 90 jours', body: [
-          'Pour les formules Visibilité IA, Présence IA mesure le score de visibilité IA du client à la fin de la mise en place, selon la méthode décrite dans le premier rapport. Si le score mesuré 90 jours plus tard n\'est pas supérieur à ce score de départ, la mensualité suivante n\'est pas facturée ; pour la formule annuelle, l\'abonnement est prolongé d\'un mois sans frais.',
-          'La garantie s\'applique une fois par client, à condition que celui-ci ait transmis les accès et informations demandés dans les 10 jours suivant la souscription. Elle constitue un geste commercial.',
+        { title: '6. Garantie 120 jours', body: [
+          'Pour les formules Visibilité IA, Présence IA mesure le score de visibilité IA du client à la souscription (mesure de départ, au plus tard au lancement de la mise en place), selon la méthode décrite dans les rapports. 120 jours après la souscription de la formule Visibilité IA, la moyenne des deux dernières mesures mensuelles est comparée à la mesure de départ.',
+          'Si cette moyenne n\'est pas supérieure à la mesure de départ, le client choisit l\'une des deux options suivantes, par e-mail à antoine@presenceia.com dans les 30 jours suivant cette comparaison : **arrêter sans frais**, la résiliation prenant effet à la fin du mois en cours, sans facturation de l\'engagement restant ni des frais de mise en place offerts (formule annuelle : les mois non utilisés sont remboursés au prorata ; formule sans engagement : les frais de mise en place payés sont remboursés) ; ou **poursuivre gratuitement**, Présence IA continuant le suivi sans facturer les mensualités suivantes (formule annuelle : prolongation d\'autant de mois sans frais) jusqu\'à ce qu\'une mesure soit supérieure à la mesure de départ, pendant au maximum 3 mois. Si, au terme de ces 3 mois, aucune mesure n\'est supérieure à la mesure de départ, le client peut encore arrêter sans frais dans les mêmes conditions.',
+          'La garantie s\'applique une fois par client, à condition que celui-ci ait transmis les accès et informations demandés (notamment l\'accès à sa fiche Google) dans les 14 jours suivant la souscription et n\'ait pas retiré ou modifié les éléments mis en place par Présence IA. En cas d\'arrêt, un abonnement Site web lié reste dû selon ses propres conditions, sauf si le site est inclus dans la formule Visibilité IA. Elle constitue un geste commercial.',
           'Présence IA s\'engage sur les moyens et sur un suivi transparent. Les réponses des assistants IA et les classements des moteurs de recherche dépendent de tiers : aucun résultat précis (position, nombre de clients) ne peut être garanti.',
         ]},
         { title: '7. Obligations du client', body: [

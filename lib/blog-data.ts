@@ -199,9 +199,9 @@ Voici le plan en 6 étapes que nous appliquons pour nos clients :
 3. **Schema.org** : balisage LocalBusiness, Service, FAQ sur votre site
 4. **Contenu FAQ** : répondre aux 20 questions les plus posées dans votre secteur
 5. **Citations** : présence sur les 15 principaux annuaires suisses
-6. **Monitoring** : mesurer votre progression chaque semaine
+6. **Monitoring** : mesurer votre progression chaque mois
 
-Le résultat moyen pour nos clients : passage de 0% à 35% de part de voix IA en 90 jours.`,
+Ce que vous pouvez viser : être cité par un ou deux assistants de plus en 3 à 4 mois, mesuré chaque mois. C'est aussi ce que couvre notre garantie 120 jours.`,
       de: `## Das Experiment
 
 Wir haben im Januar 2026 50 lokale Anfragen auf den 3 wichtigsten KI-Plattformen gestartet. Alle betrafen Dienstleistungen im Wallis: Klempner, Elektriker, Zahnärzte, Restaurants.
@@ -257,9 +257,9 @@ Here is the 6-step plan we apply for our clients:
 3. **Schema.org**: LocalBusiness, Service, FAQ markup on your site
 4. **FAQ content**: answer the 20 most asked questions in your sector
 5. **Citations**: presence on the 15 main Swiss directories
-6. **Monitoring**: measure your progress every week
+6. **Monitoring**: measure your progress every month
 
-Average result for our clients: going from 0% to 35% AI share of voice in 90 days.`,
+What you can aim for: being named by one or two more assistants within 3 to 4 months, measured every month. That is also what our 120-day guarantee covers.`,
     },
   },
   {
@@ -355,7 +355,7 @@ Notre service Présence IA génère et déploie automatiquement ces schemas sur 
 
 ## Mesurer l'impact
 
-Après implémentation, utilisez notre outil de monitoring pour suivre votre progression sur ChatGPT, Claude et Perplexity. En moyenne, nos clients voient une amélioration de leur score IA de 15 à 40 points dans les 30 premiers jours suivant l'ajout des schemas.`,
+Après implémentation, utilisez notre outil de monitoring pour suivre votre progression sur ChatGPT, Claude et Perplexity. Comptez quelques semaines à quelques mois avant que les assistants en tiennent compte : le temps que les moteurs réindexent votre site.`,
       de: `## Warum Schema.org für GEO kritisch ist
 
 Große Sprachmodelle (GPT-4, Claude, Gemini) wurden auf Milliarden von Webseiten trainiert. Unter diesen Seiten lieferten solche mit strukturierten Schema.org-Daten besonders klare Signale darüber, **wer** die Entität ist, **was** sie tut und **wo** sie sich befindet.
@@ -397,7 +397,7 @@ Our Présence IA service automatically generates and deploys these schemas to yo
 
 ## Measuring the impact
 
-After implementation, use our monitoring tool to track your progress on ChatGPT, Claude and Perplexity. On average, our clients see their AI score improve by 15 to 40 points in the first 30 days following schema addition.`,
+After implementation, use our monitoring tool to track your progress on ChatGPT, Claude and Perplexity. Allow a few weeks to a few months before assistants take it into account: the time it takes search engines to re-index your site.`,
     },
   },
 ]

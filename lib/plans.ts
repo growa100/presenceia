@@ -5,7 +5,8 @@
 //   Sur mesure                  from 690/month, quoted after the free audit (not sold online)
 //   GEO Boost (set-up alone)   890 one-time, on request only (not on the public pricing)
 // Founder offer: -30 % for the first 12 months, first 15 clients on Visibilité IA (with or without assistant).
-// Guarantee (see /conditions art. 6): if the AI visibility score has not improved 90 days after set-up, the next month is free.
+// Guarantee (see /conditions art. 6): 120 days after subscribing to Visibilité IA, if the AI visibility score has not improved,
+// the client stops at no cost, or chooses up to 3 more months of follow-up free of charge.
 export type MonthlyKey = 'site' | 'visibility' | 'complete'
 export type PlanKey = MonthlyKey | 'boost'
 export type Term = 'm12' | 'year' | 'flex'
@@ -44,7 +45,7 @@ export const OFFER = {
     per: { m12: '/ mois', year: '/ an', flex: '/ mois' } as Record<Term, string>,
     founder: (left: number) => `Offre fondateur : -${FOUNDER.percent} % la première année pour les ${FOUNDER.slots} premiers clients Visibilité IA. Encore ${left} place${left > 1 ? 's' : ''}.`,
     founderShort: `-${FOUNDER.percent} % la 1re année`,
-    guarantee: 'Garantie 90 jours : si votre score de visibilité IA n\'a pas progressé, le mois suivant est offert.',
+    guarantee: 'Garantie 120 jours : si votre visibilité IA n\'a pas progressé, vous arrêtez sans frais.',
     anchor: 'Pour comparaison, une agence SEO facture en général CHF 900 à 2\'000 par mois.',
     title: 'Visibilité IA', tagline: 'Nous corrigeons ce qui empêche les IA de vous recommander, puis nous entretenons votre présence chaque mois.',
     setup: ['Mise en place en 2 semaines : fiche Google, annuaires (local.ch, search.ch, votre métier), données structurées et FAQ, méthode avis'],
@@ -58,7 +59,7 @@ export const OFFER = {
     per: { m12: '/ Monat', year: '/ Jahr', flex: '/ Monat' } as Record<Term, string>,
     founder: (left: number) => `Gründerangebot: -${FOUNDER.percent} % im ersten Jahr für die ${FOUNDER.slots} ersten KI-Sichtbarkeit-Kunden. Noch ${left} Plätze.`,
     founderShort: `-${FOUNDER.percent} % im 1. Jahr`,
-    guarantee: '90-Tage-Garantie: Hat sich Ihr KI-Sichtbarkeitsscore nicht verbessert, ist der folgende Monat geschenkt.',
+    guarantee: '120-Tage-Garantie: Hat sich Ihre KI-Sichtbarkeit nicht verbessert, steigen Sie kostenlos aus.',
     anchor: 'Zum Vergleich: Eine SEO-Agentur verrechnet meist CHF 900 bis 2\'000 pro Monat.',
     title: 'KI-Sichtbarkeit', tagline: 'Wir beheben, was die KI daran hindert, Sie zu empfehlen, und pflegen Ihre Präsenz jeden Monat.',
     setup: ['Einrichtung in 2 Wochen: Google-Profil, Verzeichnisse (local.ch, search.ch, Ihre Branche), strukturierte Daten und FAQ, Bewertungsmethode'],
@@ -72,7 +73,7 @@ export const OFFER = {
     per: { m12: '/ month', year: '/ year', flex: '/ month' } as Record<Term, string>,
     founder: (left: number) => `Founder offer: -${FOUNDER.percent} % for the first year for our first ${FOUNDER.slots} AI visibility clients. ${left} spot${left > 1 ? 's' : ''} left.`,
     founderShort: `-${FOUNDER.percent} % the 1st year`,
-    guarantee: '90-day guarantee: if your AI visibility score has not improved, the following month is free.',
+    guarantee: '120-day guarantee: if your AI visibility has not improved, you stop at no cost.',
     anchor: 'For comparison, an SEO agency usually charges CHF 900 to 2,000 a month.',
     title: 'AI visibility', tagline: 'We fix what keeps AI from recommending you, then look after your presence every month.',
     setup: ['Set-up in 2 weeks: Google profile, directories (local.ch, search.ch, your trade), structured data and FAQ, reviews method'],
@@ -91,19 +92,19 @@ export function offerPitch(lang: 'fr' | 'de' | 'en', founder: boolean) {
   if (lang === 'de') return {
     title: 'Oder direkt handeln',
     price: founder ? `CHF ${low} / Monat im 1. Jahr (Gründerangebot, statt ${full})` : `CHF ${full} / Monat, Einrichtung geschenkt`,
-    text: `KI-Sichtbarkeit behebt in 2 Wochen, was die KI daran hindert, Sie zu nennen (Google-Profil, Verzeichnisse, strukturierte Daten, Bewertungen), und begleitet Ihre Präsenz danach jeden Monat. ${founder ? `CHF ${low} pro Monat im ersten Jahr mit dem Gründerangebot, statt ${full}.` : `CHF ${full} pro Monat über 12 Monate, Einrichtung geschenkt.`} 90-Tage-Garantie.`,
+    text: `KI-Sichtbarkeit behebt in 2 Wochen, was die KI daran hindert, Sie zu nennen (Google-Profil, Verzeichnisse, strukturierte Daten, Bewertungen), und begleitet Ihre Präsenz danach jeden Monat. ${founder ? `CHF ${low} pro Monat im ersten Jahr mit dem Gründerangebot, statt ${full}.` : `CHF ${full} pro Monat über 12 Monate, Einrichtung geschenkt.`} 120-Tage-Garantie: kostenlos aussteigen, wenn sich Ihre KI-Sichtbarkeit nicht verbessert.`,
     cta: 'KI-Sichtbarkeit starten',
   }
   if (lang === 'en') return {
     title: 'Or take action now',
     price: founder ? `CHF ${low} / month the 1st year (founder offer, instead of ${full})` : `CHF ${full} / month, set-up included`,
-    text: `AI visibility fixes in 2 weeks what keeps AI from naming you (Google profile, directories, structured data, reviews), then looks after your presence every month. ${founder ? `CHF ${low} a month the first year with the founder offer, instead of ${full}.` : `CHF ${full} a month over 12 months, set-up included.`} 90-day guarantee.`,
+    text: `AI visibility fixes in 2 weeks what keeps AI from naming you (Google profile, directories, structured data, reviews), then looks after your presence every month. ${founder ? `CHF ${low} a month the first year with the founder offer, instead of ${full}.` : `CHF ${full} a month over 12 months, set-up included.`} 120-day guarantee: stop at no cost if your AI visibility has not improved.`,
     cta: 'Start AI visibility',
   }
   return {
     title: 'Ou passez directement à l\'action',
     price: founder ? `CHF ${low} / mois la 1re année (offre fondateur, au lieu de ${full})` : `CHF ${full} / mois, mise en place offerte`,
-    text: `Visibilité IA corrige en 2 semaines ce qui empêche les IA de vous citer (fiche Google, annuaires, données structurées, avis), puis suit votre présence chaque mois. ${founder ? `CHF ${low} par mois la première année avec l'offre fondateur, au lieu de ${full}.` : `CHF ${full} par mois sur 12 mois, mise en place offerte.`} Garantie 90 jours.`,
+    text: `Visibilité IA corrige en 2 semaines ce qui empêche les IA de vous citer (fiche Google, annuaires, données structurées, avis), puis suit votre présence chaque mois. ${founder ? `CHF ${low} par mois la première année avec l'offre fondateur, au lieu de ${full}.` : `CHF ${full} par mois sur 12 mois, mise en place offerte.`} Garantie 120 jours : vous arrêtez sans frais si votre visibilité IA n'a pas progressé.`,
     cta: 'Démarrer Visibilité IA',
   }
 }
