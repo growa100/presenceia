@@ -65,7 +65,7 @@ const fr = {
     items: [
       { title: 'Votre site professionnel', desc: 'Design moderne adapté à votre métier, vos services, vos photos, vos avis Google.' },
       { title: 'Votre nom de domaine', desc: 'www.votre-entreprise.ch, .fr ou .com, enregistré à votre nom, configuré pour vous.' },
-      { title: 'Hébergement suisse + SSL', desc: 'Rapide, sécurisé, sauvegardé. Aucune technique à gérer, jamais.' },
+      { title: 'Hébergement sécurisé + SSL', desc: 'Rapide et sécurisé. Aucune technique à gérer, jamais.' },
       { title: 'Modifications illimitées', desc: 'Nouveaux horaires, photos, service ajouté : un email, c\'est fait sous 48 h.' },
       { title: 'Référencement local', desc: 'Optimisé pour apparaître sur Google quand on cherche votre métier dans votre région.' },
       { title: 'Lisible par les IA', desc: 'Structuré pour être compris et cité par ChatGPT, Perplexity et l\'IA de Google quand on leur demande un professionnel près de chez vous.' },
@@ -79,7 +79,7 @@ const fr = {
     mo: '/ mois',
     popular: 'Le plus choisi',
     plans: [
-      { key: 'site', name: 'Site web', desc: 'L\'essentiel, bien fait.', features: ['Site professionnel complet', 'Nom de domaine inclus', 'Hébergement suisse + SSL', 'Modifications illimitées', 'Référencement local', 'Lisible par les IA'], cta: 'Activer mon site' },
+      { key: 'site', name: 'Site web', desc: 'L\'essentiel, bien fait.', features: ['Site professionnel complet', 'Nom de domaine inclus', 'Hébergement sécurisé + SSL', 'Modifications illimitées', 'Référencement local', 'Lisible par les IA'], cta: 'Activer mon site' },
       { key: 'visibility', name: 'Visibilité IA', popular: true, desc: 'Pour être trouvé sur Google et recommandé par ChatGPT.', features: ['Mise en place : fiche Google, annuaires, données structurées, FAQ', 'Analyse mensuelle sur 4 IA, avec rapport', '4 publications Google par mois', 'Un nouveau contenu par mois', 'Suivi des annuaires et des avis', 'Votre site inclus si besoin'], cta: 'Démarrer' },
       { key: 'complete', name: 'Visibilité IA + Assistant', desc: 'Visibilité IA et un assistant qui répond à vos appels.', features: ['Tout Visibilité IA, plus :', 'Assistant qui répond quand vous êtes occupé', 'Résumé WhatsApp de chaque appel', 'Prise de rendez-vous et rappels', '2 contenus par mois au lieu d\'un'], cta: 'Démarrer' },
     ],
@@ -100,7 +100,7 @@ const fr = {
       { q: 'Comment fonctionne l\'analyse gratuite ?', a: 'Nous posons à quatre assistants, avec leur recherche web activée, la question qu\'un client poserait dans votre ville. Vous voyez leurs réponses mot pour mot, qui est recommandé et les sources utilisées. Nous confirmons votre email par un code pour éviter les abus : une analyse gratuite par jour.' },
       { q: 'Que se passe-t-il pendant l\'audit offert ?', a: '30 minutes avec Antoine, par téléphone ou en visio. Nous passons en revue votre site, votre fiche Google, les annuaires et vos avis, puis vous recevez un plan d\'action écrit. Vous pouvez l\'appliquer vous-même ou nous le confier.' },
       { q: 'Pourquoi avez-vous préparé un site pour mon entreprise sans me le demander ?', a: 'C\'est notre façon de nous présenter : plutôt qu\'un argumentaire, nous vous montrons le résultat. Le site est construit uniquement à partir d\'informations déjà publiques (fiche Google, annuaires professionnels). Si vous n\'en voulez pas, il est retiré, sans frais et sans relance.' },
-      { q: 'Que se passe-t-il si je dis oui ?', a: 'Nous vous répondons sous 24 h. Nous choisissons ensemble le nom de domaine, vous nous envoyez votre logo, vos photos et vos corrections, et le site est en ligne sous 3 à 5 jours ouvrés. Vous ne touchez à rien de technique.' },
+      { q: 'Que se passe-t-il si je dis oui ?', a: 'Sur votre site, le bouton « Activer mon site » mène au paiement en ligne (deux minutes). Dans votre espace client, vous choisissez ensuite votre nom de domaine : le vôtre, ou un nouveau que nous réservons à votre nom. Le site est mis en ligne automatiquement dès que le domaine est prêt. Vos corrections (logo, photos, textes) se font par simple email. Vous préférez en parler d\'abord ? Laissez votre numéro sur la page de l\'offre, Antoine vous rappelle.' },
       { q: 'Le nom de domaine m\'appartient-il ?', a: 'Oui. Il est enregistré au nom de votre entreprise. Si un jour vous partez, vous le gardez.' },
       { q: 'Puis-je modifier le contenu ?', a: 'Autant que vous voulez, c\'est compris. Un email avec la modification, et elle est en ligne sous 48 h.' },
       { q: 'Y a-t-il un engagement ou des frais d\'installation ?', a: 'Vous choisissez. Sur 12 mois ou à l\'année, la mise en place est offerte. Sans engagement, vous résiliez chaque mois et la mise en place Visibilité IA coûte CHF 490. Dans tous les cas, garantie 90 jours : si votre score de visibilité IA n\'a pas progressé, le mois suivant est offert.' },
@@ -111,7 +111,7 @@ const fr = {
   activate: {
     eyebrow: 'Vous avez reçu votre site ?',
     title: 'Vous avez vu votre site. Il est à vous.',
-    sub: 'Le plus simple : répondez « oui » à l\'email que vous avez reçu. Sinon, un appel ou un email et nous nous occupons de tout.',
+    sub: 'Le plus simple : ouvrez votre site et cliquez sur « Activer mon site ». Paiement en ligne en deux minutes, puis vous choisissez votre nom de domaine. Vous préférez en parler ? Un appel ou un email suffit.',
     call: 'Appeler',
     email: 'Écrire un email',
     emailSubject: 'Activer mon site',
@@ -170,7 +170,7 @@ const de: typeof fr = {
     items: [
       { title: 'Ihre professionelle Website', desc: 'Modernes Design passend zu Ihrem Beruf, Ihre Leistungen, Fotos und Google-Bewertungen.' },
       { title: 'Ihre Domain', desc: 'www.ihre-firma.ch, .de oder .com, auf Ihren Namen registriert und für Sie eingerichtet.' },
-      { title: 'Schweizer Hosting + SSL', desc: 'Schnell, sicher, gesichert. Keine Technik, nie.' },
+      { title: 'Sicheres Hosting + SSL', desc: 'Schnell und sicher. Keine Technik, nie.' },
       { title: 'Unbegrenzte Änderungen', desc: 'Neue Öffnungszeiten, Fotos, Leistungen: eine E-Mail, innert 48 h erledigt.' },
       { title: 'Lokale Suchmaschinenoptimierung', desc: 'Optimiert, um bei Google gefunden zu werden, wenn jemand Ihren Beruf in Ihrer Region sucht.' },
       { title: 'Für KI lesbar', desc: 'So strukturiert, dass ChatGPT, Perplexity und Googles KI Sie verstehen und empfehlen, wenn jemand nach einem Profi in Ihrer Nähe fragt.' },
@@ -184,7 +184,7 @@ const de: typeof fr = {
     mo: '/ Monat',
     popular: 'Am häufigsten gewählt',
     plans: [
-      { key: 'site', name: 'Website', desc: 'Das Wesentliche, gut gemacht.', features: ['Komplette professionelle Website', 'Domain inklusive', 'Schweizer Hosting + SSL', 'Unbegrenzte Änderungen', 'Lokale Suchmaschinenoptimierung', 'Für KI lesbar'], cta: 'Website aktivieren' },
+      { key: 'site', name: 'Website', desc: 'Das Wesentliche, gut gemacht.', features: ['Komplette professionelle Website', 'Domain inklusive', 'Sicheres Hosting + SSL', 'Unbegrenzte Änderungen', 'Lokale Suchmaschinenoptimierung', 'Für KI lesbar'], cta: 'Website aktivieren' },
       { key: 'visibility', name: 'KI-Sichtbarkeit', popular: true, desc: 'Um auf Google gefunden und von ChatGPT empfohlen zu werden.', features: ['Einrichtung: Google-Profil, Verzeichnisse, strukturierte Daten, FAQ', 'Monatliche Analyse bei 4 KI, mit Bericht', '4 Google-Beiträge pro Monat', 'Ein neuer Inhalt pro Monat', 'Kontrolle der Verzeichnisse und Bewertungen', 'Ihre Website inklusive, falls nötig'], cta: 'Starten' },
       { key: 'complete', name: 'KI-Sichtbarkeit + Assistent', desc: 'KI-Sichtbarkeit und ein Assistent, der Ihre Anrufe beantwortet.', features: ['Alles aus KI-Sichtbarkeit, plus:', 'Assistent, der abnimmt, wenn Sie beschäftigt sind', 'WhatsApp-Zusammenfassung jedes Anrufs', 'Terminvereinbarung und Rückrufe', '2 Inhalte pro Monat statt einem'], cta: 'Starten' },
     ],
@@ -205,7 +205,7 @@ const de: typeof fr = {
       { q: 'Wie funktioniert die kostenlose Analyse?', a: 'Wir stellen vier Assistenten mit aktivierter Websuche die Frage, die ein Kunde in Ihrem Ort stellen würde. Sie sehen die Antworten Wort für Wort, wer empfohlen wird und welche Quellen genutzt werden. Wir bestätigen Ihre E-Mail per Code, um Missbrauch zu verhindern: eine kostenlose Analyse pro Tag.' },
       { q: 'Wie läuft das kostenlose Audit ab?', a: '30 Minuten mit Antoine, per Telefon oder Video. Wir prüfen Website, Google-Profil, Verzeichnisse und Bewertungen, danach erhalten Sie einen schriftlichen Aktionsplan. Sie setzen ihn selbst um oder überlassen ihn uns.' },
       { q: 'Warum haben Sie eine Website für meinen Betrieb gebaut, ohne zu fragen?', a: 'So stellen wir uns vor: Statt einer Verkaufspräsentation zeigen wir Ihnen das Ergebnis. Die Website basiert ausschliesslich auf bereits öffentlichen Informationen (Google-Profil, Branchenverzeichnisse). Wenn Sie sie nicht wollen, wird sie entfernt, ohne Kosten und ohne Nachfassen.' },
-      { q: 'Was passiert, wenn ich Ja sage?', a: 'Wir antworten innert 24 h. Wir wählen gemeinsam die Domain, Sie schicken uns Logo, Fotos und Korrekturen, und die Website ist in 3 bis 5 Arbeitstagen online. Sie müssen nichts Technisches tun.' },
+      { q: 'Was passiert, wenn ich Ja sage?', a: 'Auf Ihrer Website führt der Knopf «Meine Website aktivieren» zur Online-Zahlung (zwei Minuten). Im Kundenbereich wählen Sie danach Ihre Domain: Ihre eigene oder eine neue, die wir auf Ihren Namen reservieren. Die Website geht automatisch online, sobald die Domain bereit ist. Korrekturen (Logo, Fotos, Texte) genügen per E-Mail. Lieber zuerst sprechen? Hinterlassen Sie Ihre Nummer auf der Angebotsseite, Antoine ruft zurück.' },
       { q: 'Gehört mir die Domain?', a: 'Ja. Sie wird auf den Namen Ihres Unternehmens registriert. Falls Sie eines Tages gehen, behalten Sie sie.' },
       { q: 'Kann ich den Inhalt ändern?', a: 'So oft Sie wollen, das ist inklusive. Eine E-Mail mit der Änderung, und sie ist innert 48 h online.' },
       { q: 'Gibt es eine Vertragsbindung oder Einrichtungsgebühren?', a: 'Sie wählen. Bei 12 Monaten oder jährlicher Zahlung ist die Einrichtung geschenkt. Ohne Bindung kündigen Sie monatlich, die Einrichtung KI-Sichtbarkeit kostet CHF 490. In jedem Fall gilt die 90-Tage-Garantie: Hat sich Ihr KI-Sichtbarkeitsscore nicht verbessert, ist der folgende Monat geschenkt.' },
@@ -216,7 +216,7 @@ const de: typeof fr = {
   activate: {
     eyebrow: 'Haben Sie Ihre Website erhalten?',
     title: 'Sie haben Ihre Website gesehen. Sie gehört Ihnen.',
-    sub: 'Am einfachsten: Antworten Sie mit „Ja“ auf die E-Mail, die Sie erhalten haben. Sonst ein Anruf oder eine E-Mail, und wir kümmern uns um alles.',
+    sub: 'Am einfachsten: Öffnen Sie Ihre Website und klicken Sie auf «Meine Website aktivieren». Online-Zahlung in zwei Minuten, danach wählen Sie Ihre Domain. Lieber sprechen? Ein Anruf oder eine E-Mail genügt.',
     call: 'Anrufen',
     email: 'E-Mail schreiben',
     emailSubject: 'Website aktivieren',
@@ -275,7 +275,7 @@ const en: typeof fr = {
     items: [
       { title: 'Your professional website', desc: 'Modern design suited to your trade, your services, your photos, your Google reviews.' },
       { title: 'Your domain name', desc: 'www.your-business.com, .ch or .fr, registered in your name and set up for you.' },
-      { title: 'Swiss hosting + SSL', desc: 'Fast, secure, backed up. Nothing technical to manage, ever.' },
+      { title: 'Secure hosting + SSL', desc: 'Fast and secure. Nothing technical to manage, ever.' },
       { title: 'Unlimited changes', desc: 'New hours, photos, an added service: one email, done within 48 h.' },
       { title: 'Local search optimisation', desc: 'Built to show up on Google when someone searches for your trade in your area.' },
       { title: 'Readable by AI', desc: 'Structured so ChatGPT, Perplexity and Google\'s AI understand and recommend you when someone asks for a professional nearby.' },
@@ -289,7 +289,7 @@ const en: typeof fr = {
     mo: '/ month',
     popular: 'Most chosen',
     plans: [
-      { key: 'site', name: 'Website', desc: 'The essentials, done well.', features: ['Complete professional website', 'Domain name included', 'Swiss hosting + SSL', 'Unlimited changes', 'Local search optimisation', 'Readable by AI'], cta: 'Activate my site' },
+      { key: 'site', name: 'Website', desc: 'The essentials, done well.', features: ['Complete professional website', 'Domain name included', 'Secure hosting + SSL', 'Unlimited changes', 'Local search optimisation', 'Readable by AI'], cta: 'Activate my site' },
       { key: 'visibility', name: 'AI visibility', popular: true, desc: 'To be found on Google and recommended by ChatGPT.', features: ['Set-up: Google profile, directories, structured data, FAQ', 'Monthly analysis on 4 AIs, with report', '4 Google posts a month', 'One new piece of content a month', 'Directories and reviews follow-up', 'Your website included if needed'], cta: 'Get started' },
       { key: 'complete', name: 'AI visibility + Assistant', desc: 'AI visibility and an assistant that answers your calls.', features: ['Everything in AI visibility, plus:', 'Assistant that answers when you are busy', 'WhatsApp summary of every call', 'Appointment booking and callbacks', '2 pieces of content a month instead of one'], cta: 'Get started' },
     ],
@@ -310,7 +310,7 @@ const en: typeof fr = {
       { q: 'How does the free analysis work?', a: 'We ask four assistants, with web search switched on, the question a customer in your town would ask. You see their answers word for word, who is recommended and which sources are used. We confirm your email with a code to prevent abuse: one free analysis per day.' },
       { q: 'What happens during the free audit?', a: '30 minutes with Antoine, by phone or video. We review your website, Google profile, directories and reviews, then you receive a written action plan. Apply it yourself or hand it to us.' },
       { q: 'Why did you build a site for my business without asking?', a: 'It is how we introduce ourselves: instead of a sales pitch, we show you the result. The site is built only from information that is already public (Google profile, trade directories). If you do not want it, it is taken down, no charge and no follow-up.' },
-      { q: 'What happens if I say yes?', a: 'We reply within 24 h. We choose the domain name together, you send us your logo, photos and corrections, and the site is live within 3 to 5 working days. You touch nothing technical.' },
+      { q: 'What happens if I say yes?', a: 'On your website, the "Activate my website" button leads to the online payment (two minutes). In your client area you then choose your domain: your own, or a new one we reserve in your name. The website goes live automatically as soon as the domain is ready. Corrections (logo, photos, texts) just take an email. Prefer to talk first? Leave your number on the offer page and Antoine calls you back.' },
       { q: 'Do I own the domain name?', a: 'Yes. It is registered in your company\'s name. If you ever leave, you keep it.' },
       { q: 'Can I change the content?', a: 'As much as you like, it is included. One email with the change and it is live within 48 h.' },
       { q: 'Is there a commitment or a setup fee?', a: 'Your choice. On 12 months or paid yearly, set-up is included. Without commitment you cancel any month and the AI visibility set-up costs CHF 490. Either way, 90-day guarantee: if your AI visibility score has not improved, the following month is free.' },
@@ -321,7 +321,7 @@ const en: typeof fr = {
   activate: {
     eyebrow: 'Did you receive your website?',
     title: 'You have seen your site. It is yours.',
-    sub: 'The simplest way: reply "yes" to the email you received. Otherwise, a call or an email and we take care of everything.',
+    sub: 'The simplest way: open your website and click "Activate my website". Pay online in two minutes, then choose your domain. Prefer to talk? A call or an email is enough.',
     call: 'Call',
     email: 'Send an email',
     emailSubject: 'Activate my site',

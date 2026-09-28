@@ -10,6 +10,7 @@ import Turnstile from './Turnstile'
 import ResultsPanel from './ResultsPanel'
 import AuditRequest from './AuditRequest'
 import CheckoutButton from './CheckoutButton'
+import SiteSetup from './SiteSetup'
 import { useLang } from './LangProvider'
 import { CONTACT } from '@/lib/site-copy'
 import { OFFER, PLANS, PLAN_KEYS, TERMS, chf, founderPrice, hasFounder, price, type PlanKey, type Term } from '@/lib/plans'
@@ -52,7 +53,7 @@ const L = {
     analyses: 'Vos analyses', newA: 'Nouvelle analyse', left: (n: number) => n > 50 ? 'Analyses illimitées' : n > 0 ? `${n} analyse gratuite disponible aujourd'hui` : 'Prochaine analyse gratuite demain',
     noA: 'Aucune analyse pour le moment.', view: 'Voir', hide: 'Fermer', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `cité par ${m}/${t}`,
     follow: 'Suivi', noF: 'Votre suivi apparaîtra ici : audit, plan d\'action, travaux réalisés et rapports mensuels.',
-    ev: { audit_requested: 'Audit offert demandé', subscribed: (p: string) => `Abonnement activé : ${p}`, boost_purchased: 'Mise en place commandée', monthly_analysis: (p: string) => `Analyse mensuelle : ${p}/100` } as Record<string, string | ((p: string) => string)>,
+    ev: { audit_requested: 'Audit offert demandé', subscribed: (p: string) => `Abonnement activé : ${p}`, boost_purchased: 'Mise en place commandée', monthly_analysis: (p: string) => `Analyse mensuelle : ${p}/100`, site_activated: 'Site activé', domain_chosen: (p: string) => `Domaine choisi : ${p}`, domain_ordered: (p: string) => `Domaine demandé : ${p}`, site_live: (p: string) => `Site en ligne : ${p.replace('https://', '')}` } as Record<string, string | ((p: string) => string)>,
     sub: 'Offres et facturation', plan: 'Offre', status: 'Statut', renew: 'Prochain renouvellement', manage: 'Factures, carte et résiliation',
     statuses: { active: 'Actif', trialing: 'Période d\'essai', past_due: 'Paiement en attente', canceled: 'Résilié', unpaid: 'Impayé', incomplete: 'Incomplet', paused: 'En pause' } as Record<string, string>,
     choose: 'Choisir', perMonth: '/ mois', payNote: 'Paiement sécurisé par Stripe. Vous gérez factures et carte ici.', noPay: 'Le paiement en ligne sera bientôt disponible. Écrivez-nous pour démarrer.',
@@ -84,7 +85,7 @@ const L = {
     analyses: 'Ihre Analysen', newA: 'Neue Analyse', left: (n: number) => n > 50 ? 'Unbegrenzte Analysen' : n > 0 ? `${n} kostenlose Analyse heute verfügbar` : 'Nächste kostenlose Analyse morgen',
     noA: 'Noch keine Analyse.', view: 'Ansehen', hide: 'Schliessen', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `genannt von ${m}/${t}`,
     follow: 'Verlauf', noF: 'Ihr Verlauf erscheint hier: Audit, Aktionsplan, umgesetzte Arbeiten und Monatsberichte.',
-    ev: { audit_requested: 'Kostenloses Audit angefragt', subscribed: (p: string) => `Abonnement aktiviert: ${p}`, boost_purchased: 'Einrichtung bestellt', monthly_analysis: (p: string) => `Monatliche Analyse: ${p}/100` } as Record<string, string | ((p: string) => string)>,
+    ev: { audit_requested: 'Kostenloses Audit angefragt', subscribed: (p: string) => `Abonnement aktiviert: ${p}`, boost_purchased: 'Einrichtung bestellt', monthly_analysis: (p: string) => `Monatliche Analyse: ${p}/100` , site_activated: 'Website aktiviert', domain_chosen: (p: string) => `Domain gewählt: ${p}`, domain_ordered: (p: string) => `Domain angefragt: ${p}`, site_live: (p: string) => `Website online: ${p.replace('https://', '')}` } as Record<string, string | ((p: string) => string)>,
     sub: 'Angebote und Rechnungen', plan: 'Angebot', status: 'Status', renew: 'Nächste Verlängerung', manage: 'Rechnungen, Karte und Kündigung',
     statuses: { active: 'Aktiv', trialing: 'Testphase', past_due: 'Zahlung ausstehend', canceled: 'Gekündigt', unpaid: 'Unbezahlt', incomplete: 'Unvollständig', paused: 'Pausiert' } as Record<string, string>,
     choose: 'Wählen', perMonth: '/ Monat', payNote: 'Sichere Zahlung über Stripe. Rechnungen und Karte verwalten Sie hier.', noPay: 'Die Online-Zahlung ist bald verfügbar. Schreiben Sie uns, um zu starten.',
@@ -116,7 +117,7 @@ const L = {
     analyses: 'Your analyses', newA: 'New analysis', left: (n: number) => n > 50 ? 'Unlimited analyses' : n > 0 ? `${n} free analysis available today` : 'Next free analysis tomorrow',
     noA: 'No analysis yet.', view: 'View', hide: 'Close', pdf: 'PDF', named: (m: number | null, t: number | null) => m === null || t === null ? '' : `named by ${m}/${t}`,
     follow: 'Follow-up', noF: 'Your follow-up will appear here: audit, action plan, work done and monthly reports.',
-    ev: { audit_requested: 'Free audit requested', subscribed: (p: string) => `Subscription started: ${p}`, boost_purchased: 'Set-up ordered', monthly_analysis: (p: string) => `Monthly analysis: ${p}/100` } as Record<string, string | ((p: string) => string)>,
+    ev: { audit_requested: 'Free audit requested', subscribed: (p: string) => `Subscription started: ${p}`, boost_purchased: 'Set-up ordered', monthly_analysis: (p: string) => `Monthly analysis: ${p}/100` , site_activated: 'Website activated', domain_chosen: (p: string) => `Domain chosen: ${p}`, domain_ordered: (p: string) => `Domain requested: ${p}`, site_live: (p: string) => `Website live: ${p.replace('https://', '')}` } as Record<string, string | ((p: string) => string)>,
     sub: 'Plans and billing', plan: 'Plan', status: 'Status', renew: 'Next renewal', manage: 'Invoices, card and cancellation',
     statuses: { active: 'Active', trialing: 'Trial', past_due: 'Payment pending', canceled: 'Cancelled', unpaid: 'Unpaid', incomplete: 'Incomplete', paused: 'Paused' } as Record<string, string>,
     choose: 'Choose', perMonth: '/ month', payNote: 'Secure payment by Stripe. Manage invoices and card here.', noPay: 'Online payment is coming soon. Write to us to get started.',
@@ -494,10 +495,12 @@ export default function ClientSpace() {
   const [failed, setFailed] = useState(false)
   // Read once on the client; not rendered before the first fetch, so no hydration mismatch.
   const [flags] = useState(() => {
-    if (typeof window === 'undefined') return { welcome: false, expired: false }
+    if (typeof window === 'undefined') return { welcome: false, siteWelcome: false, expired: false }
     const q = new URLSearchParams(window.location.search)
-    return { welcome: q.has('bienvenue'), expired: q.get('lien') === 'expire' }
+    const siteWelcome = q.get('bienvenue') === 'site'
+    return { welcome: q.has('bienvenue') && !siteWelcome, siteWelcome, expired: q.get('lien') === 'expire' }
   })
+  const [hasSite, setHasSite] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -539,8 +542,12 @@ export default function ClientSpace() {
                 <Check className="w-5 h-5 flex-shrink-0 mt-0.5" /><p className="leading-relaxed">{T.welcome}</p>
               </div>
             )}
-            <Journey T={T} me={me} />
-            <NextStep T={T} me={me} lang={lang} />
+            {/* The website we prepared, once paid for: domain + legal details. */}
+            <SiteSetup lang={lang} welcome={flags.siteWelcome} onSites={n => setHasSite(n > 0)} />
+            {!(hasSite && me.lead?.plan === 'site') && <>
+              <Journey T={T} me={me} />
+              <NextStep T={T} me={me} lang={lang} />
+            </>}
             <Analyses T={T} me={me} lang={lang} />
             <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6 items-start">
               <FollowUp T={T} me={me} lang={lang} />

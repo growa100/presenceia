@@ -32,25 +32,29 @@ async function ensurePrice(lookup: string, make: () => Promise<Stripe.PriceCreat
   return id
 }
 
+/** CHF by default; EUR for French businesses activating the site prepared for them (same figures). */
+export type Currency = 'chf' | 'eur'
+export const isCurrency = (v: unknown): v is Currency => v === 'chf' || v === 'eur'
+
 /** Recurring price of a plan for a term (m12 and flex monthly, year yearly), or the one-time Boost. */
-export async function priceFor(plan: PlanKey, term: Term = 'm12'): Promise<string> {
+export async function priceFor(plan: PlanKey, term: Term = 'm12', currency: Currency = 'chf'): Promise<string> {
   const p = PLANS[plan]
   if (p.once) {
-    return ensurePrice(`pia_${plan}_once_chf_${p.once}`, async () => ({
-      product: await ensureProduct(plan, p.name.fr), currency: 'chf', unit_amount: p.once! * 100, metadata: { plan },
+    return ensurePrice(`pia_${plan}_once_${currency}_${p.once}`, async () => ({
+      product: await ensureProduct(plan, p.name.fr), currency, unit_amount: p.once! * 100, metadata: { plan },
     }))
   }
   const amount = p.prices![term]
-  return ensurePrice(`pia_${plan}_${term}_chf_${amount}`, async () => ({
-    product: await ensureProduct(plan, p.name.fr), currency: 'chf', unit_amount: amount * 100,
+  return ensurePrice(`pia_${plan}_${term}_${currency}_${amount}`, async () => ({
+    product: await ensureProduct(plan, p.name.fr), currency, unit_amount: amount * 100,
     recurring: { interval: term === 'year' ? 'year' : 'month' }, metadata: { plan, term },
   }))
 }
 
 /** One-time set-up fee, added to the first invoice of a plan taken without commitment. */
-export async function setupPrice(): Promise<string> {
-  return ensurePrice(`pia_setup_once_chf_${SETUP_CHF}`, async () => ({
-    product: await ensureProduct('setup', 'Mise en place'), currency: 'chf', unit_amount: SETUP_CHF * 100, metadata: { plan: 'setup' },
+export async function setupPrice(currency: Currency = 'chf'): Promise<string> {
+  return ensurePrice(`pia_setup_once_${currency}_${SETUP_CHF}`, async () => ({
+    product: await ensureProduct('setup', 'Mise en place'), currency, unit_amount: SETUP_CHF * 100, metadata: { plan: 'setup' },
   }))
 }
 

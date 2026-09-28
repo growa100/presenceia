@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { sendWelcome, syncCheckout, syncSubscription } from '@/lib/billing'
 import { baseUrl } from '@/lib/links'
+import { claimSite } from '@/lib/sites'
 
 export async function POST(req: NextRequest) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET
@@ -20,6 +21,8 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const r = await syncCheckout(event.data.object.id)
+        // A site we prepared: hand it over on the droplet (banner off, follow-ups stopped).
+        if (r?.site) await claimSite({ ...r, slug: r.site, livemode: r.livemode !== false })
         // With a webhook configured, the welcome emails are sent here only (never by the success page).
         if (r) await sendWelcome({ ...r, base: baseUrl(req) })
         break

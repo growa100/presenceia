@@ -18,7 +18,7 @@ export default function MentionsLegales() {
           'Contact : antoine@presenceia.com · +41 78 915 15 73. Responsable de la publication : Antoine Pury.',
         ]},
         { title: 'Hébergement', body: [
-          'Le site presenceia.com est hébergé par Vercel Inc. (San Francisco, États-Unis). Les sites web réalisés pour nos clients sont hébergés sur des serveurs en Suisse et dans l\'Union européenne, avec chiffrement TLS.',
+          'Le site presenceia.com est hébergé par Vercel Inc. (San Francisco, États-Unis). Les sites web réalisés pour nos clients sont hébergés sur des serveurs DigitalOcean à Francfort (Allemagne, Union européenne), avec chiffrement TLS.',
         ]},
         { title: 'Sites préparés à titre de présentation', body: [
           'Les sites de démonstration accessibles sur des sous-domaines de presenceia.com sont préparés à partir d\'informations publiquement disponibles (fiches Google, annuaires professionnels, sites existants) afin de présenter notre service à l\'entreprise concernée. Ils ne sont pas indexés par les moteurs de recherche, portent une mention « aperçu » visible et sont retirés sur simple demande de l\'entreprise, sans frais.',

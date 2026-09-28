@@ -4,11 +4,15 @@
 //   flex = monthly, no commitment, + one-time set-up fee (Visibilité IA plans)
 // The founder coupon (-30 % for 12 months, first 15 clients) is applied automatically while it lasts.
 // POST {plan, term, language} from the site; GET ?plan=&term=&lang= from emails (redirects to Stripe).
+// GET with &site=<slug>&biz=&cur=&ts=&sig= comes from the offer page of a site we prepared
+// (signed by the droplet, lib/sites.ts): the site is carried in the metadata so the webhook
+// hands it over, the business name is prefilled, and French businesses pay in EUR.
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionEmail } from '@/lib/checker-auth'
 import { hasFounder, isPlanKey, isTerm, PLANS, type PlanKey, type Term } from '@/lib/plans'
-import { founderCoupon, priceFor, setupPrice, stripe } from '@/lib/stripe'
+import { founderCoupon, priceFor, setupPrice, stripe, type Currency } from '@/lib/stripe'
 import { baseUrl } from '@/lib/links'
+import { siteUrl, verifySiteLink, type SiteLink } from '@/lib/sites'
 import { supabaseAdmin } from '@/lib/supabase'
 
 type Lang = 'fr' | 'de' | 'en'
@@ -19,17 +23,20 @@ const ACCEPT = {
   en: (commit: boolean, base: string) => `${commit ? '12-month commitment. ' : ''}By paying, you accept our terms: ${base}/conditions`,
 }
 
-async function createSession(req: NextRequest, plan: PlanKey, term: Term, lang: Lang): Promise<string> {
+async function createSession(req: NextRequest, plan: PlanKey, term: Term, lang: Lang, site: SiteLink | null = null): Promise<string> {
   if (!stripe) throw new Error('payments_unavailable')
   const base = baseUrl(req)
-  const email = getSessionEmail(req)
+  const email = site ? null : getSessionEmail(req)
   const { data: lead } = email
     ? await supabaseAdmin.from('leads').select('stripe_customer_id, business_name').eq('email', email).maybeSingle()
     : { data: null }
   const once = !!PLANS[plan].once
-  const lineItems: { price: string; quantity: number }[] = [{ price: await priceFor(plan, term), quantity: 1 }]
-  if (!once && term === 'flex' && PLANS[plan].setupFlex) lineItems.push({ price: await setupPrice(), quantity: 1 })
+  const currency: Currency = site?.currency || 'chf'
+  const lineItems: { price: string; quantity: number }[] = [{ price: await priceFor(plan, term, currency), quantity: 1 }]
+  if (!once && term === 'flex' && PLANS[plan].setupFlex) lineItems.push({ price: await setupPrice(currency), quantity: 1 })
   const founder = !once && hasFounder(plan) ? await founderCoupon() : null
+  const bizDefault = (site?.business || lead?.business_name || '').slice(0, 255)
+  const siteMeta: Record<string, string> = site ? { site_slug: site.slug, currency } : {}
 
   const session = await stripe.checkout.sessions.create({
     mode: once ? 'payment' : 'subscription',
@@ -38,7 +45,7 @@ async function createSession(req: NextRequest, plan: PlanKey, term: Term, lang: 
     ...(once && !lead?.stripe_customer_id ? { customer_creation: 'always' as const } : {}),
     ...(once
       ? { invoice_creation: { enabled: true }, payment_intent_data: { metadata: { plan } } }
-      : { subscription_data: { metadata: { plan, term } } }),
+      : { subscription_data: { metadata: { plan, term, ...siteMeta } } }),
     ...(founder ? { discounts: [{ coupon: founder.id }] } : { allow_promotion_codes: true }),
     locale: lang,
     billing_address_collection: 'auto',
@@ -46,12 +53,14 @@ async function createSession(req: NextRequest, plan: PlanKey, term: Term, lang: 
     adaptive_pricing: { enabled: false },
     custom_fields: [{
       key: 'business', type: 'text', label: { type: 'custom', custom: LABEL[lang] },
-      ...(lead?.business_name ? { text: { default_value: lead.business_name.slice(0, 255) } } : {}),
+      ...(bizDefault ? { text: { default_value: bizDefault } } : {}),
     }],
+    // A number to reach the client about his site and domain.
+    ...(site ? { phone_number_collection: { enabled: true } } : {}),
     custom_text: { submit: { message: ACCEPT[lang](!once && term === 'm12', base) } },
-    metadata: { plan, term: once ? 'once' : term, lang },
+    metadata: { plan, term: once ? 'once' : term, lang, ...siteMeta },
     success_url: `${base}/api/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${base}/#pricing`,
+    cancel_url: site ? `${siteUrl(site.slug)}/offre/` : `${base}/#pricing`,
   })
   if (!session.url) throw new Error('no_url')
   return session.url
@@ -75,10 +84,11 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams
   const plan = q.get('plan'), term = q.get('term')
-  const fallback = new URL('/#pricing', req.url)
-  if (!stripe || !isPlanKey(plan)) return NextResponse.redirect(fallback, 303)
+  const site = q.get('site') ? verifySiteLink(q) : null
+  const fallback = site ? new URL(`${siteUrl(site.slug)}/offre/`) : new URL('/#pricing', req.url)
+  if (!stripe || !isPlanKey(plan) || (site && plan !== 'site' && plan !== 'visibility')) return NextResponse.redirect(fallback, 303)
   try {
-    return NextResponse.redirect(await createSession(req, plan, isTerm(term) ? term : 'm12', langOf(q.get('lang'))), 303)
+    return NextResponse.redirect(await createSession(req, plan, isTerm(term) ? term : 'm12', langOf(q.get('lang')), site), 303)
   } catch (e) {
     console.error('[stripe] checkout (GET) failed', e)
     return NextResponse.redirect(fallback, 303)
