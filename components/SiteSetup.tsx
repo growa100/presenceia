@@ -198,25 +198,21 @@ function DnsInstructions({ site, t, onUpdate }: { site: Site; t: TT; onUpdate: (
         {t.dnsIntro(prov?.label || t.yourProvider)}{' '}
         {prov?.url && <a href={prov.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-brand">{t.openPanel(prov.label)}<ExternalLink className="w-3.5 h-3.5" /></a>}
       </p>
-      <div className="overflow-x-auto rounded-2xl border border-line bg-white">
-        <table className="w-full text-sm">
-          <thead><tr className="text-left text-xs font-mono uppercase tracking-wider text-ink/45">
-            <th className="px-4 py-3 font-normal">{t.type}</th><th className="px-4 py-3 font-normal">{t.name}</th><th className="px-4 py-3 font-normal">{t.value}</th><th className="px-4 py-3 font-normal">{t.status}</th>
-          </tr></thead>
-          <tbody className="divide-y divide-line">
-            {records.map(r => (
-              <tr key={r.fqdn}>
-                <td className="px-4 py-3 font-mono font-semibold">{r.type}</td>
-                <td className="px-4 py-3 font-mono">{r.host}<div className="text-[11px] text-ink/40">{r.fqdn}</div></td>
-                <td className="px-4 py-3 font-mono">
-                  <div className="flex items-center gap-3">{r.value}<CopyBtn text={r.value} t={t} /></div>
-                  {r.alt && <div className="text-[11px] text-ink/45 mt-0.5">{t.or} {r.alt}</div>}
-                </td>
-                <td className="px-4 py-3 text-xs">{state(r.fqdn)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="rounded-2xl border border-line bg-white divide-y divide-line text-sm">
+        <div className="hidden sm:grid grid-cols-[64px_1fr_1.5fr_1fr] gap-4 px-4 py-3 text-xs font-mono uppercase tracking-wider text-ink/45">
+          <span>{t.type}</span><span>{t.name}</span><span>{t.value}</span><span>{t.status}</span>
+        </div>
+        {records.map(r => (
+          <div key={r.fqdn} className="grid grid-cols-[64px_1fr] sm:grid-cols-[64px_1fr_1.5fr_1fr] gap-x-4 gap-y-1.5 px-4 py-3.5 items-start sm:items-center">
+            <span className="font-mono font-semibold">{r.type}</span>
+            <span className="font-mono">{r.host} <span className="block text-[11px] text-ink/40 break-all">{r.fqdn}</span></span>
+            <div className="col-start-2 sm:col-start-auto font-mono break-all">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">{r.value}<CopyBtn text={r.value} t={t} /></div>
+              {r.alt && <div className="text-[11px] text-ink/45 mt-0.5">{t.or} {r.alt}</div>}
+            </div>
+            <span className="col-start-2 sm:col-start-auto text-xs">{state(r.fqdn)}</span>
+          </div>
+        ))}
       </div>
       <p className="text-sm text-ink/65 leading-relaxed">{t.removeOld}</p>
       {prov?.key === 'cloudflare' && <p className="text-sm text-amber-700">{t.cloudflare}</p>}
