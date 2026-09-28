@@ -57,6 +57,8 @@ async function createSession(req: NextRequest, plan: PlanKey, term: Term, lang: 
     }],
     // A number to reach the client about his site and domain.
     ...(site ? { phone_number_collection: { enabled: true } } : {}),
+    // Nothing due today (a 100 % code, e.g. a free first month or a test): no card asked.
+    ...(site && !once ? { payment_method_collection: 'if_required' as const } : {}),
     custom_text: { submit: { message: ACCEPT[lang](!once && term === 'm12', base) } },
     metadata: { plan, term: once ? 'once' : term, lang, ...siteMeta },
     success_url: `${base}/api/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
