@@ -84,8 +84,14 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams
   const plan = q.get('plan'), term = q.get('term')
-  const site = q.get('site') ? verifySiteLink(q) : null
-  const fallback = site ? new URL(`${siteUrl(site.slug)}/offre/`) : new URL('/#pricing', req.url)
+  const rawSite = q.get('site') || ''
+  const site = rawSite ? verifySiteLink(q) : null
+  const fallback = rawSite && /^[a-z0-9][a-z0-9-]{0,80}$/.test(rawSite) ? new URL(`${siteUrl(rawSite)}/offre/`) : new URL('/#pricing', req.url)
+  // A site link that does not verify never becomes a plain checkout: the payment would not activate the site.
+  if (rawSite && !site) {
+    console.error('[stripe] site link rejected', rawSite)
+    return NextResponse.redirect(fallback, 303)
+  }
   if (!stripe || !isPlanKey(plan) || (site && plan !== 'site' && plan !== 'visibility')) return NextResponse.redirect(fallback, 303)
   try {
     return NextResponse.redirect(await createSession(req, plan, isTerm(term) ? term : 'm12', langOf(q.get('lang')), site), 303)
