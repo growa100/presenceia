@@ -61,6 +61,7 @@ const L = {
     test: 'Mode test : aucun paiement réel. Carte de test 4242 4242 4242 4242, date future, CVC au choix.',
     contact: 'Votre interlocuteur', contactSub: 'Antoine Pury, fondateur. Il lit et répond lui-même à chaque message.', write: 'Écrire',
     loadErr: 'Impossible de charger votre espace. Réessayez.',
+    billedTo: (e: string) => `L'abonnement de votre site est au nom de ${e}. Pour les factures et la carte, connectez-vous avec cette adresse.`,
   },
   de: {
     title: 'Kundenbereich', loginSub: 'Geben Sie die E-Mail Ihrer Analyse ein. Wir senden Ihnen einen Anmeldelink, ohne Passwort.',
@@ -93,6 +94,7 @@ const L = {
     test: 'Testmodus: keine echte Zahlung. Testkarte 4242 4242 4242 4242, Datum in der Zukunft, beliebiger CVC.',
     contact: 'Ihr Ansprechpartner', contactSub: 'Antoine Pury, Gründer. Er liest und beantwortet jede Nachricht selbst.', write: 'Schreiben',
     loadErr: 'Ihr Bereich konnte nicht geladen werden. Bitte erneut versuchen.',
+    billedTo: (e: string) => `Das Abonnement Ihrer Website läuft auf ${e}. Für Rechnungen und Karte melden Sie sich mit dieser Adresse an.`,
   },
   en: {
     title: 'Client area', loginSub: 'Enter the email you used for your analysis. We send you a sign-in link, no password.',
@@ -125,6 +127,7 @@ const L = {
     test: 'Test mode: no real payment. Test card 4242 4242 4242 4242, any future date, any CVC.',
     contact: 'Your contact', contactSub: 'Antoine Pury, founder. He reads and answers every message himself.', write: 'Write',
     loadErr: 'Your area could not be loaded. Please try again.',
+    billedTo: (e: string) => `Your website subscription is in the name of ${e}. For invoices and card, sign in with that address.`,
   },
 }
 type TT = typeof L.fr
@@ -376,7 +379,7 @@ function FollowUp({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
   )
 }
 
-function Subscription({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
+function Subscription({ T, me, lang, billedTo }: { T: TT; me: Me; lang: Lang; billedTo?: string | null }) {
   const l = me.lead
   const O = OFFER[lang]
   const [busy, setBusy] = useState(false)
@@ -436,6 +439,8 @@ function Subscription({ T, me, lang }: { T: TT; me: Me; lang: Lang }) {
             <div><dt className="text-xs font-mono uppercase tracking-wider text-ink/45">{l?.commitment_until && new Date(l.commitment_until) > new Date() ? T.commit : T.renew}</dt><dd className="mt-1 font-semibold text-ink">{l?.commitment_until && new Date(l.commitment_until) > new Date() ? fmtDate(l.commitment_until, lang) : l?.current_period_end ? fmtDate(l.current_period_end, lang) : '-'}</dd></div>
           </dl>
         </div>
+      ) : billedTo ? (
+        <p className="mt-5 text-ink/65 leading-relaxed">{T.billedTo(billedTo)}</p>
       ) : me.payments ? (
         <>
           {l?.boost_paid_at && (
@@ -552,7 +557,7 @@ export default function ClientSpace() {
             {/* Site clients: the overview (site, visitors, Google, AI), then the site settings (domain + legal details). */}
             <PresenceOverview sites={sites} analyses={me.analyses} bookingUrl={me.bookingUrl} lang={lang} />
             <SiteSetup lang={lang} welcome={flags.siteWelcome} sites={sites} onUpdate={updateSite} />
-            {!(hasSite && me.lead?.plan === 'site') && <>
+            {!hasSite && <>
               <Journey T={T} me={me} />
               <NextStep T={T} me={me} lang={lang} />
             </>}
@@ -561,7 +566,7 @@ export default function ClientSpace() {
               <FollowUp T={T} me={me} lang={lang} />
               <Contact T={T} me={me} />
             </div>
-            <Subscription T={T} me={me} lang={lang} />
+            <Subscription T={T} me={me} lang={lang} billedTo={sites.find(x => x.email && x.email !== me.email)?.email || null} />
           </div>
         )}
       </main>

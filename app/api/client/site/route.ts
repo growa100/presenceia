@@ -18,12 +18,15 @@ const SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/
 export async function GET(req: NextRequest) {
   const email = getSessionEmail(req)
   if (!email) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-  try {
-    const { status, body } = await cockpitFetch(`sites/by-email?email=${encodeURIComponent(email)}`)
-    return NextResponse.json(status < 300 ? body : { items: [] }, { headers: { 'Cache-Control': 'no-store' } })
-  } catch {
-    return NextResponse.json({ items: [], unavailable: true })
+  const path = `sites/by-email?email=${encodeURIComponent(email)}`
+  for (let attempt = 1; attempt <= 2; attempt++) {  // one retry: a transient droplet or database error
+    try {
+      const { status, body } = await cockpitFetch(path)
+      if (status < 300) return NextResponse.json(body, { headers: { 'Cache-Control': 'no-store' } })
+      if (status < 500) break
+    } catch { /* retry */ }
   }
+  return NextResponse.json({ items: [], unavailable: true })
 }
 
 export async function POST(req: NextRequest) {
