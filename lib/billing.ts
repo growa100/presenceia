@@ -146,6 +146,7 @@ export async function sendWelcome(o: { email: string; plan: PlanKey | null; term
   if (o.site) {
     // Site activated from its offer page: the next step is the domain, in the client space.
     const ws = WS[lang]
+    const space = magicUrl(o.base, o.email, '7d', `/espace-client?lang=${lang}`)
     const extra = o.plan && o.plan !== 'site' ? ws.visibility : ''
     await sendMail({
       to: o.email, subject: ws.s(o.business),

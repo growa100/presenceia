@@ -9,6 +9,9 @@ export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>('fr')
 
   useEffect(() => {
+    // ?lang= from our own links (after a site checkout, welcome email): the language the client bought in.
+    const fromUrl = new URLSearchParams(window.location.search).get('lang') as Lang
+    if (fromUrl && translations[fromUrl]) { setLangState(fromUrl); try { localStorage.setItem('lang', fromUrl) } catch {} return }
     const stored = localStorage.getItem('lang') as Lang
     if (stored && translations[stored]) { setLangState(stored); return }
     const browser = navigator.language.toLowerCase()

@@ -29,7 +29,7 @@ const L = {
     existing: ['J\'ai déjà un nom de domaine', 'Votre site actuel est remplacé, vos emails ne changent pas.'],
     fresh: ['Je n\'ai pas de nom de domaine', 'Nous en réservons un à votre nom, compris dans votre abonnement.'],
     later: ['Plus tard', 'Votre site reste en ligne à son adresse actuelle.'],
-    yourDomain: 'Votre nom de domaine', check: 'Vérifier', confirmExisting: (d: string) => `Utiliser ${d}`,
+    yourDomain: 'Votre nom de domaine', check: 'Vérifier', phDomain: 'www.mon-entreprise.ch', phNew: 'mon-entreprise', confirmExisting: (d: string) => `Utiliser ${d}`,
     notFound: 'Ce domaine n\'existe pas encore. Vérifiez l\'orthographe, ou choisissez « Je n\'ai pas de nom de domaine ».',
     managedBy: (p: string) => `Géré chez ${p}.`, unknownProvider: (ns: string) => `Serveurs DNS : ${ns}.`,
     mailAt: (m: string) => `Vos emails passent par ${m} : nous n'y touchons pas.`,
@@ -56,7 +56,7 @@ const L = {
     company: 'Raison sociale', form: 'Forme juridique', street: 'Rue et numéro', zip: 'NPA', city: 'Localité', ide: 'Numéro IDE (si inscrit au RC)',
     rcs: 'SIREN / RCS', capital: 'Capital social', vat: 'N° TVA (facultatif)', responsible: 'Personne responsable du site', email: 'Email de contact (public)', phone: 'Téléphone (public)',
     forms: ['Raison individuelle', 'Sàrl', 'SA', 'Association', 'Autre'], formsFr: ['Entreprise individuelle', 'SARL', 'SAS', 'SA', 'Autre'],
-    save: 'Publier les pages légales', saved: 'Pages légales publiées.', see: 'Voir', legalPage: 'Mentions légales', privacyPage: 'Protection des données',
+    save: 'Publier les pages légales', saved: 'Pages légales publiées.', see: 'Voir :', legalPage: 'Mentions légales', privacyPage: 'Protection des données',
     required: 'Merci de remplir les champs obligatoires.', err: 'Une erreur est survenue. Réessayez, ou écrivez-nous.',
     errs: { invalid_domain: 'Ce nom de domaine n\'est pas valide.', domain_not_found: 'Ce domaine n\'existe pas encore.', domain_taken: 'Ce domaine est déjà pris.' } as Record<string, string>,
   },
@@ -68,7 +68,7 @@ const L = {
     existing: ['Ich habe schon eine Domain', 'Ihre bisherige Website wird ersetzt, Ihre E-Mails bleiben gleich.'],
     fresh: ['Ich habe keine Domain', 'Wir registrieren eine auf Ihren Namen, im Abonnement inbegriffen.'],
     later: ['Später', 'Ihre Website bleibt unter ihrer jetzigen Adresse online.'],
-    yourDomain: 'Ihre Domain', check: 'Prüfen', confirmExisting: (d: string) => `${d} verwenden`,
+    yourDomain: 'Ihre Domain', check: 'Prüfen', phDomain: 'www.meine-firma.ch', phNew: 'meine-firma', confirmExisting: (d: string) => `${d} verwenden`,
     notFound: 'Diese Domain existiert noch nicht. Prüfen Sie die Schreibweise oder wählen Sie «Ich habe keine Domain».',
     managedBy: (p: string) => `Verwaltet bei ${p}.`, unknownProvider: (ns: string) => `DNS-Server: ${ns}.`,
     mailAt: (m: string) => `Ihre E-Mails laufen über ${m}: daran ändern wir nichts.`,
@@ -95,7 +95,7 @@ const L = {
     company: 'Firma', form: 'Rechtsform', street: 'Strasse und Nummer', zip: 'PLZ', city: 'Ort', ide: 'UID-Nummer (falls im Handelsregister)',
     rcs: 'SIREN / RCS', capital: 'Kapital', vat: 'MWST-Nr. (freiwillig)', responsible: 'Verantwortliche Person', email: 'Kontakt-E-Mail (öffentlich)', phone: 'Telefon (öffentlich)',
     forms: ['Einzelunternehmen', 'GmbH', 'AG', 'Verein', 'Andere'], formsFr: ['Entreprise individuelle', 'SARL', 'SAS', 'SA', 'Andere'],
-    save: 'Rechtliche Seiten veröffentlichen', saved: 'Rechtliche Seiten veröffentlicht.', see: 'Ansehen', legalPage: 'Impressum', privacyPage: 'Datenschutz',
+    save: 'Rechtliche Seiten veröffentlichen', saved: 'Rechtliche Seiten veröffentlicht.', see: 'Ansehen:', legalPage: 'Impressum', privacyPage: 'Datenschutz',
     required: 'Bitte füllen Sie die Pflichtfelder aus.', err: 'Ein Fehler ist aufgetreten. Bitte nochmals versuchen oder uns schreiben.',
     errs: { invalid_domain: 'Diese Domain ist ungültig.', domain_not_found: 'Diese Domain existiert noch nicht.', domain_taken: 'Diese Domain ist vergeben.' } as Record<string, string>,
   },
@@ -107,7 +107,7 @@ const L = {
     existing: ['I already have a domain', 'Your current website is replaced, your email does not change.'],
     fresh: ['I do not have a domain', 'We register one in your name, included in your subscription.'],
     later: ['Later', 'Your website stays live at its current address.'],
-    yourDomain: 'Your domain name', check: 'Check', confirmExisting: (d: string) => `Use ${d}`,
+    yourDomain: 'Your domain name', check: 'Check', phDomain: 'www.my-company.ch', phNew: 'my-company', confirmExisting: (d: string) => `Use ${d}`,
     notFound: 'This domain does not exist yet. Check the spelling, or choose "I do not have a domain".',
     managedBy: (p: string) => `Managed at ${p}.`, unknownProvider: (ns: string) => `DNS servers: ${ns}.`,
     mailAt: (m: string) => `Your email goes through ${m}: we do not touch it.`,
@@ -134,7 +134,7 @@ const L = {
     company: 'Company name', form: 'Legal form', street: 'Street and number', zip: 'Postcode', city: 'City', ide: 'Company ID (UID, if registered)',
     rcs: 'SIREN / RCS', capital: 'Share capital', vat: 'VAT number (optional)', responsible: 'Person responsible for the website', email: 'Contact email (public)', phone: 'Phone (public)',
     forms: ['Sole proprietorship', 'LLC (Sàrl / GmbH)', 'Corporation (SA / AG)', 'Association', 'Other'], formsFr: ['Entreprise individuelle', 'SARL', 'SAS', 'SA', 'Other'],
-    save: 'Publish the legal pages', saved: 'Legal pages published.', see: 'See', legalPage: 'Legal notice', privacyPage: 'Privacy',
+    save: 'Publish the legal pages', saved: 'Legal pages published.', see: 'See:', legalPage: 'Legal notice', privacyPage: 'Privacy',
     required: 'Please fill in the required fields.', err: 'Something went wrong. Please try again, or write to us.',
     errs: { invalid_domain: 'This domain name is not valid.', domain_not_found: 'This domain does not exist yet.', domain_taken: 'This domain is already taken.' } as Record<string, string>,
   },
@@ -292,7 +292,7 @@ function DomainChoice({ site, t, onUpdate }: { site: Site; t: TT; onUpdate: (s: 
         <div className="mt-5 space-y-3">
           <label className={labelCls}>{t.yourDomain}</label>
           <div className="flex gap-2">
-            <input value={domain} onChange={e => { setDomain(e.target.value); setChecked(null) }} placeholder="www.mon-entreprise.ch" className={inputCls}
+            <input value={domain} onChange={e => { setDomain(e.target.value); setChecked(null) }} placeholder={site.market === 'FR' ? t.phDomain.replace(/\.ch$/, '.fr') : t.phDomain} className={inputCls}
               onKeyDown={e => { if (e.key === 'Enter' && domain) check() }} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
             <button onClick={check} disabled={busy || !domain} className="btn-outline px-5 rounded-xl text-sm font-semibold whitespace-nowrap">
               {busy && !checked ? <Loader2 className="w-4 h-4 animate-spin" /> : t.check}
@@ -317,7 +317,7 @@ function DomainChoice({ site, t, onUpdate }: { site: Site; t: TT; onUpdate: (s: 
         <div className="mt-5 space-y-3">
           <label className={labelCls}>{t.searchNew}</label>
           <div className="flex gap-2">
-            <input value={q} onChange={e => setQ(e.target.value)} placeholder={site.market === 'FR' ? 'mon-entreprise.fr' : 'mon-entreprise.ch'} className={inputCls}
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder={`${t.phNew}.${site.market === 'FR' ? 'fr' : 'ch'}`} className={inputCls}
               onKeyDown={e => { if (e.key === 'Enter' && q) suggest(q) }} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
             <button onClick={() => suggest(q)} disabled={busy || !q} className="btn-outline px-5 rounded-xl text-sm font-semibold whitespace-nowrap">
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : t.check}
@@ -426,7 +426,7 @@ function LegalStep({ site, t, onUpdate }: { site: Site; t: TT; onUpdate: (s: Sit
         </button>
         {site.legal_done && (
           <span className="text-sm text-ink/60">
-            {t.see} : <a href={`${base}/mentions-legales/`} target="_blank" rel="noreferrer" className="text-brand font-semibold">{t.legalPage}</a> ·{' '}
+            {t.see} <a href={`${base}/mentions-legales/`} target="_blank" rel="noreferrer" className="text-brand font-semibold">{t.legalPage}</a> ·{' '}
             <a href={`${base}/confidentialite/`} target="_blank" rel="noreferrer" className="text-brand font-semibold">{t.privacyPage}</a>
           </span>
         )}

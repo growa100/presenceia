@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       const base = baseUrl(req)
       after(() => sendWelcome({ ...r, base }))
     }
-    const res = NextResponse.redirect(new URL(r.site ? '/espace-client?bienvenue=site' : '/espace-client?bienvenue=1', req.url))
+    const res = NextResponse.redirect(new URL(r.site ? `/espace-client?bienvenue=site&lang=${encodeURIComponent(r.lang)}` : '/espace-client?bienvenue=1', req.url))
     setSession(res, r.email)
     return res
   } catch (e) {
